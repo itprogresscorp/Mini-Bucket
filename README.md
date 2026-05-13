@@ -170,14 +170,14 @@ Command install:
 
 Important system requirement: Mini Bucket must be installed on a clean system. It is not recommended to install it on a system where other services or packages are already present. During the installation, permissions for some system files will be changed, and modifications will be made to configuration files.
 
-bash
-git clone https://github.com/roman202401/Mini-Bucket.git
 
-cd Mini-Bucket
+<code>git clone https://github.com/roman202401/Mini-Bucket.git</code>
 
-chmod +x install.sh
+<code>cd Mini-Bucket</code>
 
-bash install.sh
+<code>chmod +x install.sh</code>
+
+<code>bash install.sh</code>
 
 The install script automatically checks compatibility, creates directories, configures permissions, initializes SQLite, and sets up base configurations.
 
