@@ -1,6 +1,7 @@
 🖥️ Mini Bucket — NAS Control Panel
 
-https://mini-b.itp-corp.ru/
+![](https://github.com/roman202401/Mini-Bucket/blob/main/screenshots/1.png)
+![](https://github.com/roman202401/Mini-Bucket/blob/main/screenshots/2.png)
 
 A resource-efficient web-based NAS control panel for any hardware
 Debian 9 | PHP 7.0 | SQLite | Standard Linux Utilities
@@ -170,14 +171,14 @@ Command install:
 
 Important system requirement: Mini Bucket must be installed on a clean system. It is not recommended to install it on a system where other services or packages are already present. During the installation, permissions for some system files will be changed, and modifications will be made to configuration files.
 
-bash
-git clone https://github.com/roman202401/Mini-Bucket.git
 
-cd Mini-Bucket
+<code>git clone https://github.com/itprogresscorp/Mini-Bucket.git</code>
 
-chmod +x install.sh
+<code>cd Mini-Bucket</code>
 
-bash install.sh
+<code>chmod +x install.sh</code>
+
+<code>bash install.sh</code>
 
 The install script automatically checks compatibility, creates directories, configures permissions, initializes SQLite, and sets up base configurations.
 
@@ -198,3 +199,5 @@ Tested on Raspberry Pi 1 and Netgear Stora MS2000 (128 MB RAM).
 Ready for home and small office environments.
 
 Attention! Beta version! Under active development. Work is currently underway to resolve all identified issues. For any questions, please email me at sa@itp-corp.ru with the subject line "Mini-b".
+
+https://mini-b.itp-corp.ru/
