@@ -172,7 +172,7 @@ Command install:
 Important system requirement: Mini Bucket must be installed on a clean system. It is not recommended to install it on a system where other services or packages are already present. During the installation, permissions for some system files will be changed, and modifications will be made to configuration files.
 
 
-<code>git clone https://github.com/roman202401/Mini-Bucket.git</code>
+<code>git clone https://github.com/itprogresscorp/Mini-Bucket.git</code>
 
 <code>cd Mini-Bucket</code>
 
