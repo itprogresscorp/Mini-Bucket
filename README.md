@@ -1,6 +1,7 @@
 🖥️ Mini Bucket — NAS Control Panel
 
-https://mini-b.itp-corp.ru/
+![](https://github.com/roman202401/Mini-Bucket/blob/main/screenshots/1.png)
+![](https://github.com/roman202401/Mini-Bucket/blob/main/screenshots/2.png)
 
 A resource-efficient web-based NAS control panel for any hardware
 Debian 9 | PHP 7.0 | SQLite | Standard Linux Utilities
@@ -198,3 +199,5 @@ Tested on Raspberry Pi 1 and Netgear Stora MS2000 (128 MB RAM).
 Ready for home and small office environments.
 
 Attention! Beta version! Under active development. Work is currently underway to resolve all identified issues. For any questions, please email me at sa@itp-corp.ru with the subject line "Mini-b".
+
+https://mini-b.itp-corp.ru/
