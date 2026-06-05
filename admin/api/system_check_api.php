@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -83,16 +84,19 @@ validateApiKey();
 
 
 
+// Настройки логов
 define('LOG_FILE', '/var/log/install_script.log');
 define('ERROR_LOG', '/var/log/install_script_error.log');
 define('SYSTEM_CHECK_LOG', '/var/log/system_check.log');
 
+// Функция логирования
 function logMessage($message, $type = 'INFO') {
     $logEntry = "[" . date('Y-m-d H:i:s') . "] [$type] $message\n";
     file_put_contents(SYSTEM_CHECK_LOG, $logEntry, FILE_APPEND);
     return $logEntry;
 }
 
+// Функция выполнения команды
 function runCommand($command, &$output = null) {
     $output = [];
     $returnVar = 0;
@@ -100,16 +104,19 @@ function runCommand($command, &$output = null) {
     return $returnVar === 0;
 }
 
+// Получение статуса службы
 function getServiceStatus($service) {
     $status = trim(shell_exec("systemctl is-active $service 2>/dev/null"));
     return $status === 'active';
 }
 
+// Проверка установленного пакета
 function isPackageInstalled($package) {
     $result = shell_exec("dpkg -l $package 2>/dev/null | grep '^ii'");
     return !empty(trim($result));
 }
 
+// Список всех проверок
 function getChecksList() {
     return [
         'packages' => [
@@ -189,6 +196,7 @@ function getChecksList() {
     ];
 }
 
+// Проверка конкретного пункта
 function checkItem($category, $item) {
     switch($category) {
         case 'packages':
@@ -243,6 +251,7 @@ function checkItem($category, $item) {
     }
 }
 
+// Функция исправления
 function fixItem($category, $item) {
     $result = ['success' => false, 'message' => '', 'output' => []];
     
@@ -383,6 +392,7 @@ function fixItem($category, $item) {
     return $result;
 }
 
+// API роутинг
 $action = $_GET['action'] ?? $_POST['action'] ?? 'check';
 
 if ($action === 'check_all') {

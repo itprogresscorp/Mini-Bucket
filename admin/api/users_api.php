@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -82,6 +83,7 @@ validateApiKey();
 
 $db = getDB();
 
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function escapeForShell($arg) {
     return escapeshellarg($arg);
 }
@@ -179,6 +181,7 @@ function getStats() {
     ];
 }
 
+// ========== PANEL USER MANAGEMENT ==========
 function addPanelUser($username, $password, $email, $role) {
     global $db;
     
@@ -235,6 +238,7 @@ function deletePanelUser($id) {
     return ['success' => true, 'message' => 'Panel user deleted'];
 }
 
+// ========== SYSTEM USER MANAGEMENT ==========
 function addSystemUser($username, $password, $groups = []) {
     $check = shell_exec("id $username 2>/dev/null");
     if (!empty(trim($check))) {
@@ -306,6 +310,7 @@ function deleteSystemUser($username) {
     return ['success' => empty($output), 'message' => empty($output) ? 'System user deleted' : 'Error deleting user'];
 }
 
+// ========== GROUP MANAGEMENT ==========
 function addSystemGroup($groupname) {
     $check = shell_exec("getent group $groupname 2>/dev/null");
     if (!empty(trim($check))) {
@@ -334,9 +339,11 @@ function deleteSystemGroup($groupname) {
     return ['success' => empty($output), 'message' => empty($output) ? 'Group deleted' : 'Error deleting group'];
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
+    // Get data
     case 'get_panel_users':
         echo json_encode(['success' => true, 'data' => getPanelUsers()]);
         break;
@@ -365,6 +372,7 @@ switch ($action) {
         ]);
         break;
     
+    // Panel User actions
     case 'add_panel_user':
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -411,6 +419,7 @@ switch ($action) {
         echo json_encode(deletePanelUser($id));
         break;
     
+    // System User actions
     case 'add_system_user':
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -467,6 +476,7 @@ switch ($action) {
         echo json_encode(deleteSystemUser($username));
         break;
     
+    // Group actions
     case 'add_system_group':
         $groupname = trim($_POST['groupname'] ?? '');
         

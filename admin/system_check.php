@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 //P.S. I Love USA.
 
@@ -33,6 +33,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,9 +84,9 @@ $js_config = [
 	<script src="js/crt_checker.js"></script>
 	<link rel="stylesheet" href="style.css">
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
 
     <style>
         * {
@@ -98,7 +99,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             padding: 2rem 1rem;
         }
         
-        /* Apple стиль */
         .apple-card {
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(0px);
@@ -281,6 +281,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 <body>
 
 <div class="container-lg">
+    <!-- Header -->
     <div class="text-center mb-4">
         <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle p-3 shadow-sm mb-3" style="width: 70px; height: 70px;">
             <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #007aff;"></i>
@@ -289,6 +290,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         <p class="text-secondary">Server configuration diagnostics and recovery</p>
     </div>
     
+    <!-- Control Panel -->
     <div class="apple-card p-3 p-md-4 mb-4">
         <div class="row align-items-center g-3">
             <div class="col-md-4">
@@ -324,6 +326,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
         
+        <!-- Общий прогресс -->
         <div class="mt-4" id="globalProgressSection" style="display: none;">
             <div class="d-flex justify-content-between mb-2">
                 <span class="small fw-semibold"><i class="bi bi-hourglass-split me-1"></i>Overall Progress</span>
@@ -338,6 +341,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         </div>
     </div>
     
+    <!-- Results Container -->
     <div id="checksContainer"></div>
 	
 	<div class="apple-card p-3 p-md-4 mb-4">
@@ -350,6 +354,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 			</div>
 </div>
 
+<!-- Modal для логов и модальных окон -->
 <div class="modal fade modal-apple" id="logModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -370,6 +375,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно для проверки -->
 <div class="modal fade modal-apple" id="globalCheckModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -393,6 +399,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Кнопка скролла -->
 <button class="scroll-to-top" id="scrollToTop" style="display: none;">
     <i class="bi bi-arrow-up"></i>
 </button>
@@ -407,6 +414,7 @@ let currentCheckData = null;
 let currentLogType = 'install';
 let isChecking = false;
 
+// Утилиты
 function showToast(message, type = 'success') {
     const toastHtml = `
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
@@ -425,6 +433,7 @@ function showToast(message, type = 'success') {
     toastEl.on('hidden.bs.toast', () => toastEl.remove());
 }
 
+// Запуск полной проверки
 async function runFullCheck(showProgress = true) {
     if (isChecking) {
         showToast('Check already in progress', 'warning');
@@ -482,6 +491,7 @@ async function runFullCheck(showProgress = true) {
     }
 }
 
+// Отрисовка результатов
 function renderResults(results) {
     let html = '';
     let categoryIndex = 0;
@@ -599,6 +609,7 @@ async function fixSingleItem(category, item, buttonElement = null) {
     }
 }
 
+// Исправление всего
 async function fixEverything() {
     if (!confirm('Are you sure you want to fix ALL issues? Packages will be reinstalled and settings will be changed.')) return;
     
@@ -647,6 +658,7 @@ async function fixEverything() {
     }
 }
 
+// Обновление статистики
 function updateStats() {
     if (!currentCheckData) return;
     
@@ -670,6 +682,7 @@ function updateGlobalProgress(percent, message) {
     $('#statusMessage').html(message);
 }
 
+// Toggle category
 function toggleCategory(catId) {
     $(`#${catId}`).collapse('toggle');
     const icon = $(`#icon_${catId}`);
@@ -680,6 +693,7 @@ function toggleCategory(catId) {
     }
 }
 
+// Показ логов
 async function showLogs(type) {
     currentLogType = type;
     $('#logModalTitle').html(type === 'install' ? '<i class="bi bi-file-text me-2"></i>Install Log' : '<i class="bi bi-exclamation-triangle me-2"></i>Error Log');
@@ -735,6 +749,7 @@ window.openSystemChecker = function() {
         </div>
     `);
     
+    // Run the check
     fetch('api/system_check_api.php?action=check_all')
         .then(res => res.json())
         .then(data => {
@@ -748,6 +763,7 @@ window.openSystemChecker = function() {
             modalBody.html('<div class="alert alert-danger m-3">Network error</div>');
         });
     
+    // Handler for "Fix All" button in modal
     $('#globalFixAllBtn').off('click').on('click', async function() {
         if (!confirm('Fix all issues?')) return;
         $(this).html('<i class="bi bi-hourglass-split me-2"></i>Fixing...').prop('disabled', true);
@@ -821,12 +837,14 @@ function renderModalResults(results) {
     });
 }
 
+// Инициализация
 $(document).ready(function() {
     runFullCheck();
     $('#runCheckBtn').on('click', () => runFullCheck(true));
     $('#fixAllBtn').on('click', fixEverything);
     $('#refreshLogBtn').on('click', loadLogs);
     
+    // Scroll to top
     $(window).on('scroll', function() {
         $('#scrollToTop').toggle($(this).scrollTop() > 300);
     });

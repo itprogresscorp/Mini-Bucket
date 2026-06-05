@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 $menu = require_once 'menu.php';
@@ -86,7 +86,7 @@ $js_config = [
 	<script src="js/crt_checker.js"></script>
     <script>
         window.apiConfig = <?php echo json_encode($js_config); ?>;
-        //console.log('API Config loaded:', window.apiConfig);
+        console.log('API Config loaded:', window.apiConfig);
     </script>
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -312,6 +312,7 @@ $js_config = [
     <main class="main-content">
         <div id="alertContainer" class="alert-toast"></div>
         
+        <!-- Stats Cards -->
         <div class="row g-4 mb-4" id="statsRow">
             <div class="col-md-3 col-sm-6">
                 <div class="stat-card">
@@ -342,7 +343,8 @@ $js_config = [
                 </div>
             </div>
         </div>
-
+        
+        <!-- Tabs -->
         <div class="custom-tabs">
             <button class="custom-tab active" data-tab="certs" onclick="switchTab('certs')">
                 <i class="bi bi-shield-check me-2"></i>Certificates
@@ -351,7 +353,8 @@ $js_config = [
                 <i class="bi bi-building me-2"></i>Certificate Authorities
             </button>
         </div>
-
+        
+        <!-- Certificates Tab -->
         <div id="certsTab">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div class="d-flex gap-2 flex-wrap">
@@ -377,6 +380,7 @@ $js_config = [
             </div>
         </div>
         
+        <!-- CAs Tab -->
         <div id="casTab" style="display: none;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div class="d-flex gap-2">
@@ -396,7 +400,9 @@ $js_config = [
     </main>
 </div>
 
+<!-- Modals -->
 
+<!-- Self-Signed Certificate Modal -->
 <div class="modal fade modal-modern" id="createSelfSignedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -456,6 +462,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- CA-Signed Certificate Modal -->
 <div class="modal fade modal-modern" id="createSignedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -521,6 +528,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Root CA Modal -->
 <div class="modal fade modal-modern" id="createRootCAModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -575,6 +583,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Intermediate CA Modal -->
 <div class="modal fade modal-modern" id="createIntermediateCAModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -633,6 +642,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Generate CSR Modal -->
 <div class="modal fade modal-modern" id="generateCSRModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -685,6 +695,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Import Modal -->
 <div class="modal fade modal-modern" id="importModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -731,6 +742,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Sign CSR Modal -->
 <div class="modal fade modal-modern" id="signCSRModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -770,6 +782,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Certificate Details Modal -->
 <div class="modal fade modal-modern" id="detailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -790,6 +803,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- CA Details Modal -->
 <div class="modal fade modal-modern" id="caDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -810,6 +824,7 @@ $js_config = [
     </div>
 </div>
 
+<!-- Edit Comment Modal -->
 <div class="modal fade modal-modern" id="editCommentModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -835,6 +850,7 @@ $js_config = [
 <script src="js/loader.js"></script>
 
 <script>
+// ========== Configuration ==========
 const API_BASE = window.apiConfig.apiBaseUrl || '/api/';
 const API_KEY = window.apiConfig.apiKey || '';
 const IS_LOCALHOST = window.apiConfig.isLocalhost || false;
@@ -848,6 +864,7 @@ let currentDetailsType = 'cert';
 let generatedCSRContent = '';
 let generatedPrivateKeyContent = '';
 
+// ========== Utility Functions ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         <i class="fas fa-${type === 'success' ? 'check-circle' : (type === 'danger' ? 'exclamation-triangle' : 'info-circle')} me-2"></i>
@@ -885,6 +902,7 @@ function copyToClipboard(elementId) {
     showAlert('Copied to clipboard!', 'success');
 }
 
+// ========== API Calls ==========
 async function apiCall(action, method = 'GET', data = null) {
     let url = `${API_BASE}ssl_api.php?action=${action}`;
     let options = { 
@@ -910,6 +928,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+//loading
 
 async function downloadFile(name, type, certType = 'cert') {
     let url = `${API_BASE}ssl_api.php?action=download&name=${encodeURIComponent(name)}&type=${type}&certType=${certType}`;
@@ -936,6 +955,7 @@ function exportCertificateHandler(name, type) {
 }
 
 
+// ========== Load Data ==========
 async function loadCertificates() {
     showLoading();
     let result = await apiCall('list');
@@ -1235,6 +1255,7 @@ function populateDropdowns() {
     $('#signCA').html(allOptions);
 }
 
+// ========== Tab Switching ==========
 function switchTab(tab) {
     $('.custom-tab').removeClass('active');
     $(`.custom-tab[data-tab="${tab}"]`).addClass('active');
@@ -1276,6 +1297,7 @@ function filterCerts() { renderCertificates(); }
 function filterCAs() { renderCAs(); }
 function refreshAllData() { loadCertificates(); }
 
+// ========== Modal Handlers ==========
 function openCreateSelfSignedModal() {
     $('#selfSignedForm')[0].reset();
     new bootstrap.Modal(document.getElementById('createSelfSignedModal')).show();
@@ -1327,6 +1349,7 @@ function toggleImportType() {
     }
 }
 
+// ========== CRUD Operations ==========
 async function createSelfSigned() {
     const certName = $('#certName').val().trim();
     const domain = $('#domain').val().trim();
@@ -1583,7 +1606,7 @@ async function deleteCertificate(certName, type) {
         
         if (result.success) {
             showAlert(result.message, 'success');
-            loadCertificates();
+            loadCertificates(); // Refresh the list
         } else {
             showAlert(result.error || 'Error deleting', 'danger');
         }
@@ -1739,6 +1762,7 @@ function deleteCurrentCA() {
     bootstrap.Modal.getInstance(document.getElementById('caDetailsModal')).hide();
 }
 
+// ========== Comment Functions ==========
 function editComment(name, type, currentComment) {
     $('#commentName').val(name);
     $('#commentType').val(type);
@@ -1764,6 +1788,7 @@ async function saveComment() {
     }
 }
 
+// ========== Initialization ==========
 $(document).ready(function() {
     setView(currentView);
     loadCertificates();

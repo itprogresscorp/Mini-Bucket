@@ -17,10 +17,14 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 declare(strict_types=1);
+
+// -----------------------------------------------------------------------------
+// Core Configuration
+// -----------------------------------------------------------------------------
 
 stream_context_set_default([
     'ssl' => [
@@ -36,21 +40,13 @@ if (file_exists(ROOT_PATH . '/config.php')) {
     require_once ROOT_PATH . '/config.php';
 }
 
+session_start();
+
 isAuthenticated();
 
-define('AUTH_ENABLED', false);
-define('AUTH_USERNAME', 'admin');
-define('AUTH_PASSWORD_HASH', password_hash('your_password_here', PASSWORD_DEFAULT));
-
-if (AUTH_ENABLED) {
-    if (!isset($_SERVER['PHP_AUTH_USER']) || 
-        $_SERVER['PHP_AUTH_USER'] !== AUTH_USERNAME || 
-        !password_verify($_SERVER['PHP_AUTH_PW'], AUTH_PASSWORD_HASH)) {
-        header('WWW-Authenticate: Basic realm="Key Rotation Administration"');
-        header('HTTP/1.0 401 Unauthorized');
-        exit('Access Denied');
-    }
-}
+// -----------------------------------------------------------------------------
+// API Endpoint Handler
+// -----------------------------------------------------------------------------
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
@@ -122,6 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     
     exit;
 }
+
+// -----------------------------------------------------------------------------
+// Data Retrieval & Filtering
+// -----------------------------------------------------------------------------
 
 try {
     $db = getDB();
@@ -208,7 +208,6 @@ try {
             padding: 32px 24px;
         }
         
-        /* Header Section */
         .header {
             margin-bottom: 32px;
         }
@@ -230,7 +229,6 @@ try {
             font-weight: 400;
         }
         
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -276,7 +274,6 @@ try {
             letter-spacing: 0.016em;
         }
         
-        /* Controls Bar */
         .controls-bar {
             background: #ffffff;
             border-radius: 14px;
@@ -307,7 +304,6 @@ try {
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
         
-        /* Button Styles */
         .btn {
             padding: 10px 20px;
             border-radius: 10px;
@@ -357,7 +353,6 @@ try {
             background: #e9e9ef;
         }
         
-        /* Table Section */
         .table-container {
             background: #ffffff;
             border-radius: 14px;
@@ -398,7 +393,6 @@ try {
             background: #fbfbfd;
         }
         
-        /* Status Badges */
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -464,7 +458,6 @@ try {
             border-radius: 8px;
         }
         
-        /* Pagination */
         .pagination {
             display: flex;
             justify-content: center;
@@ -489,7 +482,6 @@ try {
             cursor: not-allowed;
         }
         
-        /* Loading Overlay */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -517,7 +509,6 @@ try {
             to { transform: rotate(360deg); }
         }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 24px;

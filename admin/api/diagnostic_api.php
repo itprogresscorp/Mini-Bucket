@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -99,10 +100,13 @@ class DiagnosticAPI {
         return trim($output);
     }
     
+    // ==================== System Stats ====================
     public function getSystemStats() {
+        // CPU Usage
         $cpuLoad = sys_getloadavg();
         $cpuPercent = 0;
         
+        // Get CPU usage from /proc/stat
         $stat1 = file_get_contents('/proc/stat');
         sleep(1);
         $stat2 = file_get_contents('/proc/stat');
@@ -136,6 +140,7 @@ class DiagnosticAPI {
             }
         }
         
+        // RAM Usage
         $memInfo = file_get_contents('/proc/meminfo');
         preg_match('/MemTotal:\s+(\d+)/', $memInfo, $memTotal);
         preg_match('/MemAvailable:\s+(\d+)/', $memInfo, $memAvailable);
@@ -146,11 +151,13 @@ class DiagnosticAPI {
         $usedMem = $totalMem - $availableMem;
         $ramPercent = round(($usedMem / $totalMem) * 100, 1);
         
+        // Disk Usage
         $diskTotal = disk_total_space('/');
         $diskFree = disk_free_space('/');
         $diskUsed = $diskTotal - $diskFree;
         $diskPercent = round(($diskUsed / $diskTotal) * 100, 1);
         
+        // Uptime
         $uptime = file_get_contents('/proc/uptime');
         $uptimeSeconds = (float)explode(' ', $uptime)[0];
         $uptimeDays = floor($uptimeSeconds / 86400);
@@ -170,6 +177,7 @@ class DiagnosticAPI {
         $this->jsonResponse($stats);
     }
     
+    // ==================== Network Stats ====================
     private $lastRx = 0;
     private $lastTx = 0;
     private $lastTime = 0;
@@ -206,6 +214,7 @@ class DiagnosticAPI {
         $this->lastTx = $txBytes;
         $this->lastTime = $currentTime;
         
+        // Get active connections count
         $connections = shell_exec('sudo ss -tunap 2>/dev/null | grep -c "ESTAB"');
         $connections = (int)trim($connections);
         
@@ -217,6 +226,7 @@ class DiagnosticAPI {
         ]);
     }
     
+    // ==================== Processes ====================
     public function getProcesses($sort = 'cpu') {
         $output = shell_exec('ps aux --sort=-%cpu 2>/dev/null');
         $lines = explode("\n", trim($output));
@@ -243,6 +253,7 @@ class DiagnosticAPI {
             ];
         }
         
+        // Sort
         if ($sort === 'mem') {
             usort($processes, function($a, $b) {
                 return $b['mem'] <=> $a['mem'];
@@ -263,6 +274,7 @@ class DiagnosticAPI {
         
         $result = $this->executeCommand("kill -{$signal} {$pid}");
         
+        // Check if process exists
         $check = shell_exec("ps -p {$pid} 2>/dev/null | grep -v PID");
         if (empty(trim($check))) {
             $this->jsonResponse(['message' => "Process {$pid} terminated"]);
@@ -271,6 +283,7 @@ class DiagnosticAPI {
         }
     }
     
+    // ==================== Network Connections ====================
     public function getConnections() {
         $output = shell_exec('sudo ss -tunap 2>/dev/null | grep -v "LISTEN"');
         $lines = explode("\n", trim($output));
@@ -288,6 +301,7 @@ class DiagnosticAPI {
             $localAddr = $parts[4] ?? '';
             $remoteAddr = $parts[5] ?? '';
             
+            // Extract PID and process name
             $pid = '-';
             $process = '';
             if (isset($parts[6]) && preg_match('/users:\(\(\"([^\"]+)\",pid=(\d+)/', $parts[6], $matches)) {
@@ -297,6 +311,7 @@ class DiagnosticAPI {
                 $process = $matches[1];
             }
             
+            // Clean addresses (remove IPv6 brackets)
             $localAddr = str_replace(['[', ']'], '', $localAddr);
             $remoteAddr = str_replace(['[', ']'], '', $remoteAddr);
             
@@ -318,7 +333,9 @@ class DiagnosticAPI {
         $this->jsonResponse(['message' => "Connection {$ip}:{$port} terminated"]);
     }
     
+    // ==================== Services ====================
     public function getServices() {
+        // Check if systemd is available
         $hasSystemd = file_exists('/bin/systemctl') || file_exists('/usr/bin/systemctl');
         
         if ($hasSystemd) {
@@ -338,6 +355,7 @@ class DiagnosticAPI {
                 $sub = $parts[3];
                 $description = $parts[4] ?? '';
                 
+                // Get description
                 $descOutput = $this->executeCommand("systemctl description {$name}.service 2>/dev/null | head -1");
                 if (!empty($descOutput) && $descOutput !== $name) {
                     $description = $descOutput;
@@ -354,6 +372,7 @@ class DiagnosticAPI {
             
             $this->jsonResponse($services);
         } else {
+            // Fallback to init.d
             $services = [];
             $initFiles = glob('/etc/init.d/*');
             foreach ($initFiles as $file) {
@@ -388,6 +407,7 @@ class DiagnosticAPI {
         }
     }
     
+    // ==================== System Logs ====================
     public function getLogs($lines = 100, $type = 'syslog', $filter = '') {
         $logFile = '/var/log/syslog';
         
@@ -425,7 +445,9 @@ class DiagnosticAPI {
         $this->jsonResponse($logs);
     }
     
+    // ==================== Ping Tool ====================
     public function ping($target, $count = 4) {
+        // Validate target
         $target = escapeshellarg($target);
         $count = (int)$count;
         
@@ -439,6 +461,7 @@ class DiagnosticAPI {
         $this->jsonResponse($output);
     }
     
+    // ==================== Traceroute ====================
     public function traceroute($target) {
         $target = escapeshellarg($target);
         
@@ -455,6 +478,7 @@ class DiagnosticAPI {
         $this->jsonResponse($output);
     }
     
+    // ==================== Netstat ====================
     public function netstat($type = 'all') {
         $command = "ss -tunap 2>/dev/null";
         
@@ -485,6 +509,7 @@ class DiagnosticAPI {
         $this->jsonResponse($formatted);
     }
     
+    // ==================== Port Scanner ====================
     public function portScan($target, $ports) {
         $target = escapeshellarg($target);
         $result = "Scanning {$target}...\n\n";
@@ -523,6 +548,7 @@ class DiagnosticAPI {
         $this->jsonResponse($result);
     }
     
+    // ==================== DNS Lookup ====================
     public function dnsLookup($target, $type = 'A') {
         $target = escapeshellarg($target);
         $type = escapeshellarg($type);
@@ -546,6 +572,7 @@ class DiagnosticAPI {
         $this->jsonResponse($result);
     }
     
+    // ==================== Bandwidth Test ====================
     public function bandwidthTest() {
         $hasSpeedtest = shell_exec('which speedtest-cli 2>/dev/null');
         
@@ -627,16 +654,20 @@ class DiagnosticAPI {
         return $samples;
     }
     
+    // ==================== System Info ====================
     public function getSystemInfo() {
         $hostname = gethostname();
         $os = php_uname('s') . ' ' . php_uname('r');
         
+        // Get CPU info
         $cpuInfo = file_get_contents('/proc/cpuinfo');
         preg_match('/model name\s+:\s+(.+)/', $cpuInfo, $cpuModel);
         $cpuModel = $cpuModel[1] ?? 'Unknown';
         
+        // Get core count
         $coreCount = substr_count($cpuInfo, 'processor');
         
+        // Get IP addresses
         $ips = [];
         $interfaces = ['eth0', 'ens3', 'ens4', 'enp0s3', 'enp0s8', 'wlan0'];
         foreach ($interfaces as $iface) {

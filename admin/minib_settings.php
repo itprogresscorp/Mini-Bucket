@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -29,6 +29,7 @@ $error = '';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
+// Получаем API ключ и URL для текущего хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -93,10 +94,10 @@ $js_config = [
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
     <script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-window.hostsList = <?php echo json_encode($hosts); ?>;
-window.currentHostId = <?php echo (int)$current_host_id; ?>;
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	window.hostsList = <?php echo json_encode($hosts); ?>;
+	window.currentHostId = <?php echo (int)$current_host_id; ?>;
+	</script>
     
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -372,7 +373,6 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
             border: none;
         }
 		
-		/* Layout with right sidebar tabs */
 		.content-with-sidebar {
 			display: flex;
 			gap: 20px;
@@ -381,7 +381,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 
 		.main-panel {
 			flex: 1;
-			min-width: 0; /* Prevents overflow */
+			min-width: 0;
 		}
 
 		.sidebar-tabs {
@@ -392,7 +392,6 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 			height: fit-content;
 		}
 
-		/* Vertical tabs styling */
 		.sidebar-tabs .nav-pills {
 			background: white;
 			border-radius: 20px;
@@ -450,7 +449,6 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 			color: white;
 		}
 
-		/* Responsive */
 		@media (max-width: 768px) {
 			.sidebar-tabs {
 				width: 60px;
@@ -493,8 +491,10 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
         <div id="alertContainer"></div>
         
         <div class="content-with-sidebar">
+            <!-- Основной контент -->
             <div class="main-panel">
                 <div class="tab-content">
+                    <!-- HOSTS TAB -->
                     <div class="tab-pane fade show active" id="apacheContent" role="tabpanel">
                         <div id="hostsContainer" class="row">
                                  <div class="col-lg-6">
@@ -528,6 +528,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 										</div>
 									</div>
 									
+									<!-- SSL Configuration Card -->
 									<div class="apple-card">
 										<div class="card-header-apple">
 											<h3><i class="bi bi-lock-fill"></i> HTTPS / SSL Configuration</h3>
@@ -569,6 +570,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 										</div>
 									</div>
 								</div>
+								<!-- Status & Actions Card -->
 								<div class="col-lg-6">
 									<div class="apple-card">
 										<div class="card-header-apple">
@@ -605,6 +607,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 										</div>
 									</div>
 									
+									<!-- Actions Card -->
 									<div class="apple-card">
 										<div class="card-header-apple">
 											<h3><i class="bi bi-tools"></i> Actions</h3>
@@ -643,11 +646,13 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                         </div>
                     </div>
                     
+                    <!-- INCOMING REQUESTS TAB -->
                     <div class="tab-pane fade" id="apiceycontent" role="tabpanel">
                         <div id="incomingContainer" class="row">
                             <div class="col-12 text-center py-5">
                                 <div id="rotationContainer">						
 									<div class="row">
+										<!-- Info Card -->
 										<div class="col-lg-8">
 											<div class="apple-card">
 												<div class="card-header-apple">
@@ -678,6 +683,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 											</div>
 										</div>
 										
+										<!-- Settings Card -->
 										<div class="col-lg-4">
 											<div class="apple-card">
 												<div class="card-header-apple">
@@ -722,12 +728,16 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 										</div>
 									</div>
 								</div>
+								
+								
+								
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Сайдбар с вкладками -->
             <div class="sidebar-tabs">
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                     <button class="nav-link active" id="hosts-tab" data-bs-toggle="pill" data-bs-target="#apacheContent" type="button" role="tab">
@@ -744,6 +754,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </main>
 </div>
 
+<!-- Certificate Selector Modal -->
 <div class="modal fade modal-apple" id="certSelectorModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -776,6 +787,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 const API_BASE = window.apiConfig.apiBaseUrl || '/api/';
 let certificatesList = [];
 
+// ========== Utility Functions ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-3" role="alert">
         <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i> 
@@ -841,6 +853,8 @@ function apiCall(action, method, data, onSuccess, onError) {
     });
 }
 
+
+// ========== Host Selector ==========
 function initHostSelector() {
     const selector = $('#hostSelector');
     selector.empty();
@@ -877,6 +891,7 @@ function initHostSelector() {
     });
 }
 
+// ========== Load Apache Status ==========
 function loadApacheStatus() {
     apiCall('get_status', 'GET', null,
         function(response) {
@@ -892,6 +907,7 @@ function loadApacheStatus() {
     );
 }
 
+// ========== Load Current Config ==========
 function loadCurrentConfig() {
     $('#configPreview').html('<div class="text-center"><div class="loading-spinner-sm"></div> Loading...</div>');
     
@@ -922,6 +938,7 @@ function loadCurrentConfig() {
 }
 
 
+// ========== Apply Config ==========
 function applyConfig() {
     const data = {
         enabled: $('#enableWebInterface').is(':checked') ? '1' : '0',
@@ -955,6 +972,7 @@ function applyConfig() {
     );
 }
 
+// ========== Service Actions ==========
 function serviceAction(action) {
     showAlert(`${action}ing Apache...`, 'info');
     
@@ -969,6 +987,7 @@ function serviceAction(action) {
     );
 }
 
+// ========== Restore Default ==========
 function restoreDefaultConfig() {
     if (!confirm('Restore default Apache configuration? This will reset all settings.')) return;
     
@@ -989,6 +1008,7 @@ function restoreDefaultConfig() {
     );
 }
 
+// ========== Toggle Functions ==========
 function toggleWebInterface() {
     const enabled = $('#enableWebInterface').is(':checked');
     if (!enabled) {
@@ -1008,6 +1028,7 @@ function toggleHttps() {
     }
 }
 
+// ========== Certificate Selector ==========
 function openCertificateSelector() {
     $('#certListContainer').html('<div class="text-center py-5"><div class="loading-spinner-sm"></div> Loading certificates...</div>');
     new bootstrap.Modal(document.getElementById('certSelectorModal')).show();
@@ -1106,6 +1127,7 @@ function refreshAllData() {
     loadApacheStatus();
 }
 
+// ========== Key Rotation Functions ==========
 
 function toggleRotation() {
     const enabled = $('#enableRotation').is(':checked');
@@ -1257,6 +1279,7 @@ function renderRotationHistory(history) {
     $('#rotationHistoryTable tbody').html(html);
 }
 
+// Update initialization to include rotation
 $(document).ready(function() {
     initHostSelector();
     loadCurrentConfig();
@@ -1288,6 +1311,7 @@ $(document).ready(function() {
     });
 });
 
+// ========== Initialization ==========
 $(document).ready(function() {
     initHostSelector();
     loadCurrentConfig();

@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -42,29 +42,29 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
     case 'get_hosts':
-        $result = $db->query("SELECT idHost, hostName, hostIp, hostStatus, hostApiKey FROM hosts ORDER BY idHost");
-        $hosts = [];
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $hosts[] = $row;
-        }
-        
-        $currentHostId = isset($_SESSION['current_host_id']) ? $_SESSION['current_host_id'] : 1;
-        
-        $currentHost = null;
-        foreach ($hosts as $host) {
-            if ($host['idHost'] == $currentHostId) {
-                $currentHost = $host;
-                break;
-            }
-        }
-        
-        echo json_encode([
-            'success' => true,
-            'hosts' => $hosts,
-            'current_host_id' => $currentHostId,
-            'current_host' => $currentHost
-        ]);
-        break;
+		$result = $db->query("SELECT idHost, hostName, hostIp, hostStatus, hostApiKey FROM hosts WHERE hostType = 'slave' OR (hostType = 'master' AND idHost = 1) ORDER BY idHost");
+		$hosts = [];
+		while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+			$hosts[] = $row;
+		}
+		
+		$currentHostId = isset($_SESSION['current_host_id']) ? $_SESSION['current_host_id'] : 1;
+		
+		$currentHost = null;
+		foreach ($hosts as $host) {
+			if ($host['idHost'] == $currentHostId) {
+				$currentHost = $host;
+				break;
+			}
+		}
+		
+		echo json_encode([
+			'success' => true,
+			'hosts' => $hosts,
+			'current_host_id' => $currentHostId,
+			'current_host' => $currentHost
+		]);
+		break;
         
     case 'set_current_host':
         $hostId = intval($_POST['host_id'] ?? 0);

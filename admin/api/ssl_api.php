@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -80,6 +81,7 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== CONSTANTS ==========
 if (!defined('CERT_DIR')) {
     define('CERT_DIR', '/var/www/minib/certs/crt');
 }
@@ -91,6 +93,7 @@ if (!is_dir(CERT_DIR)) mkdir(CERT_DIR, 0755, true);
 if (!is_dir(CA_DIR)) mkdir(CA_DIR, 0755, true);
 if (!is_dir(CERT_DIR . '/revoked')) mkdir(CERT_DIR . '/revoked', 0755, true);
 
+// ========== HELPER FUNCTION FOR DIGEST ALGORITHM ==========
 function getDigestAlgo($signatureAlgo) {
     switch ($signatureAlgo) {
         case 'sha1':
@@ -105,6 +108,7 @@ function getDigestAlgo($signatureAlgo) {
     }
 }
 
+// ========== DATABASE CONNECTION ==========
 try {
     $db = getDB();
     
@@ -176,6 +180,7 @@ try {
     exit;
 }
 
+// ========== HELPER FUNCTIONS ==========
 function scanCertificates() {
     $certs = [];
     if (!is_dir(CERT_DIR)) return $certs;
@@ -365,8 +370,10 @@ function updateMetadata($db, $certInfo) {
     $stmt->execute();
 }
 
+// ========== API HANDLERS ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+// Update comment
 if ($action === 'update_comment') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? '');
     $type = $_POST['type'] ?? 'cert';
@@ -393,6 +400,7 @@ if ($action === 'update_comment') {
     exit;
 }
 
+// Get CA hierarchy
 if ($action === 'get_ca_hierarchy') {
     $cas = scanCA();
     $hierarchy = [
@@ -412,6 +420,7 @@ if ($action === 'get_ca_hierarchy') {
     exit;
 }
 
+// List certificates
 if ($action === 'list') {
     $certs = scanCertificates();
     $cas = scanCA();
@@ -419,12 +428,14 @@ if ($action === 'list') {
     exit;
 }
 
+// List CAs only
 if ($action === 'list_cas') {
     $cas = scanCA();
     echo json_encode(['success' => true, 'cas' => $cas]);
     exit;
 }
 
+// Get certificate details
 if ($action === 'details') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'cert';
@@ -503,6 +514,7 @@ if ($action === 'details') {
     exit;
 }
 
+// Get statistics
 if ($action === 'stats') {
     $certs = scanCertificates();
     $cas = scanCA();
@@ -552,6 +564,7 @@ if ($action === 'stats') {
     exit;
 }
 
+// Create Root CA
 if ($action === 'create_ca') {
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $country = trim($_POST['country'] ?? 'US');
@@ -636,6 +649,7 @@ if ($action === 'create_ca') {
     exit;
 }
 
+// Create Intermediate CA
 if ($action === 'create_intermediate_ca') {
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $rootCAName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['rootCAName'] ?? ''));
@@ -734,6 +748,7 @@ if ($action === 'create_intermediate_ca') {
     exit;
 }
 
+// Create certificate signed by CA
 if ($action === 'create_signed') {
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
@@ -848,6 +863,7 @@ if ($action === 'create_signed') {
     exit;
 }
 
+// Sign existing CSR
 if ($action === 'sign_csr') {
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
@@ -919,6 +935,7 @@ if ($action === 'sign_csr') {
     exit;
 }
 
+// Revoke certificate
 if ($action === 'revoke') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? '');
     
@@ -964,6 +981,7 @@ if ($action === 'revoke') {
     exit;
 }
 
+// Export certificate
 if ($action === 'export') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'cert';
@@ -1014,6 +1032,7 @@ if ($action === 'export') {
     exit;
 }
 
+// Create self-signed certificate
 if ($action === 'create') {
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $domain = trim($_POST['domain'] ?? '');
@@ -1107,6 +1126,7 @@ if ($action === 'create') {
     exit;
 }
 
+// Import certificate
 if ($action === 'import') {
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $certContent = trim($_POST['certContent'] ?? '');
@@ -1184,6 +1204,7 @@ if ($action === 'import') {
     exit;
 }
 
+// Delete certificate
 if ($action === 'delete') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? $_GET['name'] ?? '');
     $type = $_POST['type'] ?? $_GET['type'] ?? 'cert';
@@ -1256,6 +1277,7 @@ if ($action === 'delete') {
     exit;
 }
 
+// Download certificate
 if ($action === 'download') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'crt';
@@ -1286,6 +1308,7 @@ if ($action === 'download') {
     exit;
 }
 
+// View certificate content
 if ($action === 'view') {
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'crt';
@@ -1313,6 +1336,7 @@ if ($action === 'view') {
     exit;
 }
 
+// Generate CSR
 if ($action === 'generate_csr') {
     $csrName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['csrName'] ?? ''));
     $domain = trim($_POST['domain'] ?? '');

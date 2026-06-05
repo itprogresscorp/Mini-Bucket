@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -44,6 +44,9 @@ if (file_exists(ROOT_PATH . '/config.php')) {
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+/**
+ * Получить локальную информацию о сервере
+ */
 function getLocalServerInfo($db) {
     $stmt = $db->prepare("SELECT hostSn, hostName, hostVersion FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
@@ -61,6 +64,9 @@ function getLocalServerInfo($db) {
     return ['success' => false, 'message' => 'Server not found'];
 }
 
+/**
+ * Проверка API (тест соединения)
+ */
 function testApi($db) {
     try {
         $result = $db->query("SELECT 1");
@@ -83,6 +89,8 @@ function testApi($db) {
     
     return ['success' => false, 'test' => 'failed', 'message' => 'Unknown error'];
 }
+
+// ========== API ROUTER ==========
 
 switch ($action) {
     case 'who':

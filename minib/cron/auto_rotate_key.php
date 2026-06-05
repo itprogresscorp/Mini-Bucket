@@ -18,13 +18,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', '/var/www/html/admin');
 }
-
 
 $configPath = '/var/www/html/admin/config.php';
 if (file_exists($configPath)) {
@@ -32,6 +31,71 @@ if (file_exists($configPath)) {
 }
 
 define('LOG_FILE', '/var/www/minib/logs/auto_rotation.log');
+
+//ping status
+function getCurrentHostSn($db) {
+	$db = getDB();
+    static $currentSn = null;
+    if ($currentSn === null) {
+        $stmt = $db->prepare('SELECT hostSn FROM hosts WHERE idHost = 1');
+        $result = $stmt->execute();
+        $row = $result->fetchArray(SQLITE3_ASSOC);
+        $currentSn = $row ? $row['hostSn'] : null;
+        if (!$currentSn) {
+            $result = $db->query('SELECT hostSn FROM hosts LIMIT 1');
+            $row = $result->fetchArray(SQLITE3_ASSOC);
+            $currentSn = $row ? $row['hostSn'] : null;
+        }
+    }
+    return $currentSn;
+}
+
+function sendPing($db) {
+	$db = getDB();
+    $currentSn = getCurrentHostSn($db);
+    
+    if (!$currentSn) {
+        error_log("Не удалось получить hostSn для отправки пинга");
+        return false;
+    }
+    
+    $data = [
+        'hostSn' => $currentSn
+    ];
+    
+    $ch = curl_init('https://update.mini-bucket.ru/minib/ping.php');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    
+    if ($curlError) {
+        error_log("CURL error sending ping: " . $curlError);
+        return false;
+    }
+    
+    if ($httpCode !== 200) {
+        error_log("HTTP error sending ping: " . $httpCode . " - " . $response);
+        return false;
+    }
+    
+    $result = json_decode($response, true);
+    if (isset($result['status']) && $result['status'] === 'success') {
+        return true;
+    }
+    
+    return false;
+}
+
+$db = getDB();
+sendPing($db);
 
 function logMessage($message) {
     $timestamp = date('Y-m-d H:i:s');
@@ -144,77 +208,52 @@ function main($argv) {
         
         logMessage("✓ Key updated in database");
         
-        if ($host['hostType'] === 'master') {
-            $stmt = $db->prepare('SELECT * FROM hosts WHERE hostType = "slave"');
-            $result = $stmt->execute();
-            
-            $slaves = [];
-            while ($slave = $result->fetchArray(SQLITE3_ASSOC)) {
-                $slaves[] = $slave;
-            }
-            
-            if (!empty($slaves)) {
-                logMessage("Creating tasks for " . count($slaves) . " slave(s)...");
-                
-                foreach ($slaves as $slave) {
-                    $stmt = $db->prepare('
-                        INSERT INTO key_rotation_tasks 
-                        (initiatorSn, targetSn, newApiKey, oldApiKey, status, attempts, maxAttempts, 
-                         rotationType, initiationDate)
-                        VALUES (:initiator, :target, :newKey, :oldKey, "pending", 0, 5, 
-                                "master_to_slave", datetime("now"))
-                    ');
-                    $stmt->bindValue(':initiator', $host['hostSn'], SQLITE3_TEXT);
-                    $stmt->bindValue(':target', $slave['hostSn'], SQLITE3_TEXT);
-                    $stmt->bindValue(':newKey', $newKey, SQLITE3_TEXT);
-                    $stmt->bindValue(':oldKey', $oldKey, SQLITE3_TEXT);
-                    $stmt->execute();
-                    
-                    $taskId = $db->lastInsertRowID();
-                    logMessage("  Task {$taskId} created for slave: {$slave['hostSn']}");
-                }
-            } else {
-                logMessage("No slaves found to notify");
-            }
+        $stmt = $db->prepare('SELECT hostSn FROM hosts WHERE hostType = "master"');
+        $result = $stmt->execute();
+        
+        $masterSns = [];
+        while ($master = $result->fetchArray(SQLITE3_ASSOC)) {
+            $masterSns[] = $master['hostSn'];
+        }
+        
+        if (empty($masterSns)) {
+            logMessage("No masters found, key rotated locally only");
+            logMessage("✓ SUCCESS! Key rotation completed");
+            return;
+        }
+        
+        logMessage("Found " . count($masterSns) . " master(s): " . implode(', ', $masterSns));
+        
+        $mastersJson = json_encode($masterSns);
+        
+        $stmt = $db->prepare('
+            INSERT INTO key_rotation_tasks 
+            (initiatorSn, targetSn, newApiKey, oldApiKey, status, attempts, maxAttempts, 
+             rotationType, targetMastersJson, initiationDate)
+            VALUES (:initiator, :target, :newKey, :oldKey, "pending", 0, 5, 
+                    "slave_to_masters", :mastersJson, datetime("now"))
+        ');
+        $stmt->bindValue(':initiator', $host['hostSn'], SQLITE3_TEXT);
+        $stmt->bindValue(':target', $host['hostSn'], SQLITE3_TEXT);
+        $stmt->bindValue(':newKey', $newKey, SQLITE3_TEXT);
+        $stmt->bindValue(':oldKey', $oldKey, SQLITE3_TEXT);
+        $stmt->bindValue(':mastersJson', $mastersJson, SQLITE3_TEXT);
+        
+        if ($stmt->execute()) {
+            $taskId = $db->lastInsertRowID();
+            logMessage("✓ Task {$taskId} created for " . count($masterSns) . " master(s)");
         } else {
-            $stmt = $db->prepare('SELECT * FROM hosts WHERE hostType = "master"');
-            $result = $stmt->execute();
-            
-            $masters = [];
-            while ($master = $result->fetchArray(SQLITE3_ASSOC)) {
-                $masters[] = $master;
-            }
-            
-            if (!empty($masters)) {
-                $mastersJson = json_encode(array_column($masters, 'hostSn'));
-                
-                $stmt = $db->prepare('
-                    INSERT INTO key_rotation_tasks 
-                    (initiatorSn, targetSn, newApiKey, oldApiKey, status, attempts, maxAttempts, 
-                     rotationType, targetMastersJson, initiationDate)
-                    VALUES (:initiator, :target, :newKey, :oldKey, "pending", 0, 5, 
-                            "slave_to_masters", :mastersJson, datetime("now"))
-                ');
-                $stmt->bindValue(':initiator', $host['hostSn'], SQLITE3_TEXT);
-                $stmt->bindValue(':target', $host['hostSn'], SQLITE3_TEXT);
-                $stmt->bindValue(':newKey', $newKey, SQLITE3_TEXT);
-                $stmt->bindValue(':oldKey', $oldKey, SQLITE3_TEXT);
-                $stmt->bindValue(':mastersJson', $mastersJson, SQLITE3_TEXT);
-                $stmt->execute();
-                
-                $taskId = $db->lastInsertRowID();
-                logMessage("Task {$taskId} created for " . count($masters) . " master(s)");
-            } else {
-                logMessage("No masters found to notify");
-            }
+            throw new Exception("Failed to create task: " . $db->lastErrorMsg());
         }
         
         $backupFile = '/var/www/minib/logs/last_rotated_key_' . date('Y-m-d') . '.txt';
         file_put_contents($backupFile, 
             "Date: " . date('Y-m-d H:i:s') . "\n" .
             "Host: {$host['hostSn']}\n" .
+            "Host type: {$host['hostType']}\n" .
             "Old Key: {$oldKey}\n" .
-            "New Key: {$newKey}\n"
+            "New Key: {$newKey}\n" .
+            "Masters: " . implode(', ', $masterSns) . "\n"
         );
         logMessage("Backup saved: {$backupFile}");
         

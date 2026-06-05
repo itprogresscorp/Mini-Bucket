@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -86,9 +87,9 @@ $menu = require_once 'menu.php';
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
@@ -177,7 +178,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             padding: 20px;
         }
         
-        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -198,7 +198,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             color: #d70015;
         }
         
-        /* Toggle Switch */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -245,7 +244,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             transform: translateX(20px);
         }
         
-        /* Stats Row */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -284,7 +282,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             color: #8e8e93;
         }
         
-        /* Rule Items */
         .rule-item {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -340,7 +337,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             color: #3a38a3;
         }
         
-        /* Connection Items */
         .connection-item {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -364,7 +360,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             opacity: 1;
         }
         
-        /* Log Entries */
         .log-entry {
             font-family: 'SF Mono', Monaco, monospace;
             font-size: 11px;
@@ -387,7 +382,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             border-left-color: #ff9500;
         }
         
-        /* Filter Section */
         .filter-section {
             background: #f8f9fa;
             border-radius: 16px;
@@ -395,7 +389,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             margin-bottom: 20px;
         }
         
-        /* Buttons */
         .btn-apple {
             background: #007aff;
             border: none;
@@ -443,7 +436,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             background: #d70015;
         }
         
-        /* Tabs */
         .nav-tabs-apple {
             border-bottom: 1px solid #e9ecef;
             margin-bottom: 24px;
@@ -471,7 +463,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             box-shadow: 0 2px 8px rgba(0,122,255,0.3);
         }
         
-        /* Modal */
         .modal-apple .modal-content {
             border-radius: 24px;
             border: none;
@@ -494,7 +485,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             padding: 16px 24px;
         }
         
-        /* Form Controls */
         .form-control-apple, .form-select-apple {
             border-radius: 12px;
             border: 1px solid #e9ecef;
@@ -508,7 +498,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             outline: none;
         }
         
-        /* Toast */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -545,7 +534,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             }
         }
         
-        /* Loading */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -574,7 +562,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             100% { transform: rotate(360deg); }
         }
         
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -586,7 +573,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             margin-bottom: 16px;
         }
         
-        /* Quick Action */
         .quick-action-btn {
             transition: all 0.2s;
         }
@@ -675,6 +661,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         </ul>
         
         <div class="tab-content">
+            <!-- Rules Tab -->
             <div class="tab-pane fade show active" id="rulesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -725,6 +712,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 </div>
             </div>
             
+            <!-- Connections Tab -->
             <div class="tab-pane fade" id="connectionsTab" role="tabpanel">
                 <div class="filter-section">
                     <div class="row g-2">
@@ -779,6 +767,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 </div>
             </div>
             
+            <!-- Logs Tab -->
             <div class="tab-pane fade" id="logsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -821,6 +810,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 </div>
             </div>
             
+            <!-- Settings Tab -->
             <div class="tab-pane fade" id="settingsTab" role="tabpanel">
                 <div class="row g-4">
                     <div class="col-lg-6">
@@ -950,6 +940,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Add/Edit Rule Modal -->
 <div class="modal fade modal-apple" id="ruleModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1016,6 +1007,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Add Service Rule Modal -->
 <div class="modal fade modal-apple" id="appRuleModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1055,6 +1047,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Block IP Modal -->
 <div class="modal fade modal-apple" id="blockIPModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1131,6 +1124,7 @@ function escapeHtml(str) {
     });
 }
 
+// Load UFW Status
 function loadUfwStatus() {
     const headers = {};
     if (window.apiConfig && window.apiConfig.apiKey) {
@@ -1193,6 +1187,7 @@ function loadUfwStatus() {
     });
 }
 
+// Refresh Rules
 function refreshRules() {
     showLoading();
     
@@ -1440,6 +1435,7 @@ function resetAllRules() {
     }
 }
 
+// Connections
 function refreshConnections() {
     const headers = {};
     if (window.apiConfig && window.apiConfig.apiKey) {
@@ -1544,6 +1540,7 @@ function killConnection(ip, port, protocol) {
     }
 }
 
+// Logs
 function refreshLogs() {
     const lines = $('#logLinesSelect').val();
     const filter = $('#logFilter').val();
@@ -1636,6 +1633,7 @@ function exportLogs() {
     URL.revokeObjectURL(link.href);
 }
 
+// Settings
 function loadSettings() {
     const headers = {};
     if (window.apiConfig && window.apiConfig.apiKey) {
@@ -1676,6 +1674,7 @@ function loadSettings() {
     });
 }
 
+// App Rules
 function openAddAppRuleModal() {
     $('#appSelect').html('<option value="">Loading...</option>');
     $('#appRuleModal').modal('show');
@@ -1749,6 +1748,7 @@ function addAppRule() {
     });
 }
 
+// Quick Actions
 function quickAddRule(port, serviceName) {
     $('#rulePort').val(port);
     $('#ruleComment').val(serviceName);
@@ -1824,6 +1824,7 @@ function blockIP() {
     });
 }
 
+// Form handlers
 $('#defaultPoliciesForm').on('submit', function(e) {
     e.preventDefault();
     showLoading();
@@ -1890,6 +1891,7 @@ $('#loggingForm').on('submit', function(e) {
     });
 });
 
+// Event listeners
 $('#logLinesSelect, #logTypeFilter').on('change', () => refreshLogs());
 let logFilterTimeout;
 $('#logFilter').on('keyup', () => {
@@ -1899,12 +1901,14 @@ $('#logFilter').on('keyup', () => {
 $('#ruleSearch, #filterDirection, #filterAction').on('keyup change', () => filterRules());
 $('#connectionSearch').on('keyup', () => filterAndRenderConnections());
 
+// Tab change handlers
 $('#firewallTabs button').on('shown.bs.tab', function(e) {
     const target = $(e.target).attr('data-bs-target');
     if (target === '#connectionsTab') refreshConnections();
     else if (target === '#logsTab') refreshLogs();
 });
 
+// Initial load
 $(document).ready(function() {
     loadUfwStatus();
     refreshRules();

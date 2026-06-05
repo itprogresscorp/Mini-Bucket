@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 
 isAuthenticated();
@@ -33,6 +33,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -82,15 +83,15 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; }
         
         .app-container { display: flex; min-height: 100vh; }
-        .main-content { flex: 1; margin-left: 260px; padding: 24px 32px; }
+        
         .content-header { margin-bottom: 32px; }
         .content-header h1 { font-size: 32px; font-weight: 600; }
         
@@ -267,7 +268,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         <h1><i class="fas fa-bucket"></i> Mini-B</h1>
     </div>
     <div class="top-bar-right">
-        File Manager
+        <i class="fas fa-folder"></i> File Manager
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
                 <option value="">Loading...</option>
@@ -285,6 +286,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         <div id="clipboardIndicator" style="display:none" class="clipboard-indicator"></div>
         
         <div class="dual-container">
+            <!-- LEFT PANEL -->
             <div class="panel" id="leftPanel">
                 <div class="panel-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -327,7 +329,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 </div>
             </div>
             
-
+            <!-- RIGHT PANEL -->
             <div class="panel" id="rightPanel">
                 <div class="panel-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -373,6 +375,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Progress Widget -->
 <div id="progressWidget" class="progress-widget" style="display: none;">
     <div class="widget-header">
         <span><i class="fas fa-exchange-alt"></i> <span id="progressType">Processing</span>...</span>
@@ -392,6 +395,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     <div class="progress-current-file" id="progressCurrentFile"></div>
 </div>
 
+<!-- Log Modal -->
 <div class="modal fade" id="logModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -409,6 +413,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Upload Modal -->
 <div class="modal fade" id="uploadModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -431,6 +436,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Create Folder Modal -->
 <div class="modal fade" id="mkdirModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -453,6 +459,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Archive Modal -->
 <div class="modal fade" id="archiveModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -488,6 +495,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Permissions Modal -->
 <div class="modal fade" id="permissionsModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -533,6 +541,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- ACL Modal -->
 <div class="modal fade" id="aclModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -592,11 +601,11 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 </div>
 
 <script src="lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-
-
 const API_BASE = "<?php echo $current_host_id == 1 ? 'api/files_api.php' : rtrim($host_url, '/') . '/files_api.php'; ?>";
 
+// File Manager Application
 const fileManager = {
     activePanel: 'left',
     leftState: {
@@ -636,6 +645,7 @@ const fileManager = {
         await this.checkOngoingOperation();
     },
     
+    // API Request
     apiRequest: async function(endpoint, method = 'GET', data = null, isFormData = false) {
 		const url = `${API_BASE}?${endpoint}`;
 		const options = {
@@ -955,15 +965,18 @@ const fileManager = {
         }
     },
     
+    // Get selected files
     getSelectedFiles: function(panel) {
         const state = panel === 'left' ? this.leftState : this.rightState;
         return Array.from(state.selected);
     },
     
+    // Check if any files selected
     hasSelected: function(panel) {
         return this.getSelectedFiles(panel).length > 0;
     },
     
+    // Copy to other panel
     copyToOther: async function(panel) {
         if (!this.hasSelected(panel)) {
             this.showAlert('Please select at least one item.', 'warning');
@@ -988,6 +1001,7 @@ const fileManager = {
             if (result.operation_id) {
                 this.startProgressMonitoring(result.operation_id);
             }
+            // Clear selection and refresh
             sourceState.selected.clear();
             await this.loadDirectory(panel);
         } else if (result && result.error) {
@@ -997,6 +1011,7 @@ const fileManager = {
         return true;
     },
     
+    // Move to other panel
     moveToOther: async function(panel) {
         if (!this.hasSelected(panel)) {
             this.showAlert('Please select at least one item.', 'warning');
@@ -1031,6 +1046,7 @@ const fileManager = {
         return true;
     },
     
+    // Copy to clipboard
     copyToClipboard: async function(panel) {
         if (!this.hasSelected(panel)) {
             this.showAlert('Please select at least one item.', 'warning');
@@ -1057,6 +1073,7 @@ const fileManager = {
         return true;
     },
     
+    // Cut to clipboard
     cutToClipboard: async function(panel) {
         if (!this.hasSelected(panel)) {
             this.showAlert('Please select at least one item.', 'warning');
@@ -1083,6 +1100,7 @@ const fileManager = {
         return true;
     },
     
+    // Paste from clipboard
     pasteFromClipboard: async function(panel) {
         if (!this.clipboard || !this.clipboard.files || this.clipboard.files.length === 0) {
             this.showAlert('Clipboard is empty.', 'warning');
@@ -1114,6 +1132,7 @@ const fileManager = {
         return true;
     },
     
+    // Delete selected files
     deleteSelected: async function(panel) {
         if (!this.hasSelected(panel)) {
             this.showAlert('Please select at least one item.', 'warning');
@@ -1145,6 +1164,7 @@ const fileManager = {
         return true;
     },
     
+    // Upload files
     uploadFiles: async function() {
         const fileInput = document.getElementById('uploadFiles');
         const files = fileInput.files;
@@ -1187,6 +1207,7 @@ const fileManager = {
         }
     },
     
+    // Create directory
     createDirectory: async function() {
         const dirName = document.getElementById('mkdirName').value.trim();
         
@@ -1214,6 +1235,7 @@ const fileManager = {
         }
     },
     
+    // Create archive
     createArchive: async function() {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
@@ -1244,6 +1266,7 @@ const fileManager = {
         return true;
     },
     
+    // Extract archive
     extractArchive: async function() {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
@@ -1272,6 +1295,7 @@ const fileManager = {
         return true;
     },
     
+    // Set permissions
     setPermissions: async function() {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
@@ -1309,6 +1333,7 @@ const fileManager = {
         return true;
     },
     
+    // Set ACL permissions
     setAclPermissions: async function() {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
@@ -1361,15 +1386,17 @@ const fileManager = {
         return true;
     },
     
+    // Download file
     downloadFile: function(filePath) {
         window.location.href = `${API_BASE}?action=download&path=${encodeURIComponent(filePath)}`;
     },
     
-
+    // Download folder as TAR
     downloadFolder: function(panel, folderPath) {
         window.location.href = `${API_BASE}?action=download_folder&path=${encodeURIComponent(folderPath)}`;
     },
     
+    // Start progress monitoring
     startProgressMonitoring: function(operationId) {
         if (this.progressInterval) {
             clearInterval(this.progressInterval);
@@ -1382,6 +1409,7 @@ const fileManager = {
         if (widget) widget.style.display = 'block';
     },
     
+    // Check progress
     checkProgress: async function() {
         if (!this.currentOperationId) {
             if (this.progressInterval) {
@@ -1433,6 +1461,7 @@ const fileManager = {
         }
     },
     
+    // Stop progress monitoring
     stopProgressMonitoring: function() {
         if (this.progressInterval) {
             clearInterval(this.progressInterval);
@@ -1445,6 +1474,7 @@ const fileManager = {
         this.currentOperationId = null;
     },
     
+    // Cancel current operation
     cancelCurrentOperation: async function() {
         if (!this.currentOperationId) return;
         
@@ -1461,6 +1491,7 @@ const fileManager = {
         }
     },
     
+    // View operation log
     viewOperationLog: async function() {
         if (!this.currentOperationId) {
             this.showAlert('No active operation', 'warning');
@@ -1479,6 +1510,7 @@ const fileManager = {
         }
     },
     
+    // Check for ongoing operation
     checkOngoingOperation: async function() {
         const result = await this.apiRequest('action=get_current_operation');
         
@@ -1487,6 +1519,7 @@ const fileManager = {
         }
     },
     
+    // Load clipboard status
     loadClipboardStatus: async function() {
         const result = await this.apiRequest('action=get_clipboard');
         
@@ -1499,6 +1532,7 @@ const fileManager = {
         }
     },
     
+    // Update clipboard indicator
     updateClipboardIndicator: function() {
         const indicator = document.getElementById('clipboardIndicator');
         
@@ -1514,6 +1548,7 @@ const fileManager = {
         }
     },
     
+    // Clear clipboard
     clearClipboard: async function() {
         const result = await this.apiRequest('action=clear_clipboard', 'POST');
         
@@ -1524,6 +1559,7 @@ const fileManager = {
         }
     },
     
+    // Set active panel for modals
     setActivePanel: function(panel) {
         this.activePanel = panel;
         
@@ -1538,6 +1574,7 @@ const fileManager = {
         if (archiveTarget) archiveTarget.innerText = panelText;
     },
     
+    // Add ACL user row
     addAclUserRow: function() {
         const container = document.getElementById('aclUsersContainer');
         if (!container) return;
@@ -1562,6 +1599,7 @@ const fileManager = {
         container.appendChild(div);
     },
     
+    // Add ACL group row
     addAclGroupRow: function() {
         const container = document.getElementById('aclGroupsContainer');
         if (!container) return;
@@ -1586,7 +1624,9 @@ const fileManager = {
         container.appendChild(div);
     },
     
+    // Setup event listeners
     setupEventListeners: function() {
+        // Left panel drive change
         const leftDriveSelect = document.getElementById('leftDriveSelect');
         if (leftDriveSelect) {
             leftDriveSelect.addEventListener('change', async (e) => {
@@ -1599,6 +1639,7 @@ const fileManager = {
             });
         }
         
+        // Right panel drive change
         const rightDriveSelect = document.getElementById('rightDriveSelect');
         if (rightDriveSelect) {
             rightDriveSelect.addEventListener('change', async (e) => {
@@ -1611,6 +1652,7 @@ const fileManager = {
             });
         }
         
+        // Left panel search
         const leftSearchBtn = document.getElementById('leftSearchBtn');
         if (leftSearchBtn) {
             leftSearchBtn.addEventListener('click', async () => {
@@ -1623,6 +1665,7 @@ const fileManager = {
             });
         }
         
+        // Right panel search
         const rightSearchBtn = document.getElementById('rightSearchBtn');
         if (rightSearchBtn) {
             rightSearchBtn.addEventListener('click', async () => {
@@ -1635,6 +1678,7 @@ const fileManager = {
             });
         }
         
+        // Left clear search
         const leftClearBtn = document.getElementById('leftClearSearchBtn');
         if (leftClearBtn) {
             leftClearBtn.addEventListener('click', async () => {
@@ -1649,6 +1693,7 @@ const fileManager = {
             });
         }
         
+        // Right clear search
         const rightClearBtn = document.getElementById('rightClearSearchBtn');
         if (rightClearBtn) {
             rightClearBtn.addEventListener('click', async () => {
@@ -1663,6 +1708,7 @@ const fileManager = {
             });
         }
         
+        // Search on Enter key
         const leftSearchInput = document.getElementById('leftSearchInput');
         if (leftSearchInput) {
             leftSearchInput.addEventListener('keypress', (e) => {
@@ -1681,17 +1727,20 @@ const fileManager = {
             });
         }
         
+        // Cancel button
         const cancelBtn = document.getElementById('cancelProgressBtn');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => this.cancelCurrentOperation());
         }
         
+        // View log button
         const viewLogBtn = document.getElementById('viewLogBtn');
         if (viewLogBtn) {
             viewLogBtn.addEventListener('click', () => this.viewOperationLog());
         }
     },
     
+    // Setup archive action listener
     setupArchiveActionListener: function() {
         const archiveAction = document.getElementById('archiveAction');
         if (archiveAction) {
@@ -1716,6 +1765,7 @@ const fileManager = {
         }
     },
     
+    // Format file size
     formatSize: function(bytes) {
         if (bytes === 0) return '0 B';
         const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -1723,6 +1773,7 @@ const fileManager = {
         return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + units[i];
     },
     
+    // Escape HTML
     escapeHtml: function(str) {
         if (!str) return '';
         return str
@@ -1733,6 +1784,7 @@ const fileManager = {
             .replace(/'/g, '&#39;');
     },
     
+    // Show alert message
     showAlert: function(message, type) {
         const alertContainer = document.getElementById('alertContainer');
         if (!alertContainer) return;
@@ -1756,6 +1808,7 @@ const fileManager = {
     }
 };
 
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     fileManager.init();
 });

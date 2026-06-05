@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -80,6 +81,7 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function getServiceStatus($serviceName) {
     $status = shell_exec("systemctl is-active " . $serviceName . " 2>/dev/null");
     return trim($status) === 'active' ? 'active' : 'inactive';
@@ -175,6 +177,7 @@ function getAllServicesStatus() {
     return $result;
 }
 
+// ========== POWER MANAGEMENT ==========
 function systemReboot() {
     shell_exec('sudo /sbin/reboot > /dev/null 2>&1 &');
     return true;
@@ -252,6 +255,7 @@ function getOsDetails() {
     return $osDetails;
 }
 
+// ========== TIMEZONE MANAGEMENT ==========
 function getCurrentTimezone() {
     if (file_exists('/etc/timezone')) {
         return trim(file_get_contents('/etc/timezone'));
@@ -311,6 +315,7 @@ function getAllTimezones() {
     return $timezones;
 }
 
+// ========== HOSTNAME MANAGEMENT ==========
 function getCurrentHostname() {
     return trim(file_get_contents('/etc/hostname'));
 }
@@ -339,6 +344,7 @@ function setHostname($hostname) {
     return true;
 }
 
+// ========== NETWORK MANAGEMENT ==========
 function getNetworkInterfaces() {
     $interfaces = [];
     $output = shell_exec("ip -br link show 2>/dev/null | grep -v LOOPBACK | awk '{print $1}'");
@@ -441,6 +447,7 @@ function getSystemInfo() {
     ];
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
@@ -489,6 +496,7 @@ switch ($action) {
         ]);
         break;
     
+    // Power Management
     case 'power_action':
         $powerAction = $_POST['power_action'] ?? '';
         if ($powerAction === 'reboot') {
@@ -502,10 +510,12 @@ switch ($action) {
         }
         break;
     
+    // Resources
     case 'get_resources':
         echo json_encode(['success' => true, 'data' => getSystemResources()]);
         break;
     
+    // Timezone
     case 'get_timezone':
         echo json_encode(['success' => true, 'timezone' => getCurrentTimezone(), 'datetime' => getCurrentDateTime()]);
         break;
@@ -524,6 +534,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => getAllTimezones()]);
         break;
     
+    // NTP
     case 'get_ntp_status':
         echo json_encode(['success' => true, 'enabled' => getNtpStatus()]);
         break;
@@ -538,6 +549,7 @@ switch ($action) {
         ]);
         break;
     
+    // Manual Date/Time
     case 'set_datetime':
         $date = $_POST['date'] ?? '';
         $time = $_POST['time'] ?? '';
@@ -549,6 +561,7 @@ switch ($action) {
         ]);
         break;
     
+    // Hostname
     case 'get_hostname':
 		echo json_encode(['success' => true, 'hostname' => getCurrentHostname()]);
 		break;
@@ -563,6 +576,7 @@ switch ($action) {
 		]);
 		break;
     
+    // Network
     case 'get_network':
         echo json_encode(['success' => true, 'interfaces' => getNetworkInterfaces()]);
         break;
@@ -582,6 +596,7 @@ switch ($action) {
         ]);
         break;
     
+    // System Info
     case 'get_system_info':
         echo json_encode(['success' => true, 'data' => getSystemInfo()]);
         break;

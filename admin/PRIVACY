@@ -1,0 +1,79 @@
+PRIVACY POLICY & DATA COLLECTION
+
+Last Updated: 2026-05-29
+
+1. INFORMATION WE COLLECT
+
+During the installation and operation of Mini-B, we collect the following information:
+
+• Installation status (successful/completed)
+• Host IP address
+• Serial number (HostSn) of the installation
+• Operating system version
+• PHP version
+• Product package version
+
+2. PURPOSE OF DATA COLLECTION
+
+The collected information is used exclusively for:
+
+• Analytics and statistical purposes
+• Service interaction and update management
+• Improving product quality and user experience
+• Providing timely security updates and notifications
+
+3. DATA STORAGE AND RETENTION
+
+• We do not store any personal user data
+• Only technical installation data is collected
+• All collected data is anonymized where possible
+• Data is retained for the operational period of the service
+
+4. WHAT WE DO NOT COLLECT
+
+We explicitly DO NOT collect or store:
+
+• User personal information (names, addresses, phone numbers)
+• User credentials (passwords, API keys)
+• File contents stored in buckets
+• Database content
+• Any sensitive personal data
+• Payment or financial information
+• Browsing history or user behavior tracking
+
+5. DATA SHARING
+
+• We do not sell, trade, or rent your information to third parties
+• Data is used internally for product improvement only
+• Aggregated statistics may be shared but will never identify individual installations
+
+6. DATA SECURITY
+
+• All data transmissions are encrypted
+• Access to collected data is restricted to authorized personnel only
+• Regular security audits are performed
+
+7. YOUR RIGHTS
+
+You have the right to:
+• Request deletion of your installation data
+• Opt-out of analytics collection (by modifying configuration)
+• Receive a copy of collected data about your installation
+
+8. CONTACT INFORMATION
+
+For privacy-related questions or data deletion requests, please contact:
+Email: sa@itp-corp.ru
+
+9. CHANGES TO THIS POLICY
+
+We may update this privacy policy from time to time. 
+Continued use of the software constitutes acceptance of any changes.
+
+10. CONSENT
+
+By completing the installation of Mini-B, you acknowledge that you have read, understood, and agree to the collection and use of information as described in this Privacy Policy.
+
+---
+
+Mini-B - Simple. Secure. Reliable.

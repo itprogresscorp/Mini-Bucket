@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -78,7 +78,6 @@ $js_config = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Mini-B - Update Manager</title>
-    
     <link href="lib/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="lib/bootstrap-icons-1.11.0/bootstrap-icons.css">
     <!--<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">-->
@@ -89,10 +88,10 @@ $js_config = [
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
     <script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-window.hostsList = <?php echo json_encode($hosts); ?>;
-window.currentHostId = <?php echo (int)$current_host_id; ?>;
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	window.hostsList = <?php echo json_encode($hosts); ?>;
+	window.currentHostId = <?php echo (int)$current_host_id; ?>;
+	</script>
     
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -410,7 +409,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     <main class="main-content">
         <div id="alertContainer"></div>
         
-        <!-- Основная таблица результатов (Update Info Card) слева/по центру -->
+        <!-- Основная таблица результатов (Update Info Card) -->
         <div class="row">
 		
             <div class="col-md-8">
@@ -433,7 +432,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                                 <span id="systemInfo" class="ms-2">Loading...</span>
                             </div>
                         </div>
-                <!-- Update Info Card (shown only when update is available) -->
+                <!-- Update Info Card -->
                 <div class="apple-card" id="updateInfoCard" style="display: none;">
                     <div class="card-header-apple">
                         <h3><i class="bi bi-gift-fill"></i> Update Available</h3>
@@ -460,7 +459,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                     </div>
                 </div>
                 
-                <!-- Update Process Card (shown during update) -->
+                <!-- Update Process Card -->
                 <div class="apple-card" id="updateProcessCard" style="display: none;">
                     <div class="card-header-apple">
                         <h3><i class="bi bi-arrow-repeat spin"></i> Update in Progress</h3>
@@ -483,7 +482,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                 </div>
             </div>
             
-            <!-- Виджет проверки справа, компактный -->
+            <!-- Виджет проверки -->
             <div class="col-md-4">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -570,7 +569,7 @@ function apiCall(action, method, data = null, onSuccess = null, onError = null, 
     }
     
     const headers = {
-        'X-API-Key': UPDATE_API_KEY
+        'X-API-Key': UPDATE_API_KEY  // Ключ всегда в заголовке, не в URL
     };
     
     let url = apiUrl;
@@ -579,7 +578,6 @@ function apiCall(action, method, data = null, onSuccess = null, onError = null, 
     if (method === 'GET') {
         url += '?' + new URLSearchParams(requestData).toString();
     } else {
-
         requestBody = requestData;
     }
     
@@ -782,6 +780,7 @@ function startUpdate() {
                                     addLog('========================================', 'success');
                                     addLog('Redirecting to system check page in 5 seconds...', 'info');
                                     
+                                    // Cleanup
                                     apiCall('cleanup', 'POST', { extract_dir: extractResponse.extract_dir }, function() {});
                                     
                                     setTimeout(() => {

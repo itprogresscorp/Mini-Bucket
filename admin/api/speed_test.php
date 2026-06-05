@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 header('Content-Type: application/json');
 
 define('ROOT_PATH', dirname(dirname(__FILE__)));
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $action = $_GET['action'] ?? '';
 
+// Проверка API ключа
 $headers = getallheaders();
 $apiKey = $headers['X-API-Key'] ?? '';
 $db = getDB();

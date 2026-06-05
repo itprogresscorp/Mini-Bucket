@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -88,6 +89,7 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ ОБНОВЛЕНИЙ ==========
 
 function ensureUpdatesTable() {
     global $db;
@@ -114,6 +116,7 @@ function ensureUpdatesTable() {
     return true;
 }
 
+// Сохранение даты последней проверки
 function saveLastCheckDate() {
     global $db;
     
@@ -135,6 +138,7 @@ function saveLastCheckDate() {
     return $now;
 }
 
+// Получение даты последней проверки
 function getLastCheckDate() {
     global $db;
     
@@ -153,6 +157,8 @@ function getLastCheckDate() {
     
     return $row ? $row['lastCheckDate'] : null;
 }
+
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ОБНОВЛЕНИЯМИ ==========
 
 function getCurrentVersion() {
     $config_path = ROOT_PATH . '/config.php';
@@ -175,6 +181,7 @@ function getCurrentVersion() {
     ];
 }
 
+// Получение информации о системе
 function getSystemInfo() {
     $os_type = php_uname('s');
     $os_version = php_uname('r');
@@ -196,6 +203,7 @@ function getSystemInfo() {
     ];
 }
 
+// Проверка доступности URL
 function checkUrlAvailability($url) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -216,6 +224,7 @@ function checkUrlAvailability($url) {
     ];
 }
 
+// Проверка SSL сертификата
 function verifySSL($url) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -234,8 +243,9 @@ function verifySSL($url) {
     ];
 }
 
+// Получение статуса сервера обновлений
 function getUpdateServerStatus() {
-    $update_server = 'https://update.itp-corp.ru/minib/update.php';
+    $update_server = 'https://update.mini-bucket.ru/minib/update.php';
     
     $availability = checkUrlAvailability($update_server);
     
@@ -250,8 +260,9 @@ function getUpdateServerStatus() {
     ];
 }
 
+// Проверка обновлений на сервере
 function checkForUpdates($current_version, $type_pro, $system_info) {
-    $update_server = 'https://update.itp-corp.ru/minib/update.php';
+    $update_server = 'https://update.mini-bucket.ru/minib/update.php';
     
     $post_data = [
         'current_version' => $current_version,
@@ -303,6 +314,7 @@ function checkForUpdates($current_version, $type_pro, $system_info) {
     return $data;
 }
 
+// Загрузка обновления
 function downloadUpdate($download_url, $version) {
     $update_dir = '/var/www/minib/updates';
     
@@ -317,6 +329,7 @@ function downloadUpdate($download_url, $version) {
         ];
     }
     
+	
     $archive_path = $update_dir . "/update_{$version}.zip";
     
     $ch = curl_init($download_url);
@@ -356,7 +369,7 @@ function downloadUpdate($download_url, $version) {
         'file_size' => file_exists($archive_path) ? filesize($archive_path) : 0
     ];
     
-    file_put_contents(ROOT_PATH . '/updates/download_log.txt', 
+    file_put_contents('/var/www/minib/logs/download_log.txt', 
         date('Y-m-d H:i:s') . ' - ' . json_encode($log_data) . "\n", 
         FILE_APPEND);
     
@@ -408,6 +421,7 @@ function downloadUpdate($download_url, $version) {
     ];
 }
 
+// Распаковка ZIP файла
 function extractUpdate($archive_path) {
     $update_dir = dirname($archive_path);
     $extract_dir = $update_dir . '/extracted';
@@ -472,6 +486,7 @@ function findUpdateScript($dir) {
     return null;
 }
 
+// Выполнение скрипта обновления
 function runUpdateScript($update_script) {
     $command = "sudo bash $update_script 2>&1";
     
@@ -503,6 +518,7 @@ function runUpdateScript($update_script) {
     return false;
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
@@ -637,7 +653,7 @@ case 'run_update_background':
     if (file_exists($log_file)) {
         unlink($log_file);
     }
-     
+    
     $cmd = "sudo /bin/bash " . escapeshellarg($update_script) . " > $log_file 2>&1 & echo $! > $pid_file";
     exec($cmd);
     
@@ -649,7 +665,7 @@ case 'run_update_background':
     break;
 
 case 'get_update_status':
-    $log_file = '/tmp/updatelog.txt';
+    $log_file = '/tmp/updatelog.txt';  // Тот же путь!
     $pid_file = '/tmp/update_process.pid';
     
     if (!file_exists($log_file)) {

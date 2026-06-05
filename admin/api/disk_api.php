@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -37,10 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -86,8 +86,9 @@ error_reporting(E_ERROR);
 ini_set('display_errors', 0);
 set_time_limit(0);
 
-define('LOG_FILE', ROOT_PATH . '/tmp/disk_manager.log');
-define('ERROR_LOG_FILE', ROOT_PATH . '/tmp/disk_manager_error.log');
+// ==================== ЛОГИРОВАНИЕ ====================
+define('LOG_FILE', '/var/www/minib/logs/disk_manager.log');
+define('ERROR_LOG_FILE', '/var/www/minib/logs/disk_manager_error.log');
 
 function writeLog($message, $level = 'INFO') {
     $timestamp = date('Y-m-d H:i:s');
@@ -103,6 +104,7 @@ function writeError($message, $context = []) {
     file_put_contents(LOG_FILE, $logMessage, FILE_APPEND);
 }
 
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 $input = [];
@@ -123,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 writeLog("Action called: {$action}", 'DEBUG');
 
 
+// Функция получения логов
 function getLogs($lines = 100) {
     $logFile = LOG_FILE;
     if (!file_exists($logFile)) {
@@ -139,6 +142,7 @@ function getLogs($lines = 100) {
     return array_reverse($logs);
 }
 
+// Функция очистки логов
 function clearLogs() {
     $result = true;
     if (file_exists(LOG_FILE)) {
@@ -147,7 +151,7 @@ function clearLogs() {
     if (file_exists(ERROR_LOG_FILE)) {
         $result = $result && (file_put_contents(ERROR_LOG_FILE, '') !== false);
     }
-    writeLog("Логи очищены пользователем");
+    writeLog("User permission logs");
     return $result;
 }
 
@@ -234,7 +238,7 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
             $detectedFs = trim(execCmd("lsblk -n -o FSTYPE {$devicePath} 2>/dev/null", true, 5));
         }
         if (empty($detectedFs)) {
-            $error = "Не удалось определить файловую систему на {$device}. Возможно раздел не отформатирован.";
+            $error = "Unable to determine file system on {$device}. The partition may not be formatted.";
             writeError($error, ['device' => $device]);
             return ['success' => false, 'error' => $error];
         }
@@ -244,7 +248,7 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
     $globalMount = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 5);
     if (!empty($globalMount)) {
         $existingMount = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} ' | awk '{print $3}'", true, 5);
-        $error = "Устройство уже смонтировано в {$existingMount}";
+        $error = "The device is already mounted in {$existingMount}";
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -263,7 +267,7 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
         
         $result = execCmd("mkdir -p \"{$mountPoint}\"", true, 5);
         if (!empty($result) && strpos($result, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Не удалось создать точку монтирования: {$result}"];
+            return ['success' => false, 'error' => "Failed to create mount point: {$result}"];
         }
         
         execCmd("chown {$uid}:{$gid} \"{$mountPoint}\"", true, 3);
@@ -369,19 +373,19 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
         }
         
-        $errorMsg = "Ошибка монтирования: ";
+        $errorMsg = "Mount error: ";
         if (strpos($lastError, 'unknown filesystem type') !== false) {
-            $errorMsg .= "Неизвестный тип файловой системы '{$detectedFs}'. Установите необходимые пакеты.";
+            $errorMsg .= "Unknown file system type '{$detectedFs}'. Install the required packages.";
         } elseif (strpos($lastError, 'bad option') !== false) {
-            $errorMsg .= "Неправильные опции монтирования для ФС '{$detectedFs}'.";
+            $errorMsg .= "Incorrect mount options for FS '{$detectedFs}'.";
         } elseif (strpos($lastError, 'bad superblock') !== false) {
-            $errorMsg .= "Повреждённая файловая система на {$device}. Запустите проверку: fsck {$devicePath}";
+            $errorMsg .= "Corrupted file system on {$device}. Run the scan: fsck {$devicePath}";
         } elseif (strpos($lastError, 'helper program') !== false) {
-            $errorMsg .= "Отсутствует драйвер для ФС '{$detectedFs}'. Установите: ";
+            $errorMsg .= "There is no driver for FS '{$detectedFs}'. Install: ";
             if ($detectedFs === 'ntfs-3g') $errorMsg .= "sudo apt install ntfs-3g";
             elseif ($detectedFs === 'exfat') $errorMsg .= "sudo apt install exfat-fuse exfatprogs";
             elseif ($detectedFs === 'vfat') $errorMsg .= "sudo apt install dosfstools";
-            else $errorMsg .= "соответствующий пакет для {$detectedFs}";
+            else $errorMsg .= "corresponding package for {$detectedFs}";
         } else {
             $errorMsg .= $lastError;
         }
@@ -925,6 +929,7 @@ function getLvmLvsAsPartitions($vgName) {
             $sizeBytes = parseSizeToBytes($parts[1]);
             $attr = $parts[2];
             $lvPath = $parts[3];
+            //$sizeFormatted = formatSize($sizeBytes);
             
             $mountPoint = null;
             $mountsOutput = execCmd("mount | grep '{$lvPath} ' | awk '{print $3}'", true, 5);
@@ -1236,6 +1241,12 @@ function getAllDisks() {
                 $sizeBytes = parseSizeToBytes($size);
                 
                 $hasPartitionTable = checkPartitionTable($diskName);
+				$hasWholeDiskFs = false;
+				$diskInfo = execCmd("lsblk -J -o NAME,FSTYPE /dev/{$diskName} 2>/dev/null", true, 5);
+				$diskData = json_decode($diskInfo, true);
+				if ($diskData && isset($diskData['blockdevices'][0]['fstype']) && !empty($diskData['blockdevices'][0]['fstype'])) {
+					$hasWholeDiskFs = true;
+				}
                 $smartData = getFullSmartData($diskName);
                 $temperature = getDiskTemperature($diskName);
 				$lvmInfo = detectLvmOnDisk($diskName);
@@ -1260,7 +1271,8 @@ function getAllDisks() {
 					'lvm_info' => $lvmInfo,
 					'raid_info' => $raidInfo,
 					'is_managed_by_lvm' => $lvmInfo !== null,
-					'is_managed_by_raid' => $raidInfo !== null
+					'is_managed_by_raid' => $raidInfo !== null,
+					'has_whole_disk_fs' => $hasWholeDiskFs
 
                 ];
             }
@@ -1270,6 +1282,7 @@ function getAllDisks() {
     return $disks;
 }
 
+// ==================== LVM И RAID ФУНКЦИИ ====================
 
 function detectLvmOnDisk($diskName) {
     $pvsOutput = execCmd("pvs --noheadings -o pv_name,vg_name 2>/dev/null", true, 10);
@@ -1614,9 +1627,9 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
     if ($freeSpaceStart > 0) {
         $startByte = $freeSpaceStart;
     } elseif ($lastEndByte > 0) {
-        $startByte = $lastEndByte + 1048576; 
+        $startByte = $lastEndByte + 1048576;
     } else {
-        $startByte = 1048576; 
+        $startByte = 1048576;
     }
     
     if (empty($existingParts)) {
@@ -2099,42 +2112,42 @@ function getFullSmartData($disk) {
                 ];
                 
                 switch ($id) {
-                    case 1: 
+                    case 1: // Raw Read Error Rate
                         $smart['raw_read_error_rate'] = $rawNumber;
                         break;
-                    case 4: 
+                    case 4: // Start/Stop Count
                         $smart['start_stop_count'] = $rawNumber;
                         break;
-                    case 5: 
+                    case 5: // Reallocated Sectors Count
                         if (preg_match('/(\d+)/', $rawValue, $reallocMatch)) {
                             $smart['reallocated_sectors'] = (int)$reallocMatch[1];
                         } else {
                             $smart['reallocated_sectors'] = $rawNumber;
                         }
                         break;
-                    case 7: 
+                    case 7: // Seek Error Rate
                         $smart['seek_error_rate'] = $rawNumber;
                         break;
-                    case 9: 
+                    case 9: // Power-On Hours
                         $smart['power_on_hours'] = $rawNumber;
                         $smart['power_on_days'] = round($rawNumber / 24, 1);
                         break;
-                    case 10: 
+                    case 10: // Spin Retry Count
                         $smart['spin_retry_count'] = $rawNumber;
                         break;
-                    case 12: 
+                    case 12: // Power Cycle Count
                         $smart['power_cycle_count'] = $rawNumber;
                         break;
-                    case 187: 
+                    case 187: // Reported Uncorrectable Errors
                         $smart['reported_uncorrect'] = $rawNumber;
                         break;
-                    case 188: 
+                    case 188: // Command Timeout
                         $smart['command_timeout'] = $rawNumber;
                         break;
-                    case 189: 
+                    case 189: // High Fly Writes
                         $smart['high_fly_writes'] = $rawNumber;
                         break;
-                    case 190: 
+                    case 190: // Airflow Temperature
                         if (preg_match('/(\d+)/', $rawValue, $tempMatch)) {
                             $smart['temperature_airflow'] = (int)$tempMatch[1];
                         }
@@ -2142,30 +2155,30 @@ function getFullSmartData($disk) {
                             $smart['temperature'] = $smart['temperature_airflow'];
                         }
                         break;
-                    case 191: 
+                    case 191: // G-Sense Error Rate
                         $smart['g_sense_error_rate'] = $rawNumber;
                         break;
-                    case 192: 
+                    case 192: // Power-Off Retract Count
                         $smart['power_off_retract_count'] = $rawNumber;
                         break;
-                    case 193: 
+                    case 193: // Load/Unload Cycle Count
                         $smart['load_cycle_count'] = $rawNumber;
                         break;
-                    case 194: 
+                    case 194: // Temperature Celsius
                         if (preg_match('/(\d+)/', $rawValue, $tempMatch)) {
                             $smart['temperature'] = (int)$tempMatch[1];
                         }
                         break;
-                    case 195: 
+                    case 195: // Hardware ECC Recovered
                         $smart['hardware_ecc_recovered'] = $rawNumber;
                         break;
-                    case 197: 
+                    case 197: // Current Pending Sector
                         $smart['current_pending_sector'] = $rawNumber;
                         break;
-                    case 198: 
+                    case 198: // Offline Uncorrectable
                         $smart['offline_uncorrectable'] = $rawNumber;
                         break;
-                    case 199: 
+                    case 199: // UDMA CRC Error Count
                         $smart['udma_crc_errors'] = $rawNumber;
                         break;
                 }
@@ -2267,6 +2280,8 @@ function getPartitionTableType($disk) {
 function getPartitions($diskName) {
     $partitions = [];
     
+    $tableType = trim(execCmd("parted /dev/{$diskName} print 2>/dev/null | grep 'Partition Table' | awk '{print $3}'", true, 5));
+    
     $lsblkJson = execCmd("lsblk -J -o NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL,UUID /dev/{$diskName} 2>/dev/null", true, 10);
     
     if (!empty($lsblkJson)) {
@@ -2315,6 +2330,51 @@ function getPartitions($diskName) {
                     'lvm_info' => $lvmPartInfo,
                     'is_lvm_physical_volume' => $lvmPartInfo !== null,
                 ];
+            }
+        } elseif ($data && isset($data['blockdevices'][0])) {
+            $disk = $data['blockdevices'][0];
+            $fstype = $disk['fstype'] ?? '';
+            $mountPoint = $disk['mountpoint'] ?? '';
+            $label = $disk['label'] ?? '';
+            $uuid = $disk['uuid'] ?? '';
+            
+            if (!empty($fstype)) {
+                if (empty($mountPoint)) $mountPoint = null;
+                if (empty($label)) $label = null;
+                
+                $sizeBytes = parseSizeToBytes($disk['size'] ?? '0');
+                $hasFilesystem = true;
+                
+                $wasCreatedByMount = false;
+                if ($mountPoint && is_dir($mountPoint)) {
+                    $markerFile = $mountPoint . '/.mount_created_by_disk_manager';
+                    $wasCreatedByMount = file_exists($markerFile);
+                }
+                
+                $fstabEntry = null;
+                if ($uuid) {
+                    $fstabCheck = execCmd("grep -E \"UUID={$uuid}|/dev/{$diskName}\" /etc/fstab 2>/dev/null", true, 3);
+                    if (!empty($fstabCheck)) {
+                        $fstabEntry = parseFstabEntry($fstabCheck);
+                    }
+                }
+                
+                $partitions[] = [
+                    'name' => $diskName,
+                    'size_bytes' => $sizeBytes,
+                    'fstype' => $fstype,
+                    'mount_point' => $mountPoint,
+                    'label' => $label,
+                    'uuid' => $uuid,
+                    'fstab_entry' => $fstabEntry,
+                    'was_created_by_mount' => $wasCreatedByMount,
+                    'has_filesystem' => $hasFilesystem,
+                    'is_whole_disk_fs' => true,
+                    'lvm_info' => null,
+                    'is_lvm_physical_volume' => false,
+                ];
+                
+                writeLog("Detected whole-disk filesystem on {$diskName} with fstype {$fstype}, table type: {$tableType}");
             }
         }
     }
@@ -2540,6 +2600,7 @@ function getRaidArrayInfo($raidName) {
     return $info;
 }
 
+// ==================== ФУНКЦИЯ СОЗДАНИЯ РАЗДЕЛОВ ====================
 function getPartitionTableTypeForDisk($disk) {
     $output = execCmd("parted /dev/{$disk} print 2>/dev/null | grep 'Partition Table' | awk '{print $3}'", true, 5);
     return strtolower(trim($output));
@@ -2591,8 +2652,9 @@ function getFreeSpaceStart($disk) {
 
 function createPartition($disk, $size, $fsType = null, $label = '', $format = false, $quickFormat = true, $partitionType = 'primary') {
     writeLog("=== CREATE PARTITION START ===");
-    writeLog("Parameters: disk={$disk}, size={" . ($size === '' ? 'EMPTY' : $size) . "}, fsType={$fsType}, format=" . ($format ? 'true' : 'false'));
+    writeLog("Parameters: disk={$disk}, size={" . ($size === '' || $size === null ? 'EMPTY' : $size) . "}, fsType={$fsType}, format=" . ($format ? 'true' : 'false'));
     
+    // ==================== ПРОВЕРКА СУЩЕСТВОВАНИЯ ДИСКА ====================
     $diskPath = "/dev/{$disk}";
     if (!file_exists($diskPath)) {
         $error = "Disk {$diskPath} does not exist";
@@ -2600,6 +2662,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         return ['success' => false, 'error' => $error];
     }
     
+    // ==================== ОПРЕДЕЛЕНИЕ ТИПА ТАБЛИЦЫ РАЗДЕЛОВ ====================
     $tableType = getPartitionTableTypeForDisk($disk);
     writeLog("Current partition table type: " . ($tableType ?: 'none'));
     
@@ -2622,29 +2685,46 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
     
     $isGpt = ($tableType === 'gpt');
     $isMbr = ($tableType === 'msdos');
-    writeLog("Working with: " . ($isGpt ? "GPT" : "MBR"));
     
+    // ==================== ПОЛУЧЕНИЕ ИНФОРМАЦИИ О ДИСКЕ ====================
     $totalBytes = (int)trim(execCmd("blockdev --getsize64 {$diskPath} 2>/dev/null", true, 5));
     if ($totalBytes <= 0) {
         $totalBytes = (int)trim(execCmd("parted {$diskPath} unit B print 2>/dev/null | grep 'Disk {$diskPath}' | awk '{print $3}' | tr -d 'B'", true, 5));
     }
     writeLog("Total disk size: {$totalBytes} bytes (" . round($totalBytes/1024/1024/1024, 2) . " GB)");
     
-    $existingParts = getPartitions($disk);
+    $existingPartsRaw = getPartitions($disk);
+    $existingParts = [];
+    $seenNames = [];
+    foreach ($existingPartsRaw as $part) {
+        if (!in_array($part['name'], $seenNames)) {
+            $seenNames[] = $part['name'];
+            $existingParts[] = $part;
+        }
+    }
     writeLog("Existing partitions count: " . count($existingParts));
     
-    $partedOutput = execCmd("parted {$diskPath} unit B print free 2>/dev/null", true, 10);
-    writeLog("Parted output with free:\n{$partedOutput}");
+    // ==================== ВЫЧИСЛЕНИЕ СВОБОДНОГО МЕСТА ====================
+    $usedBytes = 0;
+    foreach ($existingParts as $part) {
+        $usedBytes += $part['size_bytes'];
+    }
+    $freeBytes = $totalBytes - $usedBytes;
+    $freeGb = round($freeBytes / 1024 / 1024 / 1024, 2);
     
-    $existingPartitionsInfo = [];
-    $lastEndByte = 0;
-    $primaryCount = 0;
-    $extendedExists = false;
-    $extendedStart = 0;
-    $extendedEnd = 0;
+    writeLog("Calculated free space: {$freeGb} GB ({$freeBytes} bytes)");
+    
+    if ($freeBytes <= 0) {
+        return ['success' => false, 'error' => 'Нет свободного места на диске для создания нового раздела'];
+    }
+    
+    // ==================== ОПРЕДЕЛЕНИЕ НАЧАЛЬНОЙ ПОЗИЦИИ ====================
+    $partedOutput = execCmd("parted {$diskPath} unit B print free 2>/dev/null", true, 10);
+    writeLog("Parted output for free space:\n{$partedOutput}");
+    
     $freeSpaceStart = 0;
     $freeSpaceEnd = 0;
-    $freeSpaceSize = 0;
+    $lastEndByte = 0;
     
     $lines = explode("\n", $partedOutput);
     $inTable = false;
@@ -2658,66 +2738,24 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         if (!$inTable || empty($line)) continue;
         if (strpos($line, 'Disk') === 0) continue;
         if (strpos($line, 'Partition Table') !== false) continue;
-        if (strpos($line, 'Model') !== false) continue;
-        if (strpos($line, 'Sector') !== false) continue;
         
-        if (preg_match('/^\s*(\d+)\s+(\d+)B\s+(\d+)B\s+\d+B\s+(\w+)/', $line, $matches)) {
-            $partNum = (int)$matches[1];
-            $startByte = (int)$matches[2];
+        if (preg_match('/^\s*(\d+)\s+(\d+)B\s+(\d+)B/', $line, $matches) && !strpos($line, 'Free Space')) {
             $endByte = (int)$matches[3];
-            $type = $matches[4];
-            
-            $existingPartitionsInfo[] = [
-                'num' => $partNum,
-                'start' => $startByte,
-                'end' => $endByte,
-                'type' => $type
-            ];
-            
             if ($endByte > $lastEndByte) {
                 $lastEndByte = $endByte;
-            }
-            
-            if ($type === 'primary') $primaryCount++;
-            if ($type === 'extended') {
-                $extendedExists = true;
-                $extendedStart = $startByte;
-                $extendedEnd = $endByte;
             }
         }
         
         if (strpos($line, 'Free Space') !== false) {
-            if (preg_match('/(\d+)B\s+(\d+)B\s+\d+B\s+Free Space/', $line, $matches)) {
+            if (preg_match('/(\d+)B\s+(\d+)B/', $line, $matches)) {
                 $freeSpaceStart = (int)$matches[1];
                 $freeSpaceEnd = (int)$matches[2];
-                $freeSpaceSize = $freeSpaceEnd - $freeSpaceStart;
-                writeLog("Found free space: {$freeSpaceStart}B - {$freeSpaceEnd}B, size: " . round($freeSpaceSize/1024/1024/1024, 2) . " GB");
+                writeLog("Found free space: {$freeSpaceStart}B - {$freeSpaceEnd}B, size: " . round(($freeSpaceEnd - $freeSpaceStart)/1024/1024/1024, 2) . " GB");
             }
         }
     }
     
-    writeLog("Last partition ends at: {$lastEndByte} bytes");
-    writeLog("Primary partitions count: {$primaryCount}");
-    writeLog("Extended exists: " . ($extendedExists ? "yes" : "no"));
-    
-    $usedBytes = 0;
-    foreach ($existingParts as $part) {
-        $usedBytes += $part['size_bytes'];
-    }
-    $freeBytes = $totalBytes - $usedBytes;
-    $freeGb = round($freeBytes / 1024 / 1024 / 1024, 2);
-    
-    writeLog("Calculated free space: {$freeGb} GB ({$freeBytes} bytes)");
-    writeLog("Free space from parted: " . round($freeSpaceSize/1024/1024/1024, 2) . " GB");
-    
-    if ($freeBytes <= 0 && $freeSpaceSize <= 0) {
-        return ['success' => false, 'error' => 'Нет свободного места на диске для создания нового раздела'];
-    }
-    
-    $actualFreeBytes = max($freeBytes, $freeSpaceSize);
-    $actualFreeGb = round($actualFreeBytes / 1024 / 1024 / 1024, 2);
-    
-    $startByte = 0;
+    $startByte = 1048576;
     
     if ($freeSpaceStart > 0) {
         $startByte = $freeSpaceStart;
@@ -2726,92 +2764,70 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         $startByte = $lastEndByte + 1048576;
         writeLog("Calculated start from last partition end: {$startByte} bytes");
     } else {
-        $startByte = 1048576;
         writeLog("Using default start: {$startByte} bytes (1MB)");
     }
     
-    $isLogical = false;
-    if ($isMbr && $extendedExists) {
-        $isLogical = true;
-        $startByte = $extendedStart + 1048576;
-        if ($lastEndByte > $extendedStart) {
-            $startByte = $lastEndByte + 1048576;
-        }
-        writeLog("MBR with extended partition, logical partition start at {$startByte}");
-    } elseif ($isMbr && $primaryCount >= 4 && !$extendedExists) {
-        $isLogical = true;
-        writeLog("MBR with 4 primary partitions, need to create extended first");
-        
-        $extendedCmd = "parted -s {$diskPath} mkpart extended {$startByte}B 100% 2>&1";
-        writeLog("Creating extended partition: {$extendedCmd}");
-        $extendedOutput = execCmd($extendedCmd, true, 20);
-        
-        if (strpos($extendedOutput, 'Error') !== false) {
-            return ['success' => false, 'error' => "Failed to create extended partition: {$extendedOutput}"];
-        }
-        
-        execCmd("partprobe {$diskPath}", true, 5);
-        execCmd("udevadm settle", true, 5);
-        sleep(2);
-        
-        $extendedExists = true;
-        $extendedStart = $startByte;
-        $extendedEnd = $totalBytes;
-        
-        $startByte = $extendedStart + 1048576;
-        writeLog("Extended created, logical partition start at {$startByte}");
-    }
-    
     $startPos = $startByte . 'B';
-    writeLog("Final start position: {$startPos} ({$startByte} bytes)");
     
+    // ==================== ОПРЕДЕЛЕНИЕ КОНЕЧНОЙ ПОЗИЦИИ ====================
     $useAllSpace = false;
     $endByte = 0;
     
-    $isEmptySize = (empty($size) || $size === '' || $size === '0' || trim($size) === '' || 
-                    strtolower($size) === 'all' || strtolower($size) === '100%');
+    $isEmptySize = false;
+    
+    if ($size === null || $size === '' || trim($size) === '' || 
+        $size === '0' || $size === 0 || $size === '0.0' ||
+        strtolower($size) === 'all' || strtolower($size) === '100%') {
+        $isEmptySize = true;
+        writeLog("EMPTY SIZE DETECTED - will use all free space");
+    }
     
     if ($isEmptySize) {
-        if ($freeSpaceEnd > 0) {
+        if ($freeSpaceEnd > 0 && $freeSpaceEnd > $startByte) {
             $endByte = $freeSpaceEnd;
-        } elseif ($isMbr && $extendedExists) {
-            $endByte = $extendedEnd;
         } else {
             $endByte = $totalBytes;
         }
         $useAllSpace = true;
-        writeLog("EMPTY SIZE DETECTED - Using ALL free space, end at: {$endByte} bytes (" . round(($endByte - $startByte)/1024/1024/1024, 2) . " GB)");
+        $partitionSizeBytes = $endByte - $startByte;
+        $partitionSizeGb = round($partitionSizeBytes / 1024 / 1024 / 1024, 2);
+        writeLog("Using ALL free space: {$partitionSizeGb} GB (start={$startByte}, end={$endByte})");
     } elseif (strpos($size, '%') !== false) {
         $percent = (float)$size / 100;
-        $sizeBytes = (int)($actualFreeBytes * $percent);
+        $sizeBytes = (int)($freeBytes * $percent);
         $endByte = $startByte + $sizeBytes;
-        writeLog("Using {$size} of free space: " . round($sizeBytes/1024/1024/1024, 2) . " GB");
+        $partitionSizeGb = round($sizeBytes / 1024 / 1024 / 1024, 2);
+        writeLog("Using {$size} of free space: {$partitionSizeGb} GB");
     } elseif (is_numeric($size)) {
         $sizeGb = (float)$size;
         $sizeBytes = (int)($sizeGb * 1024 * 1024 * 1024);
         
-        if ($sizeBytes > $actualFreeBytes) {
-            return ['success' => false, 'error' => "Запрошенный размер {$sizeGb} GB превышает доступное свободное место {$actualFreeGb} GB"];
+        if ($sizeBytes > $freeBytes) {
+            return ['success' => false, 'error' => "Запрошенный размер {$sizeGb} GB превышает доступное свободное место {$freeGb} GB"];
         }
         
         $endByte = $startByte + $sizeBytes;
+        $partitionSizeGb = $sizeGb;
         writeLog("Requested size: {$sizeGb} GB ({$sizeBytes} bytes)");
     } else {
         $sizeBytes = parseSizeToBytes($size);
         if ($sizeBytes > 0) {
-            if ($sizeBytes > $actualFreeBytes) {
+            if ($sizeBytes > $freeBytes) {
                 return ['success' => false, 'error' => "Запрошенный размер превышает доступное свободное место"];
             }
             $endByte = $startByte + $sizeBytes;
-            writeLog("Parsed size: {$size} -> {$sizeBytes} bytes");
+            $partitionSizeGb = round($sizeBytes / 1024 / 1024 / 1024, 2);
+            writeLog("Parsed size: {$size} -> {$sizeBytes} bytes ({$partitionSizeGb} GB)");
         } else {
-            if ($freeSpaceEnd > 0) {
+            if ($freeSpaceEnd > 0 && $freeSpaceEnd > $startByte) {
                 $endByte = $freeSpaceEnd;
             } else {
                 $endByte = $totalBytes;
             }
             $useAllSpace = true;
-            writeLog("Could not parse size, using all free space");
+            $partitionSizeBytes = $endByte - $startByte;
+            $partitionSizeGb = round($partitionSizeBytes / 1024 / 1024 / 1024, 2);
+            writeLog("Could not parse size, using all free space: {$partitionSizeGb} GB");
         }
     }
     
@@ -2832,70 +2848,55 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
     
     writeLog("Creating partition: start={$startPos}, end={$endPos}, size={$partitionSizeGb} GB");
     
+    // ==================== ОПРЕДЕЛЕНИЕ ТИПА РАЗДЕЛА ДЛЯ PARTED ====================
     $partedPartType = $partitionType;
-    
     if ($isGpt) {
         $partedPartType = 'primary';
     } elseif ($isMbr) {
-        if ($isLogical) {
-            $partedPartType = 'logical';
-        } else {
-            $partedPartType = $partitionType;
-            if ($partedPartType !== 'primary' && $partedPartType !== 'extended') {
-                $partedPartType = 'primary';
+        $primaryCount = 0;
+        foreach ($existingParts as $part) {
+            if (strpos($part['name'], 'extended') === false && !preg_match('/^.*(logical|extended).*/', $part['name'])) {
+                $primaryCount++;
             }
+        }
+        if ($primaryCount >= 4) {
+            $partedPartType = 'logical';
+            writeLog("MBR with 4 primary partitions, using logical");
         }
     }
     
     writeLog("Parted partition type: {$partedPartType}");
     
+    // ==================== ВЫПОЛНЕНИЕ КОМАНДЫ PARTED ====================
     $cmd = "parted -s {$diskPath} unit B mkpart {$partedPartType} {$startPos} {$endPos} 2>&1";
     writeLog("Executing: {$cmd}");
     $output = execCmd($cmd, true, 30);
     
     if (strpos($output, 'Error') !== false || strpos($output, 'error') !== false) {
-        $percentCmd = "parted -s {$diskPath} mkpart {$partedPartType} {$startPos} 100% 2>&1";
-        writeLog("Retry with 100%: {$percentCmd}");
+        $startPercent = round(($startByte / $totalBytes) * 100, 2);
+        $endPercent = round(($endByte / $totalBytes) * 100, 2);
+        $percentCmd = "parted -s {$diskPath} mkpart {$partedPartType} {$startPercent}% {$endPercent}% 2>&1";
+        writeLog("Retry with percentages: {$percentCmd}");
         $output = execCmd($percentCmd, true, 30);
         
         if (strpos($output, 'Error') !== false && strpos($output, 'error') !== false) {
-            $startMiB = ceil($startByte / 1024 / 1024);
-            $endMiB = floor($endByte / 1024 / 1024);
-            
-            if ($endMiB > $startMiB) {
-                $altCmd = "parted -s {$diskPath} unit MiB mkpart {$partedPartType} {$startMiB}MiB {$endMiB}MiB 2>&1";
-                writeLog("Retry with MiB: {$altCmd}");
-                $output = execCmd($altCmd, true, 30);
-            }
-            
-            if (strpos($output, 'Error') !== false && strpos($output, 'error') !== false) {
-                writeError("Partition creation failed: {$output}");
-                return ['success' => false, 'error' => $output];
-            }
+            writeError("Partition creation failed: {$output}");
+            return ['success' => false, 'error' => $output];
         }
     }
     
-    writeLog("Updating kernel partition table...");
+    // ==================== ОБНОВЛЕНИЕ ТАБЛИЦЫ РАЗДЕЛОВ ====================
     execCmd("partprobe {$diskPath}", true, 5);
     execCmd("blockdev --rereadpt {$diskPath} 2>/dev/null", true, 5);
     execCmd("udevadm settle", true, 5);
     sleep(2);
     
-    execCmd("partprobe {$diskPath}", true, 5);
-    execCmd("udevadm settle", true, 5);
-    
+    // ==================== ОПРЕДЕЛЕНИЕ ИМЕНИ НОВОГО РАЗДЕЛА ====================
     $newPartitionName = '';
-    $maxAttempts = 20;
+    $existingNames = array_map(function($p) { return $p['name']; }, $existingParts);
     
-    $existingNames = [];
-    foreach ($existingParts as $part) {
-        $existingNames[] = $part['name'];
-    }
-    writeLog("Existing partition names: " . implode(', ', $existingNames));
-    
-    for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+    for ($attempt = 1; $attempt <= 20; $attempt++) {
         $currentParts = getPartitions($disk);
-        
         foreach ($currentParts as $part) {
             if (!in_array($part['name'], $existingNames)) {
                 $newPartitionName = $part['name'];
@@ -2904,27 +2905,23 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
             }
         }
         
-        $expectedName = (strpos($disk, 'nvme') !== false) ? $disk . 'p' . (count($existingParts) + 1) : $disk . (count($existingParts) + 1);
+        $expectedNum = count($existingParts) + 1;
+        if (strpos($disk, 'nvme') !== false) {
+            $expectedName = $disk . 'p' . $expectedNum;
+        } else {
+            $expectedName = $disk . $expectedNum;
+        }
+        
         if (file_exists("/dev/{$expectedName}") && !in_array($expectedName, $existingNames)) {
             $newPartitionName = $expectedName;
             writeLog("Found by expected name: {$newPartitionName}");
             break;
         }
         
-        if ($isMbr && $isLogical) {
-            $logicalName = $disk . '5';
-            if (file_exists("/dev/{$logicalName}") && !in_array($logicalName, $existingNames)) {
-                $newPartitionName = $logicalName;
-                writeLog("Found logical partition: {$newPartitionName}");
-                break;
-            }
-        }
-        
         if ($attempt % 5 == 0) {
             execCmd("partprobe {$diskPath}", true, 5);
             execCmd("udevadm settle", true, 5);
         }
-        
         sleep(1);
     }
     
@@ -2955,6 +2952,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
     
     writeLog("Partition successfully created: /dev/{$newPartitionName}");
     
+    // ==================== ФОРМАТИРОВАНИЕ ====================
     if ($format === true && $fsType !== null && $fsType !== 'none' && $fsType !== '') {
         writeLog("Formatting partition {$newPartitionName} with {$fsType}");
         
@@ -3675,6 +3673,8 @@ function getDiskInfo($disk) {
     return $info;
 }
 
+// ==================== CONSOLE ====================
+
 function executeLocalCommand($command, $timeout = 60) {
     $command = trim($command);
     
@@ -3758,6 +3758,7 @@ function executeLocalCommand($command, $timeout = 60) {
     ];
 }
 
+// ==================== ОБРАБОТЧИК ЗАПРОСОВ ====================
 $response = ['success' => false, 'error' => 'Unknown action'];
 
 try {

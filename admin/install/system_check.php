@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 //P.S. I Love USA.
 
@@ -40,6 +40,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -88,8 +89,8 @@ $js_config = [
     <!--<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">-->
 	<link rel="stylesheet" href="../style.css">
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	</script>
 
     <style>
         * {
@@ -373,7 +374,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
-<!-- Модальное окно для проверки с любой страницы (глобальный вызов) -->
+<!-- Модальное окно для проверки -->
 <div class="modal fade modal-apple" id="globalCheckModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -411,6 +412,7 @@ let currentCheckData = null;
 let currentLogType = 'install';
 let isChecking = false;
 
+// Утилиты
 function showToast(message, type = 'success') {
     const toastHtml = `
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
@@ -429,6 +431,7 @@ function showToast(message, type = 'success') {
     toastEl.on('hidden.bs.toast', () => toastEl.remove());
 }
 
+// Запуск полной проверки
 async function runFullCheck(showProgress = true) {
     if (isChecking) {
         showToast('Check already in progress', 'warning');
@@ -486,6 +489,7 @@ async function runFullCheck(showProgress = true) {
     }
 }
 
+// Отрисовка результатов
 function renderResults(results) {
     let html = '';
     let categoryIndex = 0;
@@ -603,6 +607,7 @@ async function fixSingleItem(category, item, buttonElement = null) {
     }
 }
 
+// Исправление всего
 async function fixEverything() {
     if (!confirm('Are you sure you want to fix ALL issues? Packages will be reinstalled and settings will be changed.')) return;
     
@@ -651,6 +656,7 @@ async function fixEverything() {
     }
 }
 
+// Обновление статистики
 function updateStats() {
     if (!currentCheckData) return;
     
@@ -674,6 +680,7 @@ function updateGlobalProgress(percent, message) {
     $('#statusMessage').html(message);
 }
 
+// Toggle category
 function toggleCategory(catId) {
     $(`#${catId}`).collapse('toggle');
     const icon = $(`#icon_${catId}`);
@@ -684,6 +691,7 @@ function toggleCategory(catId) {
     }
 }
 
+// Показ логов в модалке
 async function showLogs(type) {
     currentLogType = type;
     $('#logModalTitle').html(type === 'install' ? '<i class="bi bi-file-text me-2"></i>Install Log' : '<i class="bi bi-exclamation-triangle me-2"></i>Error Log');
@@ -825,12 +833,14 @@ function renderModalResults(results) {
     });
 }
 
+// Инициализация
 $(document).ready(function() {
     runFullCheck();
     $('#runCheckBtn').on('click', () => runFullCheck(true));
     $('#fixAllBtn').on('click', fixEverything);
     $('#refreshLogBtn').on('click', loadLogs);
     
+    // Scroll to top
     $(window).on('scroll', function() {
         $('#scrollToTop').toggle($(this).scrollTop() > 300);
     });

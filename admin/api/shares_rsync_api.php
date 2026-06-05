@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -81,9 +82,11 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== КОНСТАНТЫ ==========
 define('RSYNC_CONF', '/etc/rsyncd.conf');
 define('RSYNC_SECRETS', '/etc/rsyncd.secrets');
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С RSYNC ==========
 function getRsyncServiceStatus() {
     $status = [
         'running' => false,
@@ -145,6 +148,7 @@ function disableRsyncService() {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КОНФИГУРАЦИЕЙ ==========
 function getRsyncGlobalConfig() {
     $config = [
         'uid' => 'nobody',
@@ -218,6 +222,7 @@ function saveRsyncGlobalConfig($config) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С МОДУЛЯМИ ==========
 function getRsyncModules() {
     $modules = [];
     
@@ -312,6 +317,7 @@ function saveRsyncModules($modules) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
 function getRsyncUsers() {
     $users = [];
     if (file_exists(RSYNC_SECRETS)) {
@@ -428,6 +434,7 @@ function deleteRsyncUser($username) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ ЛОГОВ ==========
 function getRsyncLogs($lines = 50) {
     $logs = [];
     $output = shell_exec("sudo tail -n $lines /var/log/rsyncd.log 2>/dev/null");
@@ -437,6 +444,7 @@ function getRsyncLogs($lines = 50) {
     return array_reverse(array_filter($logs));
 }
 
+// ========== ФУНКЦИИ ДЛЯ ФАЙЛОВОЙ СИСТЕМЫ ==========
 function getDirectoryContents($path) {
     $items = [];
     $path = rtrim($path, '/');
@@ -490,7 +498,7 @@ function getAllStorages() {
                 $usedPercent = (int)rtrim($parts[4], '%');
                 $mount = $parts[5];
                 
-                if ($mount == '/' || $mount == '/boot' || $mount == '/boot/efi') {
+                if ($mount == '/boot' || $mount == '/boot/efi') {
                     continue;
                 }
                 
@@ -526,6 +534,7 @@ function getAllStorages() {
     return array_values($unique);
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {

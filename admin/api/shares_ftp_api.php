@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -81,10 +82,12 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== КОНСТАНТЫ ==========
 define('VSFTPD_CONF', '/etc/vsftpd.conf');
 define('FTP_USERS_FILE', '/etc/vsftpd.userlist');
 define('FTP_SHARES_FILE', '/etc/vsftpd_shares.json');
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С FTP ==========
 function getFtpServiceStatus() {
     $status = [
         'running' => false,
@@ -145,6 +148,7 @@ function disableFtpService() {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КОНФИГУРАЦИЕЙ ==========
 function getFtpConfig() {
     $config = [
         'anonymous_enable' => 'NO',
@@ -219,6 +223,7 @@ function saveFtpConfig($config) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
 function getFtpUsers() {
     $users = [];
     if (file_exists(FTP_USERS_FILE)) {
@@ -271,6 +276,7 @@ function getSystemUsers() {
     return array_values($users);
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КАТАЛОГАМИ ==========
 function getFtpShares() {
     if (!file_exists(FTP_SHARES_FILE)) {
         return [];
@@ -292,6 +298,7 @@ function saveFtpShares($shares) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ ЛОГОВ ==========
 function getFtpLogs($lines = 50) {
     $logs = [];
     $output = shell_exec("sudo tail -n $lines /var/log/vsftpd.log 2>/dev/null");
@@ -301,6 +308,7 @@ function getFtpLogs($lines = 50) {
     return array_reverse(array_filter($logs));
 }
 
+// ========== ФУНКЦИИ ДЛЯ ФАЙЛОВОЙ СИСТЕМЫ ==========
 function getDirectoryContents($path) {
     $items = [];
     $path = rtrim($path, '/');
@@ -354,7 +362,7 @@ function getAllStorages() {
                 $usedPercent = (int)rtrim($parts[4], '%');
                 $mount = $parts[5];
                 
-                if ($mount == '/' || $mount == '/boot' || $mount == '/boot/efi') {
+                if ($mount == '/boot' || $mount == '/boot/efi') {
                     continue;
                 }
                 
@@ -390,6 +398,7 @@ function getAllStorages() {
     return array_values($unique);
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {

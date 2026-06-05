@@ -17,13 +17,19 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
 $menu = require_once 'menu.php';
+
+try {
+    $db2 = getDB2();
+} catch (Exception $e) {
+    error_log("Health Monitor init error: " . $e->getMessage());
+}
 
 try {
     $db = getDB();
@@ -32,7 +38,7 @@ try {
     error_log("Health Monitor init error: " . $e->getMessage());
 }
 
-function initMonitorTables($db) {
+function initMonitorTables($db2) {
     $queries = [
         "CREATE TABLE IF NOT EXISTS monitored_disks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,9 +145,8 @@ function initMonitorTables($db) {
     
     foreach ($queries as $query) {
         try {
-            $db->exec($query);
+            $db2->exec($query);
         } catch (Exception $e) {
-            // Table exists
         }
     }
     
@@ -172,7 +177,7 @@ function initMonitorTables($db) {
     ];
     
     foreach ($defaultSettings as $key => $value) {
-        $stmt = $db->prepare("INSERT OR IGNORE INTO notification_settings (setting_key, setting_value) VALUES (:key, :value)");
+        $stmt = $db2->prepare("INSERT OR IGNORE INTO notification_settings (setting_key, setting_value) VALUES (:key, :value)");
         $stmt->bindValue(':key', $key, SQLITE3_TEXT);
         $stmt->bindValue(':value', $value, SQLITE3_TEXT);
         $stmt->execute();
@@ -181,6 +186,7 @@ function initMonitorTables($db) {
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -231,9 +237,9 @@ $js_config = [
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         :root {
             --primary: #007aff;
@@ -539,7 +545,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 <div class="app-container">
     <?php echo $menu; ?>
     <main class="main-content">
-
+        <!-- Stats -->
         <div class="row mb-4">
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
@@ -567,6 +573,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- Notifications -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
@@ -583,6 +590,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- Disks & SMART -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-hdd"></i> Disks & SMART</h3>
@@ -598,6 +606,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- RAID Arrays -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-shield-alt"></i> RAID Arrays</h3>
@@ -613,6 +622,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- LVM -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-cubes"></i> LVM Volumes</h3>
@@ -628,6 +638,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- Temperatures -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-thermometer-half"></i> Temperatures</h3>
@@ -643,6 +654,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- Network Shares -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
                 <h3><i class="fas fa-share-alt"></i> Network Shares</h3>
@@ -660,6 +672,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- ========== MODAL: NOTIFICATION RULES ========== -->
 <div class="modal fade" id="notificationsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -668,6 +681,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- General Settings -->
                 <div class="settings-group">
                     <h4><i class="fas fa-sliders-h"></i> General Settings</h4>
                     <div class="row">
@@ -685,6 +699,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                     </div>
                 </div>
                 
+                <!-- Temperature Thresholds -->
                 <div class="settings-group">
                     <h4><i class="fas fa-thermometer-half"></i> Temperature Thresholds</h4>
                     <div class="row">
@@ -699,6 +714,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                     </div>
                 </div>
                 
+                <!-- Events to Notify -->
                 <div class="settings-group">
                     <h4><i class="fas fa-exclamation-triangle"></i> Events to Notify</h4>
                     <div class="row">
@@ -749,6 +765,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- ========== MODAL: EMAIL / SMTP ========== -->
 <div class="modal fade" id="emailModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -757,11 +774,13 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Enable Email -->
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="setting_email_enabled">
                     <label class="form-check-label">Enable Email Notifications</label>
                 </div>
                 
+                <!-- Recipient -->
                 <div class="mb-3">
                     <label class="form-label">Recipient Email</label>
                     <input type="email" class="form-control" id="setting_email_recipient" placeholder="admin@example.com">
@@ -831,6 +850,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- ========== MODAL: WEBHOOK ========== -->
 <div class="modal fade" id="webhookModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -858,6 +878,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- ========== MODAL: SCHEDULES & HISTORY ========== -->
 <div class="modal fade" id="scheduleModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -866,6 +887,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Schedules -->
                 <div class="settings-group">
                     <h4><i class="fas fa-clock"></i> Check Schedules</h4>
                     <div class="table-responsive">
@@ -888,6 +910,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                     </div>
                 </div>
                 
+                <!-- History -->
                 <div class="settings-group">
                     <h4><i class="fas fa-history"></i> Check History (Last 30)</h4>
                     <div class="table-responsive" style="max-height: 400px;">
@@ -918,6 +941,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Progress indicator -->
 <div id="checkProgress" class="progress-check">
     <div class="spinner-small"></div>
     <span id="progressText">Running checks...</span>
@@ -928,6 +952,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 
 let currentChecks = {};
 
+// ========== UI Helpers ==========
 function toggleSection(header) {
     const body = header.nextElementSibling;
     const icon = header.querySelector('.toggle-icon');
@@ -979,6 +1004,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ========== API Calls ==========
 async function apiCall(endpoint, options = {}) {
     const baseUrl = window.apiConfig.apiBaseUrl;
     const headers = {
@@ -1002,10 +1028,12 @@ async function apiCall(endpoint, options = {}) {
     return response.json();
 }
 
+// ========== Settings ==========
 async function loadSettings() {
     try {
         const data = await apiCall('get_settings');
         if (data.success) {
+            // Notification rules
             document.getElementById('setting_cpu_temp_threshold').value = data.settings.cpu_temp_threshold || 85;
             document.getElementById('setting_disk_temp_threshold').value = data.settings.disk_temp_threshold || 55;
             document.getElementById('setting_notify_disk_missing').checked = data.settings.notify_disk_missing == 1;
@@ -1017,6 +1045,7 @@ async function loadSettings() {
             document.getElementById('setting_notify_only_on_error').checked = data.settings.notify_only_on_error == 1;
             document.getElementById('setting_notification_cooldown_minutes').value = data.settings.notification_cooldown_minutes || 60;
             
+            // Email settings
             document.getElementById('setting_email_enabled').checked = data.settings.email_enabled == 1;
             document.getElementById('setting_email_recipient').value = data.settings.email_recipient || '';
             document.getElementById('setting_smtp_host').value = data.settings.smtp_host || '';
@@ -1027,6 +1056,7 @@ async function loadSettings() {
             document.getElementById('setting_smtp_from_name').value = data.settings.smtp_from_name || 'Mini-B Health Monitor';
 			document.getElementById('setting_smtp_domain').value = data.settings.smtp_domain || '';
             
+            // Webhook settings
             document.getElementById('setting_webhook_enabled').checked = data.settings.webhook_enabled == 1;
             document.getElementById('setting_webhook_url').value = data.settings.webhook_url || '';
         }
@@ -1066,12 +1096,12 @@ async function saveEmailSettings() {
     const smtpSettings = {
         smtp_host: document.getElementById('setting_smtp_host').value,
         smtp_port: document.getElementById('setting_smtp_port').value,
-        smtp_username: document.getElementById('setting_smtp_username').value,
+        smtp_username: document.getElementById('setting_smtp_username').value,  // bot
         smtp_password: document.getElementById('setting_smtp_password').value,
         smtp_encryption: document.getElementById('setting_smtp_encryption').value,
         smtp_from_email: document.getElementById('setting_smtp_from_email').value,
         smtp_from_name: document.getElementById('setting_smtp_from_name').value,
-        smtp_domain: document.getElementById('setting_smtp_domain').value,
+        smtp_domain: document.getElementById('setting_smtp_domain').value,  // itp-corp.ru
         email_enabled: document.getElementById('setting_email_enabled').checked ? 1 : 0,
         email_recipient: document.getElementById('setting_email_recipient').value
     };
@@ -1130,7 +1160,7 @@ async function testSmtp() {
         encryption: document.getElementById('setting_smtp_encryption').value,
         test_email: testEmail,
         from_email: document.getElementById('setting_smtp_from_email').value,
-        domain: document.getElementById('setting_smtp_domain').value
+        domain: document.getElementById('setting_smtp_domain').value  // ДОБАВИТЬ
     };
     
     showProgress(true, 'Testing SMTP connection...');
@@ -1152,6 +1182,7 @@ async function testSmtp() {
     }
 }
 
+// ========== Notifications ==========
 async function loadNotifications() {
     try {
         const data = await apiCall('get_notifications');
@@ -1232,6 +1263,7 @@ async function deleteNotification(id) {
     }
 }
 
+// ========== Checks ==========
 async function runCheck(checkType) {
     showProgress(true, `Checking ${checkType}...`);
     try {
@@ -1297,6 +1329,7 @@ function updateStatistics(stats) {
     loadGlobalStats();
 }
 
+// ========== Render Functions ==========
 function renderDisksStatus(data) {
     const disks = data.disks || [];
     const dbDisks = data.db_disks || [];
@@ -1501,6 +1534,7 @@ function renderSharesStatus(data) {
     return html;
 }
 
+// ========== Disk Actions ==========
 async function acknowledgeDisk(diskName) {
     try {
         await apiCall('acknowledge_disk', {
@@ -1528,6 +1562,7 @@ async function removeMissingDisk(diskName) {
     }
 }
 
+// ========== Schedules ==========
 async function loadSchedules() {
     try {
         const data = await apiCall('get_schedules');
@@ -1646,6 +1681,7 @@ async function runCheckNow(checkType) {
     }
 }
 
+// ========== History ==========
 async function loadHistory() {
     try {
         const data = await apiCall('get_check_history&limit=30');
@@ -1675,6 +1711,7 @@ async function loadHistory() {
     }
 }
 
+// ========== Host Selector ==========
 async function loadHosts() {
     try {
         const response = await fetch('/api/hosts_api.php?action=get_hosts');
@@ -1699,6 +1736,7 @@ async function loadHosts() {
     }
 }
 
+// ========== Init ==========
 async function init() {
     loadSettings();
     loadNotifications();
@@ -1708,6 +1746,7 @@ async function init() {
     //loadHosts();
 	loadGlobalStats();
     
+    // Auto-refresh every 60 seconds
     setInterval(() => {
         loadNotifications();
         loadAllStatuses();
@@ -1717,6 +1756,7 @@ async function init() {
 
 init();
 
+// Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInUp {

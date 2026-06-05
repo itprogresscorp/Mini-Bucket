@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 header("Access-Control-Allow-Origin: *");
@@ -44,6 +44,7 @@ if (file_exists(ROOT_PATH . '/config.php')) {
         return $ch;
 }
 
+isAuthenticated();
 
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -54,6 +55,9 @@ if (!function_exists('str_starts_with')) {
     }
 }
 
+/**
+ * Получить все хосты
+ */
 function getHosts($db) {
     $result = $db->query("SELECT * FROM hosts ORDER BY idHost DESC");
     $hosts = [];
@@ -63,6 +67,9 @@ function getHosts($db) {
     return $hosts;
 }
 
+/**
+ * Получить один хост по ID
+ */
 function getHostById($db, $idHost) {
     $stmt = $db->prepare("SELECT * FROM hosts WHERE idHost = :id");
     $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
@@ -71,7 +78,7 @@ function getHostById($db, $idHost) {
 }
 
 function createMasterOnSlave($db, $slaveData) {
-
+    // 1. Собираем данные о текущем сервере (себе - Master)
     $masterStmt = $db->prepare("SELECT hostSn, hostName, hostVersion, hostApiKey, hostPin FROM hosts WHERE idHost = 1");
     $masterResult = $masterStmt->execute();
     $master = $masterResult->fetchArray(SQLITE3_ASSOC);
@@ -79,7 +86,8 @@ function createMasterOnSlave($db, $slaveData) {
     if (!$master) {
         return ['success' => false, 'message' => 'Master server not found in database'];
     }
-
+    
+    // 2. Определяем реальный IP текущего сервера
     $serverIp = $_SERVER['SERVER_ADDR'];
     if ($serverIp === '127.0.0.1' || $serverIp === '::1') {
         $serverIp = gethostbyname(gethostname());
@@ -91,6 +99,7 @@ function createMasterOnSlave($db, $slaveData) {
         }
     }
     
+    // 3. Определяем реальный протокол и порт
     $proto = 'http';
     $port = 80;
     if (
@@ -104,6 +113,7 @@ function createMasterOnSlave($db, $slaveData) {
         $port = (int)$_SERVER['SERVER_PORT'];
     }
     
+    // 4. Собираем данные Master для отправки
     $masterData = [
         'hostIp' => $serverIp,
         'hostName' => $master['hostName'],
@@ -116,6 +126,7 @@ function createMasterOnSlave($db, $slaveData) {
         'hostComment' => 'Automatically created from remote Master on ' . date('Y-m-d H:i:s')
     ];
     
+    // 5. Строим URL для запроса к Slave
     $slaveProto = $slaveData['hostProto'] ?? 'http';
     $slaveIp = $slaveData['hostIp'];
     $slavePort = $slaveData['hostPort'] ? ':' . $slaveData['hostPort'] : '';
@@ -124,6 +135,7 @@ function createMasterOnSlave($db, $slaveData) {
     
     $url = $slaveProto . '://' . $slaveIp . $slavePort . $slaveApiPath . '/host_manager_api.php';
     
+    // 6. Отправляем POST запрос на Slave с action=create_master
     $postData = [
         'action' => 'create_master',
         'master_data' => $masterData
@@ -183,7 +195,9 @@ function createMasterOnSlave($db, $slaveData) {
     }
 }
 
-
+/**
+ * Сохранить хост (добавить или обновить)
+ */
 function saveHost($db, $data) {
     $idHost = $data['idHost'] ?? '';
     $hostIp = trim($data['hostIp'] ?? '');
@@ -209,6 +223,7 @@ function saveHost($db, $data) {
         }
     }
     
+    // Validation
     if (empty($hostIp) || empty($hostName) || empty($hostApiKey)) {
         return ['success' => false, 'message' => 'IP, Name and API Key are required'];
     }
@@ -245,7 +260,6 @@ function saveHost($db, $data) {
     
     try {
         if (empty($idHost)) {
-            // INSERT
             $stmt = $db->prepare("INSERT INTO hosts (
                 hostIp, hostName, hostApiKey, hostComment, hostStatus, hostLive, 
                 hostDateApiUpdtae, hostVersion, hostProto, hostPort, hostApiPath, hostSn, hostType
@@ -308,6 +322,17 @@ function saveHost($db, $data) {
             }
             return ['success' => false, 'message' => 'Failed to add host'];
         } else {
+            $currentSn = null;
+            if (empty($hostSn)) {
+                $getSnStmt = $db->prepare("SELECT hostSn FROM hosts WHERE idHost = :id");
+                $getSnStmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
+                $getSnResult = $getSnStmt->execute();
+                $existingHost = $getSnResult->fetchArray(SQLITE3_ASSOC);
+                $currentSn = $existingHost['hostSn'] ?? null;
+            } else {
+                $currentSn = $hostSn;
+            }
+            
             $stmt = $db->prepare("UPDATE hosts SET 
                 hostIp = :ip, hostName = :name, hostApiKey = :apikey, 
                 hostComment = :comment, hostProto = :proto, hostPort = :port,
@@ -321,7 +346,7 @@ function saveHost($db, $data) {
             $stmt->bindValue(':proto', $hostProto, SQLITE3_TEXT);
             $stmt->bindValue(':port', $hostPort ?: null, SQLITE3_TEXT);
             $stmt->bindValue(':apipath', $hostApiPath, SQLITE3_TEXT);
-            $stmt->bindValue(':sn', $hostSn ?: null, SQLITE3_TEXT);
+            $stmt->bindValue(':sn', $currentSn, SQLITE3_TEXT);
             $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
             
             if ($stmt->execute()) {
@@ -334,12 +359,13 @@ function saveHost($db, $data) {
     }
 }
 
-
 function createMasterHost($db, $masterData) {
+    // Проверяем обязательные поля
     if (empty($masterData['hostIp']) || empty($masterData['hostName']) || empty($masterData['hostApiKey'])) {
         return ['success' => false, 'message' => 'Missing required master data: IP, Name or API Key'];
     }
     
+    // Проверяем, не существует ли уже хост с таким IP
     $checkStmt = $db->prepare("SELECT idHost FROM hosts WHERE hostIp = :ip");
     $checkStmt->bindValue(':ip', $masterData['hostIp'], SQLITE3_TEXT);
     $checkResult = $checkStmt->execute();
@@ -348,6 +374,7 @@ function createMasterHost($db, $masterData) {
         return ['success' => false, 'message' => 'Master host with this IP already exists'];
     }
     
+    // Подготавливаем данные
     $hostIp = trim($masterData['hostIp']);
     $hostName = trim($masterData['hostName']);
     $hostApiKey = trim($masterData['hostApiKey']);
@@ -358,10 +385,12 @@ function createMasterHost($db, $masterData) {
     $hostType = 'master';
     $hostComment = trim($masterData['hostComment'] ?? 'Created by remote Master server');
     
+    // Валидация порта
     if (!empty($hostPort) && (!is_numeric($hostPort) || $hostPort < 1 || $hostPort > 65535)) {
         return ['success' => false, 'message' => 'Port must be between 1 and 65535'];
     }
     
+    // Проверяем API путь
     if (!empty($hostApiPath) && !str_starts_with($hostApiPath, '/')) {
         $hostApiPath = '/' . $hostApiPath;
     }
@@ -399,6 +428,9 @@ function createMasterHost($db, $masterData) {
     }
 }
 
+/**
+ * Удалить хост
+ */
 function deleteHost($db, $idHost) {
     $stmt = $db->prepare("DELETE FROM hosts WHERE idHost = :id");
     $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
@@ -412,6 +444,7 @@ function testHostApi($db, $hostData) {
     $apiPath = rtrim($hostData['hostApiPath'] ?? '/api', '/');
     $apiKey = $hostData['hostApiKey'] ?? '';
     
+    // Пробуем оба endpoint'а: who.php и test_api
     $endpoints = [
         '/who.php?action=who',
         '/who.php?action=test_api',
@@ -481,6 +514,7 @@ function testHostApi($db, $hostData) {
         }
     }
     
+    // Если ни один endpoint не сработал
     return [
         'success' => false,
         'message' => 'API not accessible. Tried: ' . implode(', ', array_column($results, 'endpoint')),
@@ -500,6 +534,7 @@ function fullTestHost($db, $idHost) {
         'overall' => false
     ];
     
+    // 1. Ping тест
     $ip = $host['hostIp'];
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
         $ping = exec("ping -n 1 -w 2 " . escapeshellarg($ip) . " 2>&1", $output, $return_var);
@@ -513,9 +548,11 @@ function fullTestHost($db, $idHost) {
         $results['ping'] = ['success' => false, 'message' => 'Host is not reachable'];
     }
     
+    // 2. API тест
     $apiTest = testHostApi($db, $host);
     $results['api'] = $apiTest;
     
+    // 3. Общий вердикт
     if ($results['ping']['success'] && $results['api']['success']) {
         $results['overall'] = true;
         $results['message'] = 'Host is online and API is accessible';
@@ -530,6 +567,7 @@ function fullTestHost($db, $idHost) {
         $status = 'offline';
     }
     
+    // Обновляем статус в БД
     $update = $db->prepare("UPDATE hosts SET hostLive = :status, hostStatus = :status, hostDateApiUpdtae = datetime('now') WHERE idHost = :id");
     $update->bindValue(':status', $status, SQLITE3_TEXT);
     $update->bindValue(':id', $idHost, SQLITE3_INTEGER);
@@ -538,6 +576,9 @@ function fullTestHost($db, $idHost) {
     return $results;
 }
 
+/**
+ * Тест соединения с хостом (ping)
+ */
 function testHost($db, $idHost) {
     $result = fullTestHost($db, $idHost);
     
@@ -552,6 +593,9 @@ function testHost($db, $idHost) {
     ];
 }
 
+/**
+ * Обновить статус всех хостов (массовый пинг)
+ */
 function refreshAllHostsStatus($db) {
     $hosts = getHosts($db);
     $results = [];
@@ -561,6 +605,9 @@ function refreshAllHostsStatus($db) {
     return ['success' => true, 'results' => $results];
 }
 
+/**
+ * Получить входящие запросы (agent_request)
+ */
 function getIncomingRequests($db) {
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arReq IS NULL OR arReq = '' OR arReq = 'incoming' ORDER BY arId DESC");
     $result = $stmt->execute();
@@ -571,6 +618,9 @@ function getIncomingRequests($db) {
     return $requests;
 }
 
+/**
+ * Получить исходящие запросы
+ */
 function getOutgoingRequests($db) {
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arReq = 'outgoing' ORDER BY arDate DESC");
     $result = $stmt->execute();
@@ -581,6 +631,9 @@ function getOutgoingRequests($db) {
     return $requests;
 }
 
+/**
+ * Принять входящий запрос в хосты
+ */
 function joinRequestToHosts($db, $arId) {
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
@@ -591,6 +644,7 @@ function joinRequestToHosts($db, $arId) {
         return ['success' => false, 'message' => 'Request not found'];
     }
     
+    // Проверяем существует ли уже хост с таким IP
     $checkStmt = $db->prepare("SELECT idHost FROM hosts WHERE hostIp = :ip");
     $checkStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
     $checkResult = $checkStmt->execute();
@@ -612,7 +666,7 @@ function joinRequestToHosts($db, $arId) {
     
     $insertStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
     $insertStmt->bindValue(':name', $request['arName'], SQLITE3_TEXT);
-    $insertStmt->bindValue(':apikey', $hostApiKey, SQLITE3_TEXT);
+    $insertStmt->bindValue(':apikey', $hostApiKey, SQLITE3_TEXT);  // ← Ключ из запроса
     $insertStmt->bindValue(':comment', "Added from agent request (ID: {$request['arId']}) on " . date('Y-m-d H:i:s') . "\nOriginal type: {$request['arType']}", SQLITE3_TEXT);
     $insertStmt->bindValue(':version', $request['arVersion'], SQLITE3_TEXT);
     $insertStmt->bindValue(':proto', $request['arProto'], SQLITE3_TEXT);
@@ -632,28 +686,43 @@ function joinRequestToHosts($db, $arId) {
     return ['success' => false, 'message' => 'Failed to join host'];
 }
 
+/**
+ * Удалить входящий запрос
+ */
 function deleteIncomingRequest($db, $arId) {
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id AND (arReq IS NULL OR arReq = '' OR arReq = 'incoming')");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
     return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'Request deleted' : 'Delete failed'];
 }
 
+/**
+ * Удалить все входящие запросы
+ */
 function deleteAllIncomingRequests($db) {
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arReq IS NULL OR arReq = '' OR arReq = 'incoming'");
     return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'All requests deleted' : 'Delete failed'];
 }
 
+/**
+ * Удалить исходящий запрос
+ */
 function deleteOutgoingRequest($db, $arId) {
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
     return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'Outgoing request revoked' : 'Delete failed'];
 }
 
+/**
+ * Удалить все исходящие запросы
+ */
 function deleteAllOutgoingRequests($db) {
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arReq = 'outgoing'");
     return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'All outgoing requests revoked' : 'Delete failed'];
 }
 
+/**
+ * Получить PIN для хоста (idHost=1)
+ */
 function getHostPin($db) {
     $stmt = $db->prepare("SELECT hostPin FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
@@ -661,6 +730,9 @@ function getHostPin($db) {
     return $row ? ($row['hostPin'] ?: '') : '';
 }
 
+/**
+ * Обновить PIN
+ */
 function regenerateHostPin($db) {
     $chars = '0123456789';
     $newPin = '';
@@ -675,6 +747,9 @@ function regenerateHostPin($db) {
     return ['success' => false, 'message' => 'Failed to update PIN'];
 }
 
+/**
+ * Создать исходящий запрос к удалённому серверу
+ */
 function createOutgoingRequest($db, $data) {
     $serverIp = $data['server_ip'] ?? '';
     $serverPin = $data['server_pin'] ?? '';
@@ -690,6 +765,7 @@ function createOutgoingRequest($db, $data) {
         return ['success' => false, 'message' => 'Server IP, PIN and API Key are required'];
     }
     
+    // Проверяем, не существует ли уже хост с таким IP
     $checkStmt = $db->prepare("SELECT idHost FROM hosts WHERE hostIp = :ip");
     $checkStmt->bindValue(':ip', $serverIp, SQLITE3_TEXT);
     $checkResult = $checkStmt->execute();
@@ -697,6 +773,7 @@ function createOutgoingRequest($db, $data) {
         return ['success' => false, 'message' => 'Host with this IP already exists'];
     }
     
+    // 1. СРАЗУ СОЗДАЕМ MASTER ХОСТ В ТАБЛИЦУ hosts
     $insertHostStmt = $db->prepare("INSERT INTO hosts (
         hostIp, hostName, hostApiKey, hostComment, hostStatus, hostLive, 
         hostDateApiUpdtae, hostVersion, hostProto, hostPort, hostApiPath, 
@@ -723,6 +800,7 @@ function createOutgoingRequest($db, $data) {
     
     $newHostId = $db->lastInsertRowID();
     
+    // 2. ОТПРАВЛЯЕМ ЗАПРОС НА УДАЛЕННЫЙ СЕРВЕР
     $url = $serverProto . '://' . $serverIp;
     if ($serverPort) $url .= ':' . $serverPort;
     $url .= $serverApiPath . '/connector_trap.php';
@@ -817,10 +895,12 @@ function getLocalHostSn($db) {
 
 function saveHostSn($db, $idHost, $sn, $name = null, $version = null) {
     if ($name !== null && $version !== null) {
+        // Обновляем SN, Name и Version
         $stmt = $db->prepare("UPDATE hosts SET hostSn = :sn, hostName = :name, hostVersion = :version WHERE idHost = :id");
         $stmt->bindValue(':name', $name, SQLITE3_TEXT);
         $stmt->bindValue(':version', $version, SQLITE3_TEXT);
     } else {
+        // Обновляем только SN
         $stmt = $db->prepare("UPDATE hosts SET hostSn = :sn WHERE idHost = :id");
     }
     
@@ -834,6 +914,9 @@ function saveHostSn($db, $idHost, $sn, $name = null, $version = null) {
 }
 
 
+/**
+ * Подтверждение или отклонение исходящего запроса
+ */
 function confirmOutgoingRequest($db, $arId, $action) {
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
@@ -845,6 +928,7 @@ function confirmOutgoingRequest($db, $arId, $action) {
     }
     
     if ($action === 'accept') {
+        // Проверяем существует ли уже хост с таким IP
         $checkStmt = $db->prepare("SELECT idHost FROM hosts WHERE hostIp = :ip");
         $checkStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
         $checkResult = $checkStmt->execute();
@@ -852,6 +936,7 @@ function confirmOutgoingRequest($db, $arId, $action) {
             return ['success' => false, 'message' => 'Host with this IP already exists'];
         }
         
+        // Создаем хост из запроса
         $insertStmt = $db->prepare("INSERT INTO hosts (
             hostIp, hostName, hostApiKey, hostComment, hostStatus, hostLive,
             hostDateApiUpdtae, hostVersion, hostProto, hostPort, hostApiPath,
@@ -879,6 +964,7 @@ function confirmOutgoingRequest($db, $arId, $action) {
         if ($insertStmt->execute()) {
             $newId = $db->lastInsertRowID();
             
+            // Удаляем запрос
             $deleteStmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id");
             $deleteStmt->bindValue(':id', $arId, SQLITE3_INTEGER);
             $deleteStmt->execute();
@@ -892,6 +978,7 @@ function confirmOutgoingRequest($db, $arId, $action) {
         return ['success' => false, 'message' => 'Failed to create host from request'];
         
     } elseif ($action === 'reject') {
+        // Просто удаляем запрос
         $deleteStmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id");
         $deleteStmt->bindValue(':id', $arId, SQLITE3_INTEGER);
         
@@ -904,17 +991,23 @@ function confirmOutgoingRequest($db, $arId, $action) {
     return ['success' => false, 'message' => 'Invalid action. Use "accept" or "reject"'];
 }
 
+/**
+ * Тест скорости между хостами
+ */
 function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10240) {
+    // Получаем данные исходного хоста
     $sourceHost = getHostById($db, $sourceHostId);
     if (!$sourceHost) {
         return ['success' => false, 'message' => 'Source host not found'];
     }
     
+    // Получаем данные целевого хоста
     $targetHost = getHostById($db, $targetHostId);
     if (!$targetHost) {
         return ['success' => false, 'message' => 'Target host not found'];
     }
     
+    // Определяем, кто мы (текущий сервер)
     $currentHostId = 1;
     $isSourceCurrent = ($sourceHostId == $currentHostId);
     $isTargetCurrent = ($targetHostId == $currentHostId);
@@ -929,6 +1022,7 @@ function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10
         'speed_samples' => []
     ];
     
+    // Тест задержки (ping) - 5 попыток
     $pingResults = [];
     for ($i = 0; $i < 5; $i++) {
         $start = microtime(true);
@@ -948,6 +1042,7 @@ function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10
         $results['packet_loss'] = 100;
     }
     
+    // ========== Если packet_loss 100% - хост недоступен ==========
     if ($results['packet_loss'] >= 100) {
         return [
             'success' => false,
@@ -958,15 +1053,18 @@ function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10
         ];
     }
     
+    // Продолжаем тест скорости только если хост доступен
     if ($isSourceCurrent || $isTargetCurrent) {
         $remoteHost = $isSourceCurrent ? $targetHost : $sourceHost;
         
+        // Тест DOWNLOAD
         $downloadSpeed = testDownloadSpeedCorrect($db, $remoteHost, $testSize);
         if ($downloadSpeed) {
             $results['download_speed'] = $downloadSpeed['final'];
             $results['speed_samples'] = array_merge($results['speed_samples'], $downloadSpeed['samples']);
         }
         
+        // Тест UPLOAD
         $uploadSpeed = testUploadSpeedCorrect($db, $remoteHost, $testSize);
         if ($uploadSpeed) {
             $results['upload_speed'] = $uploadSpeed['final'];
@@ -993,13 +1091,15 @@ function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10
 function testUploadSpeedWithSamples($db, $remoteHost, $testSizeKB = 1024) {
     $url = buildApiUrl($remoteHost) . '/speed_test.php';
     
-    $chunkSizeKB = 64; // 64KB чанки
+    // Разбиваем данные на чанки для получения промежуточных замеров
+    $chunkSizeKB = 64;
     $totalChunks = ceil($testSizeKB / $chunkSizeKB);
     $samples = [];
     $totalDataSent = 0;
     $startTime = microtime(true);
     
     try {
+        // Первый запрос для инициализации теста
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -1020,6 +1120,7 @@ function testUploadSpeedWithSamples($db, $remoteHost, $testSizeKB = 1024) {
         $response = curl_exec($ch);
         curl_close($ch);
         
+        // Отправляем данные чанками и записываем промежуточные скорости
         for ($chunk = 1; $chunk <= $totalChunks; $chunk++) {
             $chunkStartTime = microtime(true);
             $chunkData = generateTestData($chunkSizeKB);
@@ -1053,14 +1154,17 @@ function testUploadSpeedWithSamples($db, $remoteHost, $testSizeKB = 1024) {
             $totalDataSent += $chunkSizeKB * 1024;
             $elapsedTime = $chunkEndTime - $startTime;
             
+            // Сохраняем промежуточный замер
             $samples[] = [
                 'time_sec' => round($elapsedTime, 2),
                 'speed_mbps' => round($speedMbps, 2)
             ];
             
+            // Небольшая задержка между чанками для стабильности
             usleep(10000);
         }
         
+        // Финальный запрос для завершения теста
         $finalCh = curl_init();
         curl_setopt($finalCh, CURLOPT_URL, $url);
         curl_setopt($finalCh, CURLOPT_POST, true);
@@ -1120,12 +1224,14 @@ function testDownloadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         
+        // Включаем прогресс для получения промежуточных замеров
         curl_setopt($ch, CURLOPT_NOPROGRESS, false);
         curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function($resource, $downloadSize, $downloaded, $uploadSize, $uploaded) use ($startTime, &$samples, $testSizeKB) {
             static $lastProgressTime = 0;
             static $lastDownloaded = 0;
             $now = microtime(true);
             
+            // Собираем sample каждые 0.5 секунды или каждые 10% прогресса
             if ($downloaded > 0 && ($now - $lastProgressTime >= 0.5 || ($downloaded - $lastDownloaded) > ($downloadSize / 20))) {
                 $elapsed = $now - $startTime;
                 if ($elapsed > 0 && $downloaded > 0) {
@@ -1159,12 +1265,14 @@ function testDownloadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
             return null;
         }
         
+        // Расчет средней скорости
         $timeTaken = $endTime - $startTime;
         if ($timeTaken <= 0) return null;
         
         $dataSizeBits = ($downloadSize * 8);
         $speedMbps = ($dataSizeBits / $timeTaken) / 1000000;
         
+        // Добавляем финальный sample если нужно
         if (empty($samples) || end($samples)['time_sec'] < $timeTaken - 0.1) {
             $samples[] = [
                 'time_sec' => round($timeTaken, 2),
@@ -1191,6 +1299,9 @@ function testDownloadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
 }
 
 
+/**
+ * Простой тест ping
+ */
 function testPing($ip) {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
         exec("ping -n 1 -w 2 " . escapeshellarg($ip) . " 2>&1", $output, $return_var);
@@ -1200,6 +1311,9 @@ function testPing($ip) {
     return $return_var === 0;
 }
 
+/**
+ * Рассчет джиттера
+ */
 function calculateJitter($pingResults) {
     $jitters = [];
     for ($i = 1; $i < count($pingResults); $i++) {
@@ -1208,12 +1322,17 @@ function calculateJitter($pingResults) {
     return array_sum($jitters) / count($jitters);
 }
 
+/**
+ * Тест скорости загрузки (upload) на удаленный хост
+ */
 function testUploadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
+    // Проверяем доступность хоста
     if (!testPing($remoteHost['hostIp'])) {
         error_log("Host {$remoteHost['hostIp']} is not reachable, skipping upload test");
         return null;
     }
     
+    // Ограничиваем максимальный размер для upload
     $maxUploadKB = 5120;
     if ($testSizeKB > $maxUploadKB) {
         $testSizeKB = $maxUploadKB;
@@ -1223,6 +1342,7 @@ function testUploadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
     $url = buildApiUrl($remoteHost) . '/speed_test.php';
     $samples = [];
     
+    // Генерируем тестовые данные чанками для больших файлов
     $chunkSizeKB = 512;
     $totalChunks = ceil($testSizeKB / $chunkSizeKB);
     
@@ -1279,6 +1399,7 @@ function testUploadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
                 'progress_percent' => round(($totalUploaded / $testSizeKB) * 100, 1)
             ];
             
+            // задержка между чанками
             usleep(50000);
         }
         
@@ -1306,6 +1427,9 @@ function testUploadSpeedCorrect($db, $remoteHost, $testSizeKB = 10240) {
     }
 }
 
+/**
+ * Тест скорости скачивания (download) с удаленного хоста
+ */
 function testDownloadSpeed($db, $remoteHost, $testSizeKB = 1024) {
     $url = buildApiUrl($remoteHost) . '/speed_test.php?action=download&size=' . $testSizeKB;
     
@@ -1336,6 +1460,7 @@ function testDownloadSpeed($db, $remoteHost, $testSizeKB = 1024) {
             return null;
         }
         
+        // Расчет скорости в Mbps
         $timeTaken = $endTime - $startTime;
         $dataSizeBits = ($downloadSize * 8);
         $speedMbps = ($dataSizeBits / $timeTaken) / 1000000;
@@ -1353,6 +1478,9 @@ function testDownloadSpeed($db, $remoteHost, $testSizeKB = 1024) {
     }
 }
 
+/**
+ * Построение URL API для хоста
+ */
 function buildApiUrl($host) {
     $proto = $host['hostProto'] ?? 'http';
     $ip = $host['hostIp'];
@@ -1361,6 +1489,9 @@ function buildApiUrl($host) {
     return $proto . '://' . $ip . $port . $apiPath;
 }
 
+/**
+ * Генерация тестовых данных
+ */
 function generateTestData($sizeKB) {
     $sizeBytes = $sizeKB * 1024;
     $chunkSize = 8192;
@@ -1373,13 +1504,18 @@ function generateTestData($sizeKB) {
     return $data;
 }
 
+/**
+ * Прокси тест скорости между двумя удаленными хостами
+ */
 function speedTestProxy($db, $host1, $host2, $testSize = 1024) {
+    // Текущий сервер выступает прокси для теста между двумя удаленными хостами
     $results = [
         'host1_to_host2' => null,
         'host2_to_host1' => null,
         'proxy_mode' => true
     ];
     
+    // Запрос к host1 для теста скорости до host2
     $url1 = buildApiUrl($host1) . '/host_manager_api.php';
     $postData = [
         'action' => 'proxy_speed_test',
@@ -1389,6 +1525,7 @@ function speedTestProxy($db, $host1, $host2, $testSize = 1024) {
     
     $results['host1_to_host2'] = performProxySpeedTest($url1, $host1['hostApiKey'], $postData);
     
+    // Запрос к host2 для теста скорости до host1
     $url2 = buildApiUrl($host2) . '/host_manager_api.php';
     $postData = [
         'action' => 'proxy_speed_test',
@@ -1407,6 +1544,9 @@ function speedTestProxy($db, $host1, $host2, $testSize = 1024) {
     ];
 }
 
+/**
+ * Выполнение прокси теста скорости
+ */
 function performProxySpeedTest($url, $apiKey, $postData) {
     try {
         $ch = curl_init();
@@ -1436,6 +1576,9 @@ function performProxySpeedTest($url, $apiKey, $postData) {
     return ['success' => false, 'message' => 'Proxy test failed'];
 }
 
+/**
+ * Проверить статус исходящего запроса
+ */
 function checkOutgoingRequestStatus($db, $arId) {
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
@@ -1462,6 +1605,9 @@ function getTrapStatus($db) {
     ];
 }
 
+/**
+ * Установить статус Trap
+ */
 function setTrapStatus($db, $enabled) {
     $value = $enabled ? '1' : '0';
     
@@ -1488,6 +1634,7 @@ function setTrapStatus($db, $enabled) {
     return ['success' => false, 'message' => 'Failed to update trap status'];
 }
 
+// ========== API ROUTER ==========
 
 switch ($action) {
     case 'get_hosts':

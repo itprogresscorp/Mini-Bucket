@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 libxml_use_internal_errors(true);
 stream_context_set_default([
     'ssl' => [
@@ -168,6 +168,9 @@ try {
     echo json_encode(['error' => 'Internal server error', 'message' => $e->getMessage()]);
 }
 
+/**
+ * 1. МАСТЕР инициирует смену ключа СЛЕЙВА
+ */
 function handleGenerateNewKey($db) {
     logApiAction("handleGenerateNewKey called");
     
@@ -217,6 +220,9 @@ function handleGenerateNewKey($db) {
     ]);
 }
 
+/**
+ * 2. ОТПРАВКА НОВОГО КЛЮЧА (вызывается шедулером)
+ */
 function handleSendNewKey($db) {
     logApiAction("handleSendNewKey called");
     
@@ -280,6 +286,9 @@ function handleSendNewKey($db) {
     }
 }
 
+/**
+ * 3. ПРИНЯТИЕ НОВОГО КЛЮЧА (слейв получает новый ключ от мастера)
+ */
 function handleReceiveNewKey($db) {
     logApiAction("handleReceiveNewKey called");
     
@@ -316,6 +325,7 @@ function handleReceiveNewKey($db) {
     
     logApiAction("Keys updated for SN: {$targetSn}");
     
+    // Находим задачу и отмечаем ее как выполненную
     $stmt = $db->prepare('
         SELECT taskId, initiatorSn FROM key_rotation_tasks 
         WHERE targetSn = :sn AND newApiKey = :key AND status = "in_progress"
@@ -337,6 +347,7 @@ function handleReceiveNewKey($db) {
         
         logApiAction("Task {$task['taskId']} completed");
         
+        // Каскад для вышестоящих мастеров
         $initiatorSn = $task['initiatorSn'];
         $currentMasterSn = getCurrentHostSn($db);
         
@@ -382,6 +393,9 @@ function handleReceiveNewKey($db) {
     ]);
 }
 
+/**
+ * 4. ПОДТВЕРЖДЕНИЕ СМЕНЫ КЛЮЧА
+ */
 function handleCommandNewKey($db) {
     logApiAction("handleCommandNewKey called");
     
@@ -427,6 +441,9 @@ function handleCommandNewKey($db) {
     ]);
 }
 
+/**
+ * 5. СТАТУС ЗАДАЧИ
+ */
 function handleStatus($db) {
     $auth = authenticate($db);
     $sn = $auth['host']['hostSn'];
@@ -454,6 +471,9 @@ function handleStatus($db) {
     }
 }
 
+/**
+ * 6. СЛЕЙВ инициирует смену СВОЕГО ключа
+ */
 function handleSlaveInitiateKeyRotation($db) {
     logApiAction("handleSlaveInitiateKeyRotation called");
     
@@ -519,6 +539,9 @@ function handleSlaveInitiateKeyRotation($db) {
     ]);
 }
 
+/**
+ * 7. МАСТЕР принимает новый ключ от слейва
+ */
 function handleMasterReceiveSlaveKey($db) {
     logApiAction("handleMasterReceiveSlaveKey called");
     
@@ -540,7 +563,7 @@ function handleMasterReceiveSlaveKey($db) {
         echo json_encode(['error' => 'Slave host not found']);
         return;
     }
-      
+    
     $currentKey = $slaveHost['hostApiKey'];
     
     $stmt = $db->prepare('
@@ -555,12 +578,14 @@ function handleMasterReceiveSlaveKey($db) {
     
     logApiAction("Master updated key for slave: {$slaveSn} (old was " . substr($currentKey, 0, 10) . "...)");
     
+    // Каскад для других мастеров
     $currentMasterSn = getCurrentHostSn($db);
     $otherMasters = getAllMastersExceptCurrent($db, $currentMasterSn);
     
     if (!empty($otherMasters)) {
         $mastersJson = json_encode($otherMasters);
         
+        // Проверяем нет ли уже активной задачи
         $stmt = $db->prepare('
             SELECT taskId FROM key_rotation_tasks 
             WHERE targetSn = :slaveSn AND rotationType = "slave_cascade"

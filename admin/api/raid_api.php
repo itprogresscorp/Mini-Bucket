@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -81,7 +82,7 @@ function validateApiKey() {
 
 validateApiKey();
 
-$cacheFile = '/tmp/raid_api_cache.json';
+$cacheFile = '/var/www/minib/tmp/raid_api_cache.json';
 $cacheTTL = 3;
 
 function getCached($key, $ttl = 3) {
@@ -338,6 +339,7 @@ function getRaidHealth($mdName) {
     return $health;
 }
 
+// ==================== НОВАЯ ФУНКЦИЯ ДЛЯ ПРОВЕРКИ LVM ====================
 function getLVGInfoForRaid($mdName) {
     $devicePath = '/dev/' . $mdName;
     $result = [
@@ -514,7 +516,6 @@ function getAllRaidArrays() {
                 'disk_states' => []
             ];
         }
-		
         elseif ($currentArray !== null && preg_match('/\[[=>\s]+\]\s+(\d+\.?\d*)%/', $line, $syncMatches)) {
             $currentArray['sync_percent'] = floatval($syncMatches[1]);
         }
@@ -557,7 +558,6 @@ function getAllRaidArrays() {
     }
     
     foreach ($validArrays as &$array) {
-
         $sizeFromProc = execLight("cat /proc/partitions | grep ' " . $array['name'] . "$' | awk '{print $3}'", 2);
         if (!empty($sizeFromProc)) {
             $sizeBytes = intval($sizeFromProc) * 1024;
@@ -567,7 +567,6 @@ function getAllRaidArrays() {
             $array['size'] = 'N/A';
         }
         
-
         $health = getRaidHealth($array['name']);
         $array['degraded'] = $health['degraded'] || $array['degraded'];
         $array['failed_disks'] = $health['failed_disks'] ?: $array['failed_disks'];
@@ -582,11 +581,9 @@ function getAllRaidArrays() {
             $array['sync_action'] = $health['sync_action'];
         }
         
-
         $array['mount_point'] = isset($mounts['/dev/' . $array['name']]) ? $mounts['/dev/' . $array['name']]['mount_point'] : null;
         $array['is_mounted'] = isset($mounts['/dev/' . $array['name']]);
         
-
         $array['in_lvm'] = isRaidUsedInLVM($array['name']);
         if ($array['in_lvm']) {
             $lvmInfo = getLVGInfoForRaid($array['name']);
@@ -883,6 +880,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
         sleep(1);
     }
     
+    // ========== СОЗДАНИЕ RAID ==========
     foreach ($allDevices as $device) {
         $devicePath = "/dev/" . $device;
         $writeTest = execCmd("dd if=/dev/zero of=" . escapeshellarg($devicePath) . " bs=1M count=1 2>&1", true, 10);
@@ -1066,7 +1064,11 @@ function startRaid($mdName) {
     return ['success' => false, 'error' => $result];
 }
 
+// ==================== ФУНКЦИЯ УДАЛЕНИЯ ====================
 function deleteRaid($mdName, $force = false) {
+    // ============================================================
+    // 1. ПРОВЕРКА LVM
+    // ============================================================
     $lvmInfo = getLVGInfoForRaid($mdName);
     
     if ($lvmInfo['is_pv'] && !$force) {
@@ -1092,6 +1094,9 @@ function deleteRaid($mdName, $force = false) {
     $log[] = "=== DELETING RAID: $mdName ===";
     $log[] = "Force mode: " . ($force ? "YES" : "NO");
     
+    // ============================================================
+    // 2. ПРОВЕРКА МОНТИРОВАНИЯ
+    // ============================================================
     $mountPoint = execCmd("mount | grep '/dev/" . $mdName . "' | awk '{print $3}'", true, 5);
     if (!empty($mountPoint) && !$force) {
         return [
@@ -1109,6 +1114,9 @@ function deleteRaid($mdName, $force = false) {
         sleep(2);
     }
     
+    // ============================================================
+    // 3. ПОЛУЧАЕМ СПИСОК ДИСКОВ
+    // ============================================================
     $log[] = "=== Getting disks from RAID ===";
     $allDevices = [];
     
@@ -1142,6 +1150,9 @@ function deleteRaid($mdName, $force = false) {
         $log[] = "WARNING: No devices found for RAID $mdName";
     }
     
+    // ============================================================
+    // 4. ОСТАНОВКА МАССИВА ЧЕРЕЗ SYSFS
+    // ============================================================
     $log[] = "=== Stopping RAID via sysfs ===";
     
     execCmd("sudo sh -c 'echo \"clear\" > /sys/block/" . $mdName . "/md/array_state' 2>/dev/null", true, 5);
@@ -1156,15 +1167,24 @@ function deleteRaid($mdName, $force = false) {
     $log[] = "  echo remove > /sys/block/$mdName/md/array_state";
     sleep(1);
     
+    // ============================================================
+    // 5. ОСТАНОВКА ЧЕРЕЗ MDADM
+    // ============================================================
     $log[] = "=== Stopping via mdadm ===";
     execCmd("mdadm --stop /dev/" . escapeshellarg($mdName) . " 2>/dev/null", true, 10);
     execCmd("mdadm --stop --force /dev/" . escapeshellarg($mdName) . " 2>/dev/null", true, 10);
     sleep(2);
     
+    // ============================================================
+    // 6. УДАЛЕНИЕ DEVICE NODE
+    // ============================================================
     $log[] = "=== Removing device node ===";
     execCmd("rm -f /dev/" . escapeshellarg($mdName) . " 2>/dev/null", true, 5);
     execCmd("rm -f /dev/" . escapeshellarg($mdName) . "p* 2>/dev/null", true, 5);
     
+    // ============================================================
+    // 7. ОЧИСТКА КАЖДОГО ДИСКА
+    // ============================================================
     if (!empty($allDevices)) {
         $log[] = "=== Cleaning " . count($allDevices) . " disks ===";
         
@@ -1213,6 +1233,9 @@ function deleteRaid($mdName, $force = false) {
         $log[] = "=== No disks to clean, skipping ===";
     }
     
+    // ============================================================
+    // 8. ГЛОБАЛЬНОЕ СКАНИРОВАНИЕ
+    // ============================================================
     $log[] = "=== Scanning all disks for remaining superblocks ===";
     $allDisks = getAllDiskDevices();
     $foundExtra = [];
@@ -1237,6 +1260,9 @@ function deleteRaid($mdName, $force = false) {
         }
     }
     
+    // ============================================================
+    // 9. ОЧИСТКА КОНФИГУРАЦИИ
+    // ============================================================
     $log[] = "=== Cleaning configuration ===";
     execCmd("sed -i '/" . preg_quote($mdName, '/') . "/d' /etc/mdadm/mdadm.conf", true, 5);
     execCmd("sed -i '/name=.*:" . $mdName . "/d' /etc/mdadm/mdadm.conf", true, 5);
@@ -1251,6 +1277,9 @@ function deleteRaid($mdName, $force = false) {
         }
     }
     
+    // ============================================================
+    // 10. ОБНОВЛЕНИЕ СИСТЕМЫ
+    // ============================================================
     $log[] = "=== Updating system ===";
     execCmd("udevadm settle 2>/dev/null", true, 5);
     execCmd("udevadm control --reload 2>/dev/null", true, 5);
@@ -1259,6 +1288,9 @@ function deleteRaid($mdName, $force = false) {
     execCmd("systemctl restart mdmonitor", true, 10);
     execCmd("mdadm --assemble --scan 2>/dev/null", true, 10);
     
+    // ============================================================
+    // 11. ФИНАЛЬНАЯ ПРОВЕРКА
+    // ============================================================
     sleep(3);
     $finalCheck = execLight("cat /proc/mdstat 2>/dev/null | grep '^" . preg_quote($mdName, '/') . " '", 5);
     $deviceNodeExists = file_exists("/dev/" . $mdName);
@@ -1269,7 +1301,7 @@ function deleteRaid($mdName, $force = false) {
     
     clearCache();
     
-    $logFile = '/tmp/raid_delete_' . $mdName . '_' . date('Ymd_His') . '.log';
+    $logFile = '/var/www/minib/logs/raid_delete_' . $mdName . '_' . date('Ymd_His') . '.log';
     file_put_contents($logFile, implode("\n", $log));
     
     if (empty($finalCheck) && !$deviceNodeExists) {
@@ -1601,7 +1633,7 @@ function cleanupStaleRaid($mdName) {
     $log[] = "Restarting mdmonitor...";
     execCmd("systemctl restart mdmonitor", true, 10);
     
-    $logFile = '/tmp/raid_cleanup_' . $mdName . '_' . date('Ymd_His') . '.log';
+    $logFile = '/var/www/minib/logs/raid_cleanup_' . $mdName . '_' . date('Ymd_His') . '.log';
     file_put_contents($logFile, implode("\n", $log));
     
     sleep(2);
@@ -1662,6 +1694,9 @@ function forceCleanDisk($diskName) {
         return ['success' => false, 'error' => "Disk $diskPath not found"];
     }
     
+    // ============================================================
+    // 1. НАХОДИМ И ОСТАНАВЛИВАЕМ ВСЕ RAID, ГДЕ ИСПОЛЬЗУЕТСЯ ЭТОТ ДИСК
+    // ============================================================
     $log[] = "Finding and stopping RAIDs using this disk...";
     
     $mdstat = execLight("cat /proc/mdstat 2>/dev/null", 5);
@@ -1687,11 +1722,17 @@ function forceCleanDisk($diskName) {
         }
     }
     
+    // ============================================================
+    // 2. ОСТАНАВЛИВАЕМ ВСЁ, ЧТО ИСПОЛЬЗУЕТ ДИСК
+    // ============================================================
     $log[] = "Stopping processes using disk...";
     execCmd("mdadm --stop " . escapeshellarg($diskPath) . " 2>/dev/null", true, 5);
     execCmd("fuser -km " . escapeshellarg($diskPath) . " 2>/dev/null", true, 5);
     sleep(1);
     
+    // ============================================================
+    // 3. ОЧИСТКА СУПЕРБЛОКА RAID
+    // ============================================================
     $log[] = "Cleaning RAID superblock...";
     
     $possibleMd = execLight("ls /dev/md* 2>/dev/null | grep -E 'md[0-9]+$'", 5);
@@ -1713,11 +1754,17 @@ function forceCleanDisk($diskName) {
     }
     sleep(1);
     
+    // ============================================================
+    // 4. ОЧИСТКА ФАЙЛОВЫХ СИСТЕМ
+    // ============================================================
     $log[] = "Wiping filesystem signatures...";
     execCmd("wipefs --all --force " . escapeshellarg($diskPath) . " 2>/dev/null", true, 10);
     execCmd("wipefs --all --force " . escapeshellarg($diskPath) . " 2>/dev/null", true, 10);
     sleep(1);
     
+    // ============================================================
+    // 5. ЗАПИСЬ НУЛЕЙ
+    // ============================================================
     $log[] = "Writing zeros to disk (50MB)...";
     execCmd("dd if=/dev/zero of=" . escapeshellarg($diskPath) . " bs=1M count=50 2>/dev/null", true, 60);
     sleep(2);
@@ -1726,12 +1773,18 @@ function forceCleanDisk($diskName) {
     execCmd("dd if=/dev/zero of=" . escapeshellarg($diskPath) . " bs=512 count=20000 2>/dev/null", true, 60);
     sleep(1);
     
+    // ============================================================
+    // 6. ОБНОВЛЕНИЕ СИСТЕМЫ
+    // ============================================================
     $log[] = "Updating system...";
     execCmd("blockdev --rereadpt " . escapeshellarg($diskPath) . " 2>/dev/null", true, 5);
     execCmd("udevadm settle 2>/dev/null", true, 5);
     execCmd("udevadm control --reload 2>/dev/null", true, 5);
     execCmd("udevadm trigger 2>/dev/null", true, 5);
     
+    // ============================================================
+    // 7. ПРОВЕРКА
+    // ============================================================
     $check = execCmd("mdadm --examine " . escapeshellarg($diskPath) . " 2>/dev/null | grep -i 'magic'", true, 5);
     
     if (empty($check)) {
@@ -1832,6 +1885,7 @@ function fullSystemCleanup() {
     return $result;
 }
 
+// ==================== ОБРАБОТКА ЗАПРОСОВ ====================
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

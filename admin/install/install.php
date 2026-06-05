@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -28,6 +28,7 @@ if (file_exists(ROOT_PATH . '/config.php')) {
     die('Configuration file not found. Please ensure config.php exists in the parent directory.');
 }
 
+// Если установка уже выполнена
 if ($status_install == "1") {
     if (isset($_GET['reconfigure']) && $_GET['reconfigure'] == '1') {
         isAuthenticated();
@@ -37,6 +38,7 @@ if ($status_install == "1") {
     }
 }
 
+// Обработка выхода
 if (isset($_POST['cancel_install'])) {
     $configPath = ROOT_PATH . '/config.php';
     if (file_exists($configPath) && is_writable($configPath)) {
@@ -49,6 +51,7 @@ if (isset($_POST['cancel_install'])) {
     exit;
 }
 
+// Шаги мастера
 $steps = [
     1 => 'Welcome',
     2 => 'System Check',
@@ -68,12 +71,29 @@ if (!isset($_SESSION['install_data'])) {
     $_SESSION['install_data'] = [];
 }
 
+// Обработка POST запросов
 $error = null;
 $success = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
+    // Шаг 1: Проверка согласий
+    if ($action === 'accept_terms' && $currentStep == 1) {
+        $license_accepted = isset($_POST['license_accepted']) && $_POST['license_accepted'] == '1';
+        $privacy_accepted = isset($_POST['privacy_accepted']) && $_POST['privacy_accepted'] == '1';
+        
+        if ($license_accepted && $privacy_accepted) {
+            $_SESSION['install_data']['license_accepted'] = true;
+            $_SESSION['install_data']['privacy_accepted'] = true;
+            header('Location: ?step=2');
+            exit;
+        } else {
+            $error = 'You must accept both the License Agreement and the Privacy Policy to continue.';
+        }
+    }
+    
+    // Шаг 3: Сохранение имени хоста
     if ($action === 'save_hostname' && $currentStep == 3) {
 		$hostname = trim($_POST['hostname'] ?? '');
 		if (!empty($hostname)) {
@@ -92,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		}
 	}
     
+    // Шаг 4: Генерация API ключа и серийного номера
     if ($action === 'generate_api' && $currentStep == 4) {
         $apiKey = bin2hex(random_bytes(32));
         $serialNumber = generateSerialNumber(32);
@@ -103,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
+    // Шаг 5: Создание администратора
     if ($action === 'create_admin' && $currentStep == 5) {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -125,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // Шаг 6: Завершение установки
     if ($action === 'finalize' && $currentStep == 6) {
         $installSuccess = finalizeInstallation();
         
@@ -145,6 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Функция для получения системного hostname
 function getSystemHostname() {
     $hostname = php_uname('n');
     if (empty($hostname)) {
@@ -153,6 +177,7 @@ function getSystemHostname() {
     return $hostname ?: 'localhost';
 }
 
+// Функция для установки системного hostname
 function setSystemHostname($hostname) {
     if (empty($hostname)) return false;
     
@@ -191,6 +216,7 @@ function generateSerialNumber($length = 32) {
     return $serial;
 }
 
+// Функция завершения установки
 function finalizeInstallation() {
     try {
         $db = getDB();
@@ -199,17 +225,21 @@ function finalizeInstallation() {
         
         $data = $_SESSION['install_data'];
         
+        // 1. Устанавливаем системный hostname
         $newHostname = $data['hostname'] ?? getSystemHostname();
         setSystemHostname($newHostname);
         
+        // 2. Обновляем host в таблице hosts
         $hostname = $newHostname . ' (LocalHost)';
         $apiKey = $data['api_key'] ?? bin2hex(random_bytes(32));
-        $serialNumber = $data['serial_number'] ?? generateSerialNumber(32);
+        $serialNumber = $data['serial_number'] ?? generateSerialNumber(32); // Получаем серийный номер
         $currentDate = date('Y-m-d H:i:s');
         
+        // Проверяем, существует ли запись
         $check = $db->querySingle("SELECT COUNT(*) FROM hosts WHERE idHost = 1");
         
         if ($check == 0) {
+            // Вставляем новую запись с HostSn
             $stmt = $db->prepare("INSERT INTO hosts (idHost, hostName, hostApiKey, HostSn, hostProto, hostIp, hostPort, hostApiPath, hostStatus, hostLive, hostDateApiUpdtae) 
                                   VALUES (1, :name, :key, :sn, 'http', 'localhost', '80', '/api/', 'active', '1', :date)");
             $stmt->bindValue(':name', $hostname, SQLITE3_TEXT);
@@ -218,6 +248,7 @@ function finalizeInstallation() {
             $stmt->bindValue(':date', $currentDate, SQLITE3_TEXT);
             $stmt->execute();
         } else {
+            // Обновляем существующую запись, включая поле HostSn
             $stmt = $db->prepare("UPDATE hosts SET 
                                   hostName = :name, 
                                   hostApiKey = :key, 
@@ -231,13 +262,16 @@ function finalizeInstallation() {
             $stmt->execute();
         }
         
+        // 3. Обновляем или создаем администратора в таблице users
         $hashedPassword = password_hash($data['admin_password'], PASSWORD_DEFAULT);
         $adminUser = $data['admin_username'] ?? 'admin';
         $adminEmail = $data['admin_email'] ?? '';
         
+        // Проверяем существует ли пользователь
         $checkAdmin = $db->querySingle("SELECT COUNT(*) FROM users WHERE id = 1");
         
         if ($checkAdmin == 0) {
+            // Вставляем нового пользователя
             $stmt = $db->prepare("INSERT INTO users (id, username, password, email, role, created_at) 
                                   VALUES (1, :username, :pass, :email, 'admin', datetime('now'))");
             $stmt->bindValue(':username', $adminUser, SQLITE3_TEXT);
@@ -245,6 +279,7 @@ function finalizeInstallation() {
             $stmt->bindValue(':email', $adminEmail, SQLITE3_TEXT);
             $stmt->execute();
         } else {
+            // Обновляем существующего пользователя
             $stmt = $db->prepare("UPDATE users SET 
                                   username = :username, 
                                   password = :pass, 
@@ -261,14 +296,12 @@ function finalizeInstallation() {
 		//$type_pro = getCurrentConfigVersion()['type_pro'];
 
 		//@file_get_contents("https://update.itp-corp.ru/minib/download.php?action=record_install&version=" . urlencode($version) . "&type_pro=" . urlencode($type_pro));
-		@file_get_contents("https://update.itp-corp.ru/minib/download.php?action=record_install");	
-
+		@file_get_contents("https://update.mini-bucket.ru/minib/download.php?action=record_install");	
         $db->exec('COMMIT');
         $db->close();
         
         return true;
     } catch (Exception $e) {
-
         if (isset($db)) {
             $db->exec('ROLLBACK');
             $db->close();
@@ -278,7 +311,23 @@ function finalizeInstallation() {
     }
 }
 
+function getLicenseContent() {
+    $licensePath = ROOT_PATH . '/LICENSE';
+    if (file_exists($licensePath)) {
+        return file_get_contents($licensePath);
+    }
+    return "License file not found.";
+}
 
+function getPrivacyContent() {
+    $privacyPath = ROOT_PATH . '/PRIVACY';
+    if (file_exists($privacyPath)) {
+        return file_get_contents($privacyPath);
+    }
+    return "Privacy policy file not found.";
+}
+
+// Проверки для шага 2 (диагностика)
 $dbOk = false;
 $tempWritable = false;
 $dbError = null;
@@ -300,6 +349,9 @@ $tempWritable = is_writable($tempPath);
 $configWritable = is_writable(ROOT_PATH . '/config.php');
 
 $allChecksPassed = $dbOk && $tempWritable && $configWritable;
+
+$licenseContent = getLicenseContent();
+$privacyContent = getPrivacyContent();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -616,6 +668,79 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
             color: #8e8e93;
             cursor: pointer;
         }
+        
+        /* Стили для чекбоксов */
+        .agreement-checkbox {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f9f9fb;
+            border-radius: 12px;
+            border: 1px solid #e5e5ea;
+            transition: all 0.2s;
+        }
+        
+        .agreement-checkbox:hover {
+            background: #f5f5f7;
+            border-color: #007aff;
+        }
+        
+        .agreement-checkbox .form-check {
+            margin: 0;
+        }
+        
+        .agreement-checkbox .form-check-label {
+            font-weight: 500;
+            color: #1c1c1e;
+        }
+        
+        .agreement-checkbox .link-text {
+            color: #007aff;
+            text-decoration: none;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        
+        .agreement-checkbox .link-text:hover {
+            text-decoration: underline;
+        }
+        
+        /* Стили для модального окна */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #e5e5ea;
+            padding: 20px 24px;
+            background: #fafafc;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #e5e5ea;
+            padding: 16px 24px;
+            background: #fafafc;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        .license-content, .privacy-content {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f9f9fb;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -659,6 +784,7 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
                 </div>
             <?php endif; ?>
             
+            <!-- STEP 1: Welcome with Agreements -->
             <?php if ($currentStep == 1): ?>
                 <div class="text-center">
                     <i class="fas fa-hand-wave" style="font-size: 48px; color: #007aff; margin-bottom: 20px;"></i>
@@ -673,9 +799,51 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
                         <p class="mb-2"><i class="fas fa-shield-alt me-2" style="color: #34c759;"></i> Secure API key generation</p>
                         <p class="mb-0"><i class="fas fa-users me-2" style="color: #5856d6;"></i> Admin account creation</p>
                     </div>
+                    
+                    <hr class="my-4">
+                    
+                    <form method="POST" id="agreementForm">
+                        <input type="hidden" name="action" value="accept_terms">
+                        
+                        <!-- Лицензионное соглашение -->
+                        <div class="agreement-checkbox">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="license_accepted" id="license_accepted" value="1" required>
+                                <label class="form-check-label" for="license_accepted">
+                                    I have read and agree to the 
+                                    <a href="#" class="link-text" data-bs-toggle="modal" data-bs-target="#licenseModal">
+                                        License Agreement
+                                    </a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Политика сбора данных -->
+                        <div class="agreement-checkbox">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="privacy_accepted" id="privacy_accepted" value="1" required>
+                                <label class="form-check-label" for="privacy_accepted">
+                                    I have read and agree to the 
+                                    <a href="#" class="link-text" data-bs-toggle="modal" data-bs-target="#privacyModal">
+                                        Privacy Policy & Data Collection Terms
+                                    </a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info alert-custom mt-3" style="background: #e3f2fd;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You must accept both agreements to continue with the installation.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-apple-primary btn-apple mt-3 w-100" id="continueBtn" disabled>
+                            Accept & Continue <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </form>
                 </div>
             <?php endif; ?>
             
+            <!-- STEP 2: System Check -->
             <?php if ($currentStep == 2): ?>
                 <div>
                     <h3 style="font-weight: 600; margin-bottom: 20px;">System Diagnostics</h3>
@@ -723,6 +891,7 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
                 </div>
             <?php endif; ?>
             
+            <!-- STEP 3: Host Configuration -->
             <?php if ($currentStep == 3): ?>
 				<div>
 					<h3 style="font-weight: 600; margin-bottom: 8px;">Host Configuration</h3>
@@ -760,6 +929,7 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
 				</div>
 			<?php endif; ?>
             
+            <!-- STEP 4: API Security -->
             <?php if ($currentStep == 4): ?>
 				<div class="text-center">
 					<i class="fas fa-key" style="font-size: 48px; color: #ff9500; margin-bottom: 20px;"></i>
@@ -798,6 +968,7 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
 				</div>
 			<?php endif; ?>
             
+            <!-- STEP 5: Admin Account -->
             <?php if ($currentStep == 5): ?>
                 <div>
                     <h3 style="font-weight: 600; margin-bottom: 8px;">Administrator Account</h3>
@@ -844,6 +1015,7 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
                 </div>
             <?php endif; ?>
             
+            <!-- STEP 6: Ready to Launch -->
             <?php if ($currentStep == 6): ?>
                 <div class="text-center">
                     <i class="fas fa-check-circle" style="font-size: 56px; color: #34c759; margin-bottom: 20px;"></i>
@@ -884,9 +1056,6 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
             
             <?php if ($currentStep < 6 && $currentStep != 4 && $currentStep != 3 && $currentStep != 5): ?>
                 <?php if ($currentStep == 1): ?>
-                    <a href="?step=2" class="btn btn-apple-primary btn-apple">
-                        Begin Setup <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
                 <?php elseif ($currentStep == 2): ?>
                     <?php if ($allChecksPassed): ?>
                         <a href="?step=3" class="btn btn-apple-primary btn-apple">
@@ -899,19 +1068,110 @@ $allChecksPassed = $dbOk && $tempWritable && $configWritable;
                     <?php endif; ?>
                 <?php endif; ?>
             <?php endif; ?>
-             Version: <?php echo $version; ?>
-            <!-- Cancel button -->
-            <!--<form method="POST" style="display: inline;" onsubmit="return confirm('Cancel installation? This will mark setup as complete and redirect to login.');">
-                <input type="hidden" name="cancel_install" value="1">
-                <button type="submit" class="btn btn-apple-danger btn-apple">
-                    <i class="fas fa-times me-2"></i> Cancel
-                </button>
-            </form>-->
+            Version: <?php echo $version; ?>
         </div>
     </div>
 </div>
 
+<!-- Модальное окно для лицензионного соглашения -->
+<div class="modal fade" id="licenseModal" tabindex="-1" aria-labelledby="licenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="licenseModalLabel">
+                    <i class="fas fa-file-contract me-2" style="color: #007aff;"></i>
+                    License Agreement
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="license-content"><?= htmlspecialchars($licenseContent) ?></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-apple-primary" id="acceptLicenseBtn">
+                    <i class="fas fa-check me-2"></i>I Accept
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для политики конфиденциальности -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel">
+                    <i class="fas fa-shield-alt me-2" style="color: #34c759;"></i>
+                    Privacy Policy & Data Collection
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="privacy-content"><?= htmlspecialchars($privacyContent) ?></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-apple-primary" id="acceptPrivacyBtn">
+                    <i class="fas fa-check me-2"></i>I Accept
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Управление кнопкой Continue на шаге 1
+const licenseCheckbox = document.getElementById('license_accepted');
+const privacyCheckbox = document.getElementById('privacy_accepted');
+const continueBtn = document.getElementById('continueBtn');
+
+function updateContinueButton() {
+    if (continueBtn) {
+        const licenseChecked = licenseCheckbox ? licenseCheckbox.checked : false;
+        const privacyChecked = privacyCheckbox ? privacyCheckbox.checked : false;
+        continueBtn.disabled = !(licenseChecked && privacyChecked);
+    }
+}
+
+if (licenseCheckbox && privacyCheckbox) {
+    licenseCheckbox.addEventListener('change', updateContinueButton);
+    privacyCheckbox.addEventListener('change', updateContinueButton);
+    updateContinueButton();
+}
+
+// Функции для принятия соглашений из модальных окон
+function acceptLicense() {
+    if (licenseCheckbox) {
+        licenseCheckbox.checked = true;
+        updateContinueButton();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('licenseModal'));
+        if (modal) modal.hide();
+    }
+}
+
+function acceptPrivacy() {
+    if (privacyCheckbox) {
+        privacyCheckbox.checked = true;
+        updateContinueButton();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('privacyModal'));
+        if (modal) modal.hide();
+    }
+}
+
+// Назначаем обработчики для кнопок в модальных окнах
+const acceptLicenseBtn = document.getElementById('acceptLicenseBtn');
+if (acceptLicenseBtn) {
+    acceptLicenseBtn.addEventListener('click', acceptLicense);
+}
+
+const acceptPrivacyBtn = document.getElementById('acceptPrivacyBtn');
+if (acceptPrivacyBtn) {
+    acceptPrivacyBtn.addEventListener('click', acceptPrivacy);
+}
+
 function checkPasswordStrength(password) {
     let strength = 0;
     if (password.length >= 8) strength++;

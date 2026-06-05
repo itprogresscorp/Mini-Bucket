@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 header('Content-Type: application/json');
 
 define('ROOT_PATH', dirname(dirname(__FILE__)));
@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Function to get client IP address
 function getClientIp($data = []) {
     $realIp = !empty($data['my_real_ip']) ? trim($data['my_real_ip']) : '';
     
@@ -74,6 +75,7 @@ function getClientIp($data = []) {
     return $realIp;
 }
 
+// Function to detect real protocol (http/https)
 function getRealProtocol() {
     if (
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
@@ -86,6 +88,7 @@ function getRealProtocol() {
     return 'http';
 }
 
+// Function to detect real port
 function getRealPort() {
     if (!empty($_SERVER['HTTP_X_FORWARDED_PORT'])) {
         return (int)$_SERVER['HTTP_X_FORWARDED_PORT'];
@@ -96,6 +99,7 @@ function getRealPort() {
     return (getRealProtocol() === 'https') ? 443 : 80;
 }
 
+// Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
@@ -105,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Get PIN
 $pin = $_SERVER['HTTP_X_PIN'] ?? $_SERVER['HTTP_X_API_PIN'] ?? $_SERVER['HTTP_PIN'] ?? '';
 
 if (empty($pin)) {
@@ -116,6 +121,7 @@ if (empty($pin)) {
     exit;
 }
 
+// Verify PIN against database
 try {
     $stmt = $db->prepare("SELECT hostPin FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
@@ -140,6 +146,7 @@ try {
     exit;
 }
 
+// Get JSON input
 $jsonInput = file_get_contents('php://input');
 if (empty($jsonInput)) {
     http_response_code(400);
@@ -160,6 +167,7 @@ if ($data === null) {
     exit;
 }
 
+// Extract data from JSON
 $arVersion = !empty($data['version']) ? trim($data['version']) : 
              (!empty($data['arVersion']) ? trim($data['arVersion']) : '');
              
@@ -178,6 +186,7 @@ $arType = !empty($data['type']) ? trim($data['type']) :
 $arHostSn = !empty($data['host_sn']) ? trim($data['host_sn']) : 
             (!empty($data['arHostSn']) ? trim($data['arHostSn']) : '');
 
+// Detect real connection data
 $realProtocol = getRealProtocol();
 $realPort = getRealPort();
 $realIp = getClientIp($data);
@@ -185,6 +194,7 @@ $realIp = getClientIp($data);
 $arDate = date('Y-m-d H:i:s');
 $arReq = "incoming";
 
+// Validation
 if (empty($arName) && empty($arApiKey) && empty($arHostSn)) {
     http_response_code(400);
     echo json_encode([
@@ -275,7 +285,6 @@ try {
             ]);
         }
     } else {
-        // Insert new record
         $insertStmt = $db->prepare("INSERT INTO agent_request (
             arVersion, 
             arApiKey, 

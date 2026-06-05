@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -35,6 +35,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -71,6 +72,7 @@ $js_config = [
     'isLocalhost' => ($current_host_id == 1)
 ];
 
+// Статистика
 $stats = [
     'mounted' => 0,
     'fstab' => 0
@@ -94,7 +96,7 @@ if (isset($_GET['view_mode'])) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Mount Master — Mini-b</title>
+    <title>Mount Manager — Mini-b</title>
     <link href="lib/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="lib/fontawesome-free-6.7.2-web/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -103,9 +105,9 @@ if (isset($_GET['view_mode'])) {
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         * { box-sizing: border-box; }
         body { background: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -386,7 +388,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         <h1><i class="fas fa-bucket"></i> Mini-B</h1>
     </div>
     <div class="top-bar-right">
-        <i class="fas fa-hdd"></i> Mount Master
+        <i class="fas fa-hdd"></i> Mount Manager
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
                 <option value="">Loading...</option>
@@ -420,6 +422,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 	<div id="alertContainer"></div>
         <div id="globalAlert"></div>
         
+        <!-- ФИЛЬТРЫ -->
         <div class="filters-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -440,6 +443,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
         
+        <!-- ТАБЛИЦА -->
         <div class="card">
             <div class="card-header">
                 <span><i class="fas fa-hdd me-2"></i>Mounted Filesystems</span>
@@ -459,6 +463,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
         
+        <!-- ЛОГИ (свёрнутые) -->
         <div class="card" id="logsCard" style="display: none;">
             <div class="card-header collapse-header cursor-pointer" onclick="toggleLogs()">
                 <span><i class="fas fa-history me-2"></i>Operation Logs</span>
@@ -476,6 +481,9 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- ==================== МОДАЛЬНЫЕ ОКНА ==================== -->
+
+<!-- Модалка: Local Device -->
 <div class="modal fade" id="mountLocalModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -545,6 +553,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: RAID Device -->
 <div class="modal fade" id="mountRaidModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -610,6 +619,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: LVM Volume -->
 <div class="modal fade" id="mountLvmModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -675,6 +685,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: SMB/CIFS Share -->
 <div class="modal fade" id="mountCifsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -756,6 +767,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: NFS Share -->
 <div class="modal fade" id="mountNfsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -840,6 +852,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: Browse Folder -->
 <div class="modal fade" id="browseFolderModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -863,6 +876,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: Create Folder -->
 <div class="modal fade" id="createFolderDialog" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -882,6 +896,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модалка: Edit Mount Point -->
 <div class="modal fade" id="editMountPointModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -922,6 +937,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script src="lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
 let mountedData = [];
 let currentFilter = 'all';
@@ -931,6 +947,7 @@ let currentBrowseTarget = null;
 let currentBrowsePath = '/';
 let systemUsers = [];
 
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
@@ -986,6 +1003,7 @@ async function apiCall(action, method = 'GET', data = null, customApiKey = null)
     }
 }
 
+// ==================== ЗАГРУЗКА ДАННЫХ ====================
 async function loadAllData() {
     let result = await apiCall('get_all');
     if (result.success) {
@@ -1057,6 +1075,7 @@ async function loadAvailableDevices() {
     }
 }
 
+// ==================== ОТОБРАЖЕНИЕ ====================
 function filterMounts() {
     searchTerm = $('#searchInput').val().toLowerCase();
     fstabOnly = $('#showFstabOnly').prop('checked');
@@ -1098,6 +1117,7 @@ function renderMounts() {
         return true;
     });
     
+    // Таблица
     let tableHtml = '';
     filtered.forEach(m => {
         let typeIcon = m.is_network ? (m.network_type === 'cifs' ? '<i class="fab fa-windows"></i>' : '<i class="fab fa-linux"></i>') : '<i class="fas fa-hdd"></i>';
@@ -1126,6 +1146,7 @@ function renderMounts() {
     }
     $('#tableMountsContainer').html(tableHtml);
     
+    // Сетка
     let gridHtml = '';
     filtered.forEach(m => {
         let typeIcon = m.is_network ? (m.network_type === 'cifs' ? '<i class="fab fa-windows"></i>' : '<i class="fab fa-linux"></i>') : '<i class="fas fa-hdd"></i>';
@@ -1156,6 +1177,7 @@ function renderMounts() {
     $('#gridMountsContainer').html(gridHtml);
 }
 
+// ==================== ДЕЙСТВИЯ С МОНТИРОВАНИЕМ ====================
 async function unmount(mountPoint) {
     if (!confirm(`Unmount ${mountPoint}?`)) return;
     
@@ -1250,6 +1272,7 @@ $('#editMountPointForm').on('submit', async function(e) {
     }
 });
 
+// ==================== ФОРМЫ МОНТИРОВАНИЯ ====================
 $('#mountLocalForm').on('submit', async function(e) {
     e.preventDefault();
     let data = $(this).serializeArray();
@@ -1354,6 +1377,7 @@ $('#mountNfsForm').on('submit', async function(e) {
     }
 });
 
+// ==================== БРАУЗЕР ПАПОК ====================
 async function loadFolder(path, containerId, breadcrumbId, currentPathInputId) {
     $(`#${containerId}`).html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br>Loading...</div>');
     
@@ -1474,6 +1498,7 @@ async function createNewFolder() {
     }
 }
 
+// ==================== ЛОГИ ====================
 async function loadLogs() {
     let result = await apiCall('get_logs', 'GET', { lines: 100 });
     if (result.success && result.logs) {
@@ -1499,6 +1524,7 @@ function toggleLogs() {
     $('#logsCard').slideDown();
 }
 
+// ==================== ОБНОВЛЕНИЕ ====================
 async function refreshAllData() {
     await loadAllData();
     await loadAvailableDevices();
@@ -1506,6 +1532,7 @@ async function refreshAllData() {
     showAlert('Data refreshed', 'success');
 }
 
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
 $(document).ready(function() {
     refreshAllData();
     loadSystemUsers();

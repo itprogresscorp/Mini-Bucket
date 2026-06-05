@@ -17,373 +17,56 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
-$message = '';
-$error = '';
+$current_host_id = $_SESSION['current_host_id'] ?? 1;
 
-$cron_file = __DIR__ . '/cron_jobs.json';
-$log_file = __DIR__ . '/cron.log';
-$status_file = __DIR__ . '/cron_status.json';
-
-function getCrontabEntries() {
-    global $cron_file;
-    
-    if (!file_exists($cron_file)) {
-        return [];
-    }
-    
-    $content = file_get_contents($cron_file);
-    $entries = json_decode($content, true);
-    
-    if (!is_array($entries)) {
-        return [];
-    }
-    
-    foreach ($entries as $idx => &$entry) {
-        if (!isset($entry['unique_id'])) {
-            $entry['unique_id'] = uniqid('job_', true);
-        }
-        if (!isset($entry['enabled'])) {
-            $entry['enabled'] = true;
-        }
-        if (!isset($entry['created_at'])) {
-            $entry['created_at'] = date('Y-m-d H:i:s');
-        }
-        if (!isset($entry['job_name'])) {
-            $entry['job_name'] = 'Untitled Job';
-        }
-        if (!isset($entry['comment'])) {
-            $entry['comment'] = '';
-        }
-        if (!isset($entry['last_run'])) {
-            $entry['last_run'] = null;
-        }
-        if (!isset($entry['last_status'])) {
-            $entry['last_status'] = 'pending';
-        }
-        if (!isset($entry['last_output'])) {
-            $entry['last_output'] = '';
-        }
-        $entry['index'] = $idx;
-    }
-    
-    return $entries;
-}
-
-function saveCrontabEntries($entries) {
-    global $cron_file;
-    
-    $to_save = [];
-    foreach ($entries as $entry) {
-        unset($entry['index']);
-        $to_save[] = $entry;
-    }
-    
-    return file_put_contents($cron_file, json_encode($to_save, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
-}
-
-function getNextRunTime($cron) {
-    $now = time();
-    $max_attempts = 1000;
-    
-    for ($i = 0; $i < $max_attempts; $i++) {
-        $check_time = $now + ($i * 60);
-        $minute = (int)date('i', $check_time);
-        $hour = (int)date('H', $check_time);
-        $day = (int)date('d', $check_time);
-        $month = (int)date('m', $check_time);
-        $weekday = (int)date('w', $check_time);
-        
-        if (checkCronTime($cron['minute'], $minute) &&
-            checkCronTime($cron['hour'], $hour) &&
-            checkCronTime($cron['day'], $day) &&
-            checkCronTime($cron['month'], $month) &&
-            checkCronTime($cron['weekday'], $weekday)) {
-            return date('Y-m-d H:i:s', $check_time);
-        }
-    }
-    
-    return 'N/A';
-}
-
-function checkCronTime($cron_value, $current_value) {
-    if ($cron_value === "*") return true;
-    
-    if (preg_match("/^\*\/(\d+)$/", $cron_value, $matches)) {
-        $interval = (int)$matches[1];
-        return ($current_value % $interval === 0);
-    }
-    
-    if (strpos($cron_value, "-") !== false) {
-        list($start, $end) = explode("-", $cron_value);
-        return ($current_value >= (int)$start && $current_value <= (int)$end);
-    }
-    
-    if (strpos($cron_value, ",") !== false) {
-        $values = explode(",", $cron_value);
-        return in_array($current_value, array_map("intval", $values));
-    }
-    
-    return (int)$cron_value === (int)$current_value;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-    header('Content-Type: application/json');
-    
-    $action = $_POST['action'] ?? '';
-    $response = ['success' => false, 'message' => ''];
-    
-    if ($action === 'save') {
-        $job_name = trim($_POST['job_name'] ?? '');
-        $comment = trim($_POST['comment'] ?? '');
-        $minute = trim($_POST['minute'] ?? '*');
-        $hour = trim($_POST['hour'] ?? '*');
-        $day = trim($_POST['day'] ?? '*');
-        $month = trim($_POST['month'] ?? '*');
-        $weekday = trim($_POST['weekday'] ?? '*');
-        $command = trim($_POST['command'] ?? '');
-        $enabled = isset($_POST['enabled']) ? true : false;
-        $edit_unique_id = $_POST['edit_unique_id'] ?? '';
-        
-        if (empty($job_name) || empty($command)) {
-            $response['message'] = 'Job name and command are required';
-            echo json_encode($response);
-            exit;
-        }
-        
-        $entries = getCrontabEntries();
-        
-        $new_entry = [
-            'unique_id' => empty($edit_unique_id) ? uniqid('job_', true) : $edit_unique_id,
-            'job_name' => $job_name,
-            'comment' => $comment,
-            'minute' => $minute ?: '*',
-            'hour' => $hour ?: '*',
-            'day' => $day ?: '*',
-            'month' => $month ?: '*',
-            'weekday' => $weekday ?: '*',
-            'command' => $command,
-            'enabled' => $enabled,
-            'created_at' => date('Y-m-d H:i:s'),
-            'last_run' => null,
-            'last_status' => 'pending',
-            'last_output' => ''
-        ];
-        
-        $found = false;
-        foreach ($entries as $idx => $job) {
-            if (isset($job['unique_id']) && $job['unique_id'] === $edit_unique_id && !empty($edit_unique_id)) {
-                $new_entry['created_at'] = $job['created_at'];
-                $new_entry['last_run'] = $job['last_run'] ?? null;
-                $new_entry['last_status'] = $job['last_status'] ?? 'pending';
-                $new_entry['last_output'] = $job['last_output'] ?? '';
-                $entries[$idx] = $new_entry;
-                $found = true;
-                break;
-            }
-        }
-        
-        if (!$found) {
-            $entries[] = $new_entry;
-        }
-        
-        if (saveCrontabEntries($entries)) {
-            $response['success'] = true;
-            $response['message'] = empty($edit_unique_id) ? 'Cron job added successfully' : 'Cron job updated successfully';
-        } else {
-            $response['message'] = 'Failed to save cron job';
-        }
-    }
-    
-    echo json_encode($response);
+try {
+    $db = getDB();
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     exit;
 }
 
-if (isset($_GET['ajax_delete'])) {
-    header('Content-Type: application/json');
-    $unique_id = $_GET['ajax_delete'];
-    $entries = getCrontabEntries();
-    $response = ['success' => false, 'message' => ''];
+$stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
+$stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
+$result = $stmt->execute();
+$host = $result->fetchArray(SQLITE3_ASSOC);
+
+if ($host) {
+    $api_key = $host['hostApiKey'];
+    $host_name = $host['hostName'];
+    $host_id = $host['idHost'];
+    $host_proto = $host['hostProto'];
+    $host_ip = $host['hostIp'];
+    $host_port = $host['hostPort'];
+    $host_api_path = $host['hostApiPath'];
     
-    foreach ($entries as $idx => $job) {
-        if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
-            array_splice($entries, $idx, 1);
-            if (saveCrontabEntries($entries)) {
-                $response['success'] = true;
-                $response['message'] = 'Cron job deleted';
-            }
-            break;
-        }
+    $host_url = $host_proto . "://" . $host_ip;
+    if (!empty($host_port) && $host_port != 0 && $host_port != '0') {
+        $host_url .= ":" . $host_port;
     }
+    $host_url .= $host_api_path;
     
-    echo json_encode($response);
-    exit;
+    if ($current_host_id == 1) {
+        $api_base_url = '/api/';
+    } else {
+        $api_base_url = rtrim($host_url, '/') . '/';
+    }
+} else {
+    $api_key = null;
+    $api_base_url = '/api/';
 }
 
-if (isset($_GET['ajax_toggle'])) {
-    header('Content-Type: application/json');
-    $unique_id = $_GET['ajax_toggle'];
-    $entries = getCrontabEntries();
-    $response = ['success' => false, 'message' => ''];
-    
-    foreach ($entries as $idx => &$job) {
-        if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
-            $job['enabled'] = !$job['enabled'];
-            if (saveCrontabEntries($entries)) {
-                $response['success'] = true;
-                $response['message'] = 'Cron job ' . ($job['enabled'] ? 'enabled' : 'disabled');
-                $response['enabled'] = $job['enabled'];
-            }
-            break;
-        }
-    }
-    
-    echo json_encode($response);
-    exit;
-}
-
-if (isset($_GET['ajax_run'])) {
-    header('Content-Type: application/json');
-    $unique_id = $_GET['ajax_run'];
-    $entries = getCrontabEntries();
-    $response = ['success' => false, 'message' => ''];
-    
-    foreach ($entries as $idx => &$job) {
-        if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
-            if (!$job['enabled']) {
-                $response['message'] = 'Job is disabled';
-                echo json_encode($response);
-                exit;
-            }
-            
-            $cmd = $job['command'];
-            $output = [];
-            $return_var = 0;
-            exec($cmd . " 2>&1", $output, $return_var);
-            
-            $output_str = implode("\n", $output);
-            $status = ($return_var === 0) ? 'success' : 'failed';
-            
-            $job['last_run'] = date('Y-m-d H:i:s');
-            $job['last_status'] = $status;
-            $job['last_output'] = substr($output_str, 0, 500);
-            saveCrontabEntries($entries);
-            
-            $response['success'] = true;
-            $response['message'] = 'Job executed. Status: ' . $status;
-            $response['status'] = $status;
-            $response['output'] = nl2br(htmlspecialchars(substr($output_str, 0, 1000)));
-            break;
-        }
-    }
-    
-    echo json_encode($response);
-    exit;
-}
-
-if (isset($_GET['ajax_get_job'])) {
-    header('Content-Type: application/json');
-    $unique_id = $_GET['ajax_get_job'];
-    $entries = getCrontabEntries();
-    
-    foreach ($entries as $job) {
-        if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
-            echo json_encode(['success' => true, 'job' => $job]);
-            exit;
-        }
-    }
-    
-    echo json_encode(['success' => false, 'message' => 'Job not found']);
-    exit;
-}
-
-if (isset($_GET['ajax_get_status'])) {
-    header('Content-Type: application/json');
-    $unique_id = $_GET['ajax_get_status'];
-    $entries = getCrontabEntries();
-    
-    foreach ($entries as $job) {
-        if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
-            echo json_encode([
-                'success' => true,
-                'last_run' => $job['last_run'] ?? null,
-                'last_status' => $job['last_status'] ?? 'pending',
-                'last_output' => $job['last_output'] ?? ''
-            ]);
-            exit;
-        }
-    }
-    
-    echo json_encode(['success' => false, 'message' => 'Job not found']);
-    exit;
-}
-
-$crons = getCrontabEntries();
-
-$runner_script = __DIR__ . '/cron_runner.php';
-if (!file_exists($runner_script)) {
-    $runner_content = '<?php
-$cron_file = __DIR__ . "/cron_jobs.json";
-$log_file = __DIR__ . "/cron.log";
-
-if (!file_exists($cron_file)) exit(0);
-
-$jobs = json_decode(file_get_contents($cron_file), true);
-if (!is_array($jobs)) exit(0);
-
-$now = time();
-$current_minute = date("i", $now);
-$current_hour = date("H", $now);
-$current_day = date("d", $now);
-$current_month = date("m", $now);
-$current_weekday = date("w", $now);
-
-function check_cron_time($cron_value, $current_value) {
-    if ($cron_value === "*") return true;
-    if (preg_match("/^\*\/(\d+)$/", $cron_value, $matches)) {
-        return ($current_value % (int)$matches[1] === 0);
-    }
-    if (strpos($cron_value, "-") !== false) {
-        list($start, $end) = explode("-", $cron_value);
-        return ($current_value >= (int)$start && $current_value <= (int)$end);
-    }
-    if (strpos($cron_value, ",") !== false) {
-        $values = explode(",", $cron_value);
-        return in_array($current_value, array_map("intval", $values));
-    }
-    return (int)$cron_value === (int)$current_value;
-}
-
-foreach ($jobs as &$job) {
-    if (!$job["enabled"]) continue;
-    
-    if (check_cron_time($job["minute"], (int)$current_minute) &&
-        check_cron_time($job["hour"], (int)$current_hour) &&
-        check_cron_time($job["day"], (int)$current_day) &&
-        check_cron_time($job["month"], (int)$current_month) &&
-        check_cron_time($job["weekday"], (int)$current_weekday)) {
-        
-        $output = [];
-        $return_var = 0;
-        exec($job["command"] . " 2>&1", $output, $return_var);
-        
-        $job["last_run"] = date("Y-m-d H:i:s");
-        $job["last_status"] = ($return_var === 0) ? "success" : "failed";
-        $job["last_output"] = substr(implode("\n", $output), 0, 500);
-        
-        file_put_contents($log_file, "[" . date("Y-m-d H:i:s") . "] " . $job["job_name"] . " - " . $job["last_status"] . "\n", FILE_APPEND);
-    }
-}
-
-file_put_contents($cron_file, json_encode($jobs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-';
-    file_put_contents($runner_script, $runner_content);
-}
+$js_config = [
+    'apiBaseUrl' => $api_base_url,
+    'apiKey' => $api_key,
+    'isLocalhost' => ($current_host_id == 1)
+];
 
 $menu = require_once 'menu.php';
 ?>
@@ -396,7 +79,6 @@ $menu = require_once 'menu.php';
     
     <link href="lib/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="lib/bootstrap-icons-1.11.0/bootstrap-icons.css">
-    <!--<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">-->
     <link rel="stylesheet" href="lib/fontawesome-free-6.7.2-web/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/loader.css">
@@ -836,6 +518,141 @@ $menu = require_once 'menu.php';
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
         }
+        
+        .log-viewer {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1c1c1e;
+            color: #e5e5ea;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .log-line {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border-bottom: 1px solid #2a2a2e;
+            padding: 4px 0;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .tab-btn.active {
+            color: #007aff;
+            border-bottom: 2px solid #007aff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .runner-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+		
+        .script-select {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+        }
+        
+        .script-list-item {
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .script-list-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .script-list-item.selected {
+            background-color: #007aff20;
+            border-left: 3px solid #007aff;
+        }
+        
+        .code-editor {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            background: #1c1c1e;
+            color: #e5e5ea;
+            padding: 16px;
+            border-radius: 12px;
+            min-height: 400px;
+        }
+        
+        .code-editor:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #007aff;
+        }
+        
+        .type-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .type-selector label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .command-input-group {
+            transition: all 0.3s ease;
+        }
+        
+        .script-selector-group {
+            transition: all 0.3s ease;
+        }
+        
+        .file-badge {
+            font-family: monospace;
+            font-size: 11px;
+        }
+		
+		.widget-header {
+			margin-left: 15px;
+			margin-top: 5px;
+		}
+		
+		.widget-body {
+			margin-left: 10px;
+			margin-right: 10px;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
     </style>
 </head>
 <body>
@@ -848,134 +665,95 @@ $menu = require_once 'menu.php';
     <div class="top-bar-left">
         <h1><i class="fas fa-bucket"></i> Mini-B</h1>
     </div>
-	
     <div class="top-bar-right">
-	<text><i class="bi bi-clock-history"></i> Cron Jobs</text>
-    <button class="btn btn-success btn-sm" onclick="openCronModal()">
+	<i class="bi bi-clock-history"></i> Cron Jobs
+        <div class="host-selector" style="margin-right: 15px;">
+            <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+		<button class="btn-apple" onclick="openCronModal()">
                 <i class="bi bi-plus-lg"></i> Add Cron Job
             </button>
-	</div>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+    </div>
 </div>
 
 <div class="app-container">
     <?php echo $menu; ?>
     
     <main class="main-content">
-        
         <div id="alertContainer"></div>
         
-        <?php if(empty($crons)): ?>
-            <div class="empty-state">
-                <i class="bi bi-calendar2-x"></i>
-                <h5>No Cron Jobs</h5>
-                <p class="text-muted">Click "Add Cron Job" to create your first scheduled task</p>
-                <button class="btn-apple" onclick="openCronModal()">
-                    <i class="bi bi-plus-lg"></i> Create Cron Job
-                </button>
-            </div>
-        <?php else: ?>
-            <div class="row g-4">
-                <?php foreach($crons as $cron): 
-                    $next_run = $cron['enabled'] ? getNextRunTime($cron) : 'Disabled';
-                ?>
-                    <div class="col-md-6 col-lg-4" data-job-id="<?= htmlspecialchars($cron['unique_id']) ?>">
-                        <div class="job-card <?= $cron['enabled'] ? 'enabled' : 'disabled' ?>">
-                            <div class="job-card-header">
-                                <div>
-                                    <div class="job-name">
-                                        <?php if($cron['enabled']): ?>
-                                            <span class="status-badge status-success"><i class="bi bi-play-fill"></i> Active</span>
-                                        <?php else: ?>
-                                            <span class="status-badge status-pending"><i class="bi bi-pause-fill"></i> Paused</span>
-                                        <?php endif; ?>
-                                        
-                                        <?php if($cron['last_status'] === 'success' && $cron['enabled']): ?>
-                                            <span class="status-badge status-success"><i class="bi bi-check-circle"></i> OK</span>
-                                        <?php elseif($cron['last_status'] === 'failed' && $cron['enabled']): ?>
-                                            <span class="status-badge status-failed"><i class="bi bi-exclamation-circle"></i> Failed</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="fw-semibold fs-6 mt-1"><?= htmlspecialchars($cron['job_name']) ?></div>
-                                    <?php if(!empty($cron['comment'])): ?>
-                                        <div class="job-comment"><?= htmlspecialchars($cron['comment']) ?></div>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <div class="card-actions-dropdown">
-                                    <button class="dropdown-toggle-actions" onclick="toggleDropdown(this)">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <div class="dropdown-menu-actions">
-                                        <a href="#" onclick="runJob('<?= htmlspecialchars($cron['unique_id']) ?>'); return false;">
-                                            <i class="bi bi-play-fill"></i> Run Now
-                                        </a>
-                                        <a href="#" onclick="toggleJob('<?= htmlspecialchars($cron['unique_id']) ?>'); return false;">
-                                            <i class="bi bi-<?= $cron['enabled'] ? 'pause-fill' : 'play-fill' ?>"></i> <?= $cron['enabled'] ? 'Disable' : 'Enable' ?>
-                                        </a>
-                                        <a href="#" onclick="editJob('<?= htmlspecialchars($cron['unique_id']) ?>'); return false;">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <a href="#" onclick="deleteJob('<?= htmlspecialchars($cron['unique_id']) ?>'); return false;" style="color: #ff3b30;">
-                                            <i class="bi bi-trash3"></i> Delete
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="job-card-body">
-                                <div class="schedule-code">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    <code><?= htmlspecialchars($cron['minute'] . ' ' . $cron['hour'] . ' ' . $cron['day'] . ' ' . $cron['month'] . ' ' . $cron['weekday']) ?></code>
-                                </div>
-                                
-                                <div class="command-code">
-                                    <i class="bi bi-terminal me-1"></i>
-                                    <code><?= htmlspecialchars($cron['command']) ?></code>
-                                </div>
-                                
-                                <div class="run-time">
-                                    <i class="bi bi-hourglass-split"></i>
-                                    <span>Next: <strong><?= htmlspecialchars($next_run) ?></strong></span>
-                                </div>
-                                
-                                <?php if($cron['last_run']): ?>
-                                    <div class="run-time">
-                                        <i class="bi bi-clock-history"></i>
-                                        <span>Last: <?= htmlspecialchars($cron['last_run']) ?></span>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <?php if(!empty($cron['last_output'])): ?>
-                                    <div class="output-preview">
-                                        <i class="bi bi-code-square"></i> Last output:<br>
-                                        <code><?= nl2br(htmlspecialchars(substr($cron['last_output'], 0, 120))) ?></code>
-                                        <?php if(strlen($cron['last_output']) > 120): ?>
-                                            <button class="btn btn-link btn-sm p-0 mt-1" onclick="showFullOutput('<?= htmlspecialchars($cron['unique_id']) ?>')" style="font-size: 10px;">Show more...</button>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="job-card-footer">
-                                <i class="bi bi-calendar-plus"></i> Created: <?= htmlspecialchars($cron['created_at'] ?? '-') ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="jobs">Jobs</button>
+            <button class="tab-btn" data-tab="scripts">Scripts</button>
+            <button class="tab-btn" data-tab="logs">Logs</button>
+            <button class="tab-btn" data-tab="settings">Runner Settings</button>
+        </div>
         
-        <div class="help-box">
-            <div class="d-flex align-items-start gap-3">
-                <i class="bi bi-info-circle-fill fs-4" style="color: #007aff;"></i>
-                <div>
-                    <strong>How to enable automatic execution:</strong><br>
-                    <code class="bg-dark text-light p-1 px-2 rounded d-inline-block mt-1">* * * * * php <?= $runner_script ?> > /dev/null 2>&1</code>
-                    <div class="small text-muted mt-2">
-                        Add this line to your system crontab (<code>crontab -e</code>). Jobs run every minute based on schedule.
-                        Logs stored in <code><?= __DIR__ ?>/cron.log</code>
+        <div id="jobsTab" class="tab-content active">
+            <div id="jobsContainer"></div>
+        </div>
+        
+        <div id="scriptsTab" class="tab-content">
+            <div class="apple-card">
+                <div class="widget-header">
+                    <h3><i class="bi bi-file-code"></i> User Scripts</h3>
+                    <div>
+                        <button class="btn btn-primary btn-sm" onclick="openScriptModal()">
+                            <i class="bi bi-plus-lg"></i> New Script
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="refreshScripts()">
+                            <i class="bi bi-arrow-repeat"></i> Refresh
+                        </button>
                     </div>
+                </div>
+                <div class="widget-body">
+                    <div id="scriptsContainer" class="table-responsive">
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="logsTab" class="tab-content">
+            <div class="apple-card">
+                <div class="widget-header">
+                    <h3><i class="bi bi-file-text"></i> Execution Logs</h3>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshLogs()"><i class="bi bi-arrow-repeat"></i> Refresh</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearLogs()"><i class="bi bi-trash"></i> Clear</button>
+                    </div>
+                </div>
+                <div class="widget-body">
+                    <div id="logViewer" class="log-viewer">
+                        <div class="text-center text-muted">Loading logs...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="settingsTab" class="tab-content">
+            <div class="apple-card">
+                <div class="widget-header">
+                    <h3><i class="bi bi-gear"></i> Cron Runner Configuration</h3>
+                </div>
+                <div class="widget-body">
+                    <div class="runner-status" id="runnerStatus">
+                        <div class="loading-spinner-sm"></div> Checking runner status...
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mt-3">Scripts Directory</h6>
+                    <p><code id="scriptsDirDisplay"></code></p>
+                    
+                    <hr>
+                    
+                    <h6 class="mt-3">Manual Setup Instructions</h6>
+                    <p>Add this line to your system crontab (<code>crontab -e</code>):</p>
+                    <pre id="runnerCommandDisplay" class="bg-dark text-light p-3 rounded" style="overflow-x: auto;"></pre>
                 </div>
             </div>
         </div>
@@ -992,7 +770,7 @@ $menu = require_once 'menu.php';
             </div>
             <div class="modal-body">
                 <form id="cronForm">
-                    <input type="hidden" id="editUniqueId" name="edit_unique_id" value="">
+                    <input type="hidden" id="editUniqueId" name="unique_id" value="">
                     
                     <div class="row g-3">
                         <div class="col-12">
@@ -1005,7 +783,43 @@ $menu = require_once 'menu.php';
                             <textarea class="form-control form-control-apple" id="comment" name="comment" rows="2" placeholder="What does this job do?"></textarea>
                         </div>
                         
-                        <div class="row g-2">
+                        <!-- Type Selector -->
+                        <div class="col-12 type-selector">
+                            <label>
+                                <input type="radio" name="job_type" value="command" checked onchange="toggleJobType()">
+                                <i class="bi bi-terminal"></i> Command
+                            </label>
+                            <label>
+                                <input type="radio" name="job_type" value="script" onchange="toggleJobType()">
+                                <i class="bi bi-file-code"></i> Script
+                            </label>
+                        </div>
+                        
+                        <!-- Command Input -->
+                        <div class="col-12 command-input-group" id="commandGroup">
+                            <label class="form-label fw-semibold">Command <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-apple" id="command" name="command" rows="3" placeholder="/usr/bin/php /path/to/script.php"></textarea>
+                        </div>
+                        
+                        <!-- Script Selector -->
+                        <div class="col-12 script-selector-group" id="scriptGroup" style="display: none;">
+                            <label class="form-label fw-semibold">Select Script <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-select form-select-apple" id="script_name" name="script_name">
+                                    <option value="">-- Select a script --</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" onclick="openScriptModalForSelect()">
+                                    <i class="bi bi-plus-lg"></i> New
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="editSelectedScript()">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </div>
+                            <small class="text-muted mt-1 d-block">Scripts are stored in <code>/var/www/minib/cron/userscripts/</code></small>
+                        </div>
+                        
+                        <!-- Cron Schedule -->
+                        <div class="row g-2 mt-2">
                             <div class="col-md-2">
                                 <label class="form-label small fw-semibold">Minute</label>
                                 <input type="text" class="form-control form-control-apple" id="minute" name="minute" value="*" placeholder="*">
@@ -1041,11 +855,6 @@ $menu = require_once 'menu.php';
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Command <span class="text-danger">*</span></label>
-                            <textarea class="form-control form-control-apple" id="command" name="command" rows="3" placeholder="/usr/bin/php /path/to/script.php"></textarea>
-                        </div>
                     </div>
                     
                     <hr class="my-3">
@@ -1077,6 +886,59 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal for Script Editor -->
+<div class="modal fade modal-apple" id="scriptModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-file-code me-2"></i><span id="scriptModalTitle">Create Script</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Filename <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-apple" id="script_filename" placeholder="script.sh">
+                        <small class="text-muted">Extension determines script type (.sh, .php, .py, .js, .rb)</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Template</label>
+                        <select class="form-select form-select-apple" id="script_template" onchange="loadTemplate()">
+                            <option value="bash">Bash (.sh)</option>
+                            <option value="php">PHP (.php)</option>
+                            <option value="python">Python (.py)</option>
+                            <option value="node">Node.js (.js)</option>
+                            <option value="ruby">Ruby (.rb)</option>
+                            <option value="empty">Empty</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Script Content</label>
+                        <textarea id="script_content" class="code-editor" rows="15" style="width: 100%; font-family: monospace;"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="script_executable" checked>
+                            <label class="form-check-label" for="script_executable">
+                                Make executable (chmod +x)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="deleteScriptBtn" onclick="deleteCurrentScript()" style="display: none;">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-apple" onclick="saveScript()">
+                    <i class="bi bi-save"></i> Save Script
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal for Full Output -->
 <div class="modal fade modal-apple" id="outputModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -1098,11 +960,47 @@ $menu = require_once 'menu.php';
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script src="lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/loader.js"></script>
+<script src="js/hosts_load.js"></script>
 
 <script>
+window.apiConfig = <?php echo json_encode($js_config); ?>;
+
 let currentModal = null;
 let outputModal = null;
+let scriptModal = null;
+let currentJobs = [];
+let currentScripts = [];
+let scriptSelectCallback = null;
 
+// ========== API Calls ==========
+async function apiCall(action, method = 'GET', data = null) {
+    let fullUrl = `${window.apiConfig.apiBaseUrl}cron_api.php?action=${action}`;
+    let options = { 
+        method: method, 
+        headers: {}
+    };
+    
+    if (window.apiConfig && window.apiConfig.apiKey) {
+        options.headers['X-API-Key'] = window.apiConfig.apiKey;
+    }
+    
+    if (method === 'POST' && data) {
+        options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        options.body = new URLSearchParams(data);
+    } else if (method === 'GET' && data) {
+        fullUrl += '&' + new URLSearchParams(data);
+    }
+    
+    try {
+        let response = await fetch(fullUrl, options);
+        return await response.json();
+    } catch(e) {
+        console.error('API Error:', e);
+        return { success: false, error: e.message };
+    }
+}
+
+// ========== UI Helpers ==========
 function showLoading() {
     if (!$('.loading-overlay').length) {
         $('body').append('<div class="loading-overlay"><div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div></div>');
@@ -1114,16 +1012,21 @@ function hideLoading() {
     $('.loading-overlay').hide();
 }
 
-function toggleDropdown(btn) {
-    $('.dropdown-menu-actions').not($(btn).next()).removeClass('show');
-    $(btn).next('.dropdown-menu-actions').toggleClass('show');
+function showAlert(message, type = 'success') {
+    const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show alert-apple mb-3" role="alert">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+    $('#alertContainer').append(alertHtml);
+    setTimeout(() => $('.alert').fadeOut(500, function() { $(this).remove(); }), 5000);
 }
 
-$(document).on('click', function(e) {
-    if (!$(e.target).closest('.card-actions-dropdown').length) {
-        $('.dropdown-menu-actions').removeClass('show');
-    }
-});
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
+    });
+}
 
 function updatePreview() {
     const minute = $('#minute').val() || '*';
@@ -1162,6 +1065,371 @@ function setCronPreset(minute, hour, day, month, weekday) {
     updatePreview();
 }
 
+function toggleJobType() {
+    const jobType = $('input[name="job_type"]:checked').val();
+    if (jobType === 'command') {
+        $('#commandGroup').show();
+        $('#scriptGroup').hide();
+        $('#command').prop('required', true);
+        $('#script_name').prop('required', false);
+    } else {
+        $('#commandGroup').hide();
+        $('#scriptGroup').show();
+        $('#command').prop('required', false);
+        $('#script_name').prop('required', true);
+        loadScriptsForSelect();
+    }
+}
+
+function toggleDropdown(btn) {
+    $('.dropdown-menu-actions').not($(btn).next()).removeClass('show');
+    $(btn).next('.dropdown-menu-actions').toggleClass('show');
+}
+
+// ========== Script Management ==========
+async function loadScripts() {
+    let result = await apiCall('get_scripts');
+    if (result.success) {
+        currentScripts = result.data;
+        renderScripts();
+    } else {
+        $('#scriptsContainer').html(`<div class="text-center text-danger">Error loading scripts: ${result.error}</div>`);
+    }
+}
+
+function renderScripts() {
+    if (currentScripts.length === 0) {
+        $('#scriptsContainer').html(`
+            <div class="empty-state">
+                <i class="bi bi-file-code"></i>
+                <h5>No Scripts</h5>
+                <p class="text-muted">Click "New Script" to create your first script</p>
+                <button class="btn-apple" onclick="openScriptModal()">
+                    <i class="bi bi-plus-lg"></i> Create Script
+                </button>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = `<table class="table table-hover">
+        <thead>
+            <tr><th>Filename</th><th>Size</th><th>Modified</th><th>Permissions</th><th>Actions</th></tr>
+        </thead>
+        <tbody>`;
+    
+    currentScripts.forEach(script => {
+        const extBadge = script.extension ? `<span class="badge bg-secondary">${escapeHtml(script.extension)}</span>` : '';
+        const executableBadge = script.is_executable ? '<span class="badge bg-success">executable</span>' : '<span class="badge bg-warning">not executable</span>';
+        
+        html += `<tr>
+            <td><code>${escapeHtml(script.name)}</code> ${extBadge}</td>
+            <td>${formatBytes(script.size)}</td>
+            <td>${escapeHtml(script.modified)}</td>
+            <td>${script.permissions} ${executableBadge}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="editScript('${escapeHtml(script.name)}')"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteScript('${escapeHtml(script.name)}')"><i class="bi bi-trash"></i></button>
+                ${script.is_executable ? `<button class="btn btn-sm btn-outline-success" onclick="testScript('${escapeHtml(script.name)}')"><i class="bi bi-play-fill"></i> Run</button>` : ''}
+            </td>
+        </tr>`;
+    });
+    
+    html += `</tbody></table>`;
+    $('#scriptsContainer').html(html);
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function loadScriptsForSelect() {
+    let result = await apiCall('get_scripts');
+    if (result.success) {
+        const select = $('#script_name');
+        const currentVal = select.val();
+        select.empty();
+        select.append('<option value="">-- Select a script --</option>');
+        result.data.forEach(script => {
+            if (script.is_executable) {
+                select.append(`<option value="${escapeHtml(script.name)}">${escapeHtml(script.name)}</option>`);
+            }
+        });
+        if (currentVal) select.val(currentVal);
+    }
+}
+
+function openScriptModalForSelect() {
+    scriptSelectCallback = true;
+    openScriptModal();
+}
+
+function openScriptModal(scriptName = null) {
+    $('#scriptModalTitle').text(scriptName ? 'Edit Script' : 'Create Script');
+    $('#script_filename').val(scriptName || '');
+    $('#script_content').val('');
+    $('#deleteScriptBtn').toggle(!!scriptName);
+    $('#script_template').val('bash');
+    
+    if (scriptName) {
+        loadScriptContent(scriptName);
+    } else {
+        loadTemplate();
+    }
+    
+    scriptModal = new bootstrap.Modal(document.getElementById('scriptModal'));
+    scriptModal.show();
+}
+
+async function loadScriptContent(filename) {
+    showLoading();
+    let result = await apiCall('get_script', 'GET', { filename: filename });
+    hideLoading();
+    
+    if (result.success) {
+        $('#script_content').val(result.content);
+        const ext = filename.split('.').pop();
+        if (ext === 'sh') $('#script_template').val('bash');
+        else if (ext === 'php') $('#script_template').val('php');
+        else if (ext === 'py') $('#script_template').val('python');
+        else if (ext === 'js') $('#script_template').val('node');
+        else if (ext === 'rb') $('#script_template').val('ruby');
+        else $('#script_template').val('bash');
+    } else {
+        showAlert(result.error, 'danger');
+    }
+}
+
+async function loadTemplate() {
+    const type = $('#script_template').val();
+    const filename = $('#script_filename').val() || 'script';
+    const name = filename.split('.')[0];
+    
+    if (type === 'empty') {
+        $('#script_content').val('');
+        return;
+    }
+    
+    let result = await apiCall('get_script_template', 'GET', { type: type, name: name });
+    if (result.success) {
+        $('#script_content').val(result.template);
+    }
+}
+
+async function saveScript() {
+    const filename = $('#script_filename').val().trim();
+    const content = $('#script_content').val();
+    const makeExecutable = $('#script_executable').is(':checked');
+    
+    if (!filename) {
+        showAlert('Filename is required', 'danger');
+        return;
+    }
+    
+    showLoading();
+    let result = await apiCall('save_script', 'POST', {
+        filename: filename,
+        content: content,
+        make_executable: makeExecutable ? '1' : '0'
+    });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, 'success');
+        scriptModal.hide();
+        await loadScripts();
+        await loadScriptsForSelect();
+        
+        if (scriptSelectCallback) {
+            scriptSelectCallback = false;
+            $('#script_name').val(filename);
+        }
+    } else {
+        showAlert(result.error, 'danger');
+    }
+}
+
+async function editSelectedScript() {
+    const scriptName = $('#script_name').val();
+    if (!scriptName) {
+        showAlert('Select a script first', 'warning');
+        return;
+    }
+    openScriptModal(scriptName);
+}
+
+async function editScript(filename) {
+    openScriptModal(filename);
+}
+
+async function deleteScript(filename) {
+    if (!confirm(`Delete script "${filename}"?`)) return;
+    
+    showLoading();
+    let result = await apiCall('delete_script', 'GET', { filename: filename });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, 'success');
+        await loadScripts();
+        await loadScriptsForSelect();
+    } else {
+        showAlert(result.error, 'danger');
+    }
+}
+
+async function deleteCurrentScript() {
+    const filename = $('#script_filename').val();
+    if (!filename) return;
+    
+    if (!confirm(`Delete script "${filename}"?`)) return;
+    
+    showLoading();
+    let result = await apiCall('delete_script', 'GET', { filename: filename });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, 'success');
+        scriptModal.hide();
+        await loadScripts();
+        await loadScriptsForSelect();
+    } else {
+        showAlert(result.error, 'danger');
+    }
+}
+
+async function testScript(filename) {
+    showLoading();
+    showAlert('Running script...', 'info');
+    
+    let result = await apiCall('run_script', 'GET', { filename: filename });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, result.status === 'success' ? 'success' : 'warning');
+        if (result.output) {
+            $('#fullOutput').text(result.output);
+            outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
+            outputModal.show();
+        }
+    } else {
+        showAlert(result.error || 'Error running script', 'danger');
+    }
+}
+
+function refreshScripts() {
+    loadScripts();
+}
+
+// ========== Load Jobs ==========
+async function loadJobs() {
+    let result = await apiCall('get_jobs');
+    if (result.success) {
+        currentJobs = result.data;
+        renderJobs();
+    } else {
+        $('#jobsContainer').html(`<div class="empty-state"><i class="bi bi-calendar2-x"></i><h5>Error loading jobs</h5><p class="text-muted">${result.error || 'Unknown error'}</p></div>`);
+    }
+}
+
+function renderJobs() {
+    if (currentJobs.length === 0) {
+        $('#jobsContainer').html(`
+            <div class="empty-state">
+                <i class="bi bi-calendar2-x"></i>
+                <h5>No Cron Jobs</h5>
+                <p class="text-muted">Click "Add Cron Job" to create your first scheduled task</p>
+                <button class="btn-apple" onclick="openCronModal()">
+                    <i class="bi bi-plus-lg"></i> Create Cron Job
+                </button>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '<div class="row g-4">';
+    currentJobs.forEach(job => {
+        const next_run = job.next_run || (job.enabled ? 'Calculating...' : 'Disabled');
+        const last_status_class = job.last_status === 'success' ? 'status-success' : (job.last_status === 'failed' ? 'status-failed' : 'status-pending');
+        const last_status_icon = job.last_status === 'success' ? 'bi-check-circle' : (job.last_status === 'failed' ? 'bi-exclamation-circle' : 'bi-question-circle');
+        
+        // Отображаем что выполняется
+        const execDisplay = job.job_type === 'script' 
+            ? `<span class="badge bg-info"><i class="bi bi-file-code"></i> Script: ${escapeHtml(job.script_name)}</span>`
+            : `<span class="badge bg-secondary"><i class="bi bi-terminal"></i> Command</span>`;
+        
+        html += `
+            <div class="col-md-6 col-lg-4" data-job-id="${escapeHtml(job.unique_id)}">
+                <div class="job-card ${job.enabled ? 'enabled' : 'disabled'}">
+                    <div class="job-card-header">
+                        <div>
+                            <div class="job-name">
+                                ${job.enabled ? '<span class="status-badge status-success"><i class="bi bi-play-fill"></i> Active</span>' : '<span class="status-badge status-pending"><i class="bi bi-pause-fill"></i> Paused</span>'}
+                                ${job.last_status !== 'pending' && job.enabled ? `<span class="status-badge ${last_status_class}"><i class="${last_status_icon}"></i> ${job.last_status === 'success' ? 'OK' : 'Failed'}</span>` : ''}
+                                ${execDisplay}
+                            </div>
+                            <div class="fw-semibold fs-6 mt-1">${escapeHtml(job.job_name)}</div>
+                            ${job.comment ? `<div class="job-comment">${escapeHtml(job.comment)}</div>` : ''}
+                        </div>
+                        <div class="card-actions-dropdown">
+                            <button class="dropdown-toggle-actions" onclick="toggleDropdown(this)">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <div class="dropdown-menu-actions">
+                                <a href="#" onclick="runJob('${escapeHtml(job.unique_id)}'); return false;">
+                                    <i class="bi bi-play-fill"></i> Run Now
+                                </a>
+                                <a href="#" onclick="toggleJob('${escapeHtml(job.unique_id)}'); return false;">
+                                    <i class="bi bi-${job.enabled ? 'pause-fill' : 'play-fill'}"></i> ${job.enabled ? 'Disable' : 'Enable'}
+                                </a>
+                                <a href="#" onclick="editJob('${escapeHtml(job.unique_id)}'); return false;">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" onclick="deleteJob('${escapeHtml(job.unique_id)}'); return false;" style="color: #ff3b30;">
+                                    <i class="bi bi-trash3"></i> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="schedule-code">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            <code>${escapeHtml(job.minute)} ${escapeHtml(job.hour)} ${escapeHtml(job.day)} ${escapeHtml(job.month)} ${escapeHtml(job.weekday)}</code>
+                        </div>
+                        <div class="command-code">
+                            <i class="bi bi-${job.job_type === 'script' ? 'file-code' : 'terminal'} me-1"></i>
+                            <code>${escapeHtml(job.job_type === 'script' ? job.script_name : job.command)}</code>
+                        </div>
+                        <div class="run-time">
+                            <i class="bi bi-hourglass-split"></i>
+                            <span>Next: <strong>${escapeHtml(next_run)}</strong></span>
+                        </div>
+                        ${job.last_run ? `<div class="run-time"><i class="bi bi-clock-history"></i><span>Last: ${escapeHtml(job.last_run)}</span></div>` : ''}
+                        ${job.last_output ? `
+                            <div class="output-preview">
+                                <i class="bi bi-code-square"></i> Last output:<br>
+                                <code>${escapeHtml(job.last_output.substring(0, 120))}</code>
+                                ${job.last_output.length > 120 ? `<button class="btn btn-link btn-sm p-0 mt-1" onclick="showFullOutput('${escapeHtml(job.unique_id)}')" style="font-size: 10px;">Show more...</button>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="job-card-footer">
+                        <i class="bi bi-calendar-plus"></i> Created: ${escapeHtml(job.created_at)}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    $('#jobsContainer').html(html);
+}
+
+// ========== Job CRUD Operations ==========
 function openCronModal() {
     $('#modalTitle').text('Add Cron Job');
     $('#cronForm')[0].reset();
@@ -1172,177 +1440,269 @@ function openCronModal() {
     $('#weekday').val('*');
     $('#enabled').prop('checked', true);
     $('#editUniqueId').val('');
+    $('input[name="job_type"][value="command"]').prop('checked', true);
+    $('#commandGroup').show();
+    $('#scriptGroup').hide();
     updatePreview();
     currentModal = new bootstrap.Modal(document.getElementById('cronModal'));
     currentModal.show();
 }
 
-function editJob(uniqueId) {
+async function editJob(uniqueId) {
     showLoading();
-    $.ajax({
-        url: `?ajax_get_job=${encodeURIComponent(uniqueId)}`,
-        method: 'GET',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    }).done(function(data) {
-        hideLoading();
-        if (data.success) {
-            $('#modalTitle').text('Edit Cron Job');
-            $('#editUniqueId').val(data.job.unique_id);
-            $('#job_name').val(data.job.job_name);
-            $('#comment').val(data.job.comment || '');
-            $('#minute').val(data.job.minute);
-            $('#hour').val(data.job.hour);
-            $('#day').val(data.job.day);
-            $('#month').val(data.job.month);
-            $('#weekday').val(data.job.weekday);
-            $('#command').val(data.job.command);
-            $('#enabled').prop('checked', data.job.enabled);
-            updatePreview();
-            currentModal = new bootstrap.Modal(document.getElementById('cronModal'));
-            currentModal.show();
+    let result = await apiCall('get_job', 'GET', { unique_id: uniqueId });
+    hideLoading();
+    
+    if (result.success) {
+        const job = result.data;
+        $('#modalTitle').text('Edit Cron Job');
+        $('#editUniqueId').val(job.unique_id);
+        $('#job_name').val(job.job_name);
+        $('#comment').val(job.comment || '');
+        $('#minute').val(job.minute);
+        $('#hour').val(job.hour);
+        $('#day').val(job.day);
+        $('#month').val(job.month);
+        $('#weekday').val(job.weekday);
+        $('#enabled').prop('checked', job.enabled);
+        
+        $(`input[name="job_type"][value="${job.job_type}"]`).prop('checked', true);
+        
+        if (job.job_type === 'command') {
+            $('#command').val(job.command);
+            $('#commandGroup').show();
+            $('#scriptGroup').hide();
         } else {
-            showAlert('danger', data.message || 'Error loading job');
+            $('#commandGroup').hide();
+            $('#scriptGroup').show();
+            await loadScriptsForSelect();
+            $('#script_name').val(job.script_name);
         }
-    }).fail(function() {
-        hideLoading();
-        showAlert('danger', 'Network error');
-    });
-}
-
-function saveCronJob() {
-    const jobName = $('#job_name').val().trim();
-    const command = $('#command').val().trim();
-    
-    if (!jobName) { showAlert('danger', 'Job name is required'); return; }
-    if (!command) { showAlert('danger', 'Command is required'); return; }
-    
-    showLoading();
-    
-    $.ajax({
-        url: '',
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        data: $('#cronForm').serialize() + '&action=save'
-    }).done(function(data) {
-        hideLoading();
-        if (data.success) {
-            if (currentModal) currentModal.hide();
-            showAlert('success', data.message);
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showAlert('danger', data.message);
-        }
-    }).fail(function() {
-        hideLoading();
-        showAlert('danger', 'Error saving cron job');
-    });
-}
-
-function deleteJob(uniqueId) {
-    if (confirm('Delete this cron job?')) {
-        showLoading();
-        $.ajax({
-            url: `?ajax_delete=${encodeURIComponent(uniqueId)}`,
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        }).done(function(data) {
-            hideLoading();
-            if (data.success) {
-                showAlert('success', data.message);
-                location.reload();
-            } else {
-                showAlert('danger', data.message);
-            }
-        }).fail(function() {
-            hideLoading();
-            showAlert('danger', 'Error deleting job');
-        });
+        
+        updatePreview();
+        currentModal = new bootstrap.Modal(document.getElementById('cronModal'));
+        currentModal.show();
+    } else {
+        showAlert(result.error || 'Error loading job', 'danger');
     }
 }
 
-function toggleJob(uniqueId) {
+async function saveCronJob() {
+    const jobName = $('#job_name').val().trim();
+    const jobType = $('input[name="job_type"]:checked').val();
+    
+    if (!jobName) { showAlert('Job name is required', 'danger'); return; }
+    
+    if (jobType === 'command') {
+        const command = $('#command').val().trim();
+        if (!command) { showAlert('Command is required', 'danger'); return; }
+    } else {
+        const scriptName = $('#script_name').val();
+        if (!scriptName) { showAlert('Please select a script', 'danger'); return; }
+    }
+    
     showLoading();
-    $.ajax({
-        url: `?ajax_toggle=${encodeURIComponent(uniqueId)}`,
-        method: 'GET',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    }).done(function(data) {
-        hideLoading();
-        if (data.success) {
-            showAlert('success', data.message);
-            location.reload();
-        } else {
-            showAlert('danger', data.message);
-        }
-    }).fail(function() {
-        hideLoading();
-        showAlert('danger', 'Error toggling job');
-    });
+    
+    let result = await apiCall('save_job', 'POST', $('#cronForm').serialize());
+    hideLoading();
+    
+    if (result.success) {
+        if (currentModal) currentModal.hide();
+        showAlert(result.message, 'success');
+        await loadJobs();
+    } else {
+        showAlert(result.error || 'Error saving cron job', 'danger');
+    }
 }
 
-function runJob(uniqueId) {
+async function deleteJob(uniqueId) {
+    if (!confirm('Delete this cron job?')) return;
+    showLoading();
+    let result = await apiCall('delete_job', 'GET', { unique_id: uniqueId });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, 'success');
+        await loadJobs();
+    } else {
+        showAlert(result.error || 'Error deleting job', 'danger');
+    }
+}
+
+async function toggleJob(uniqueId) {
+    showLoading();
+    let result = await apiCall('toggle_job', 'GET', { unique_id: uniqueId });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, 'success');
+        await loadJobs();
+    } else {
+        showAlert(result.error || 'Error toggling job', 'danger');
+    }
+}
+
+async function runJob(uniqueId) {
     $('.dropdown-menu-actions').removeClass('show');
     showLoading();
-    showAlert('info', 'Executing job...');
+    showAlert('Executing job...', 'info');
     
-    $.ajax({
-        url: `?ajax_run=${encodeURIComponent(uniqueId)}`,
-        method: 'GET',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    }).done(function(data) {
-        hideLoading();
-        if (data.success) {
-            showAlert(data.status === 'success' ? 'success' : 'warning', data.message);
-            if (data.output) {
-                const plainOutput = data.output.replace(/<br\s*\/?>/gi, '\n');
-                $('#fullOutput').text(plainOutput);
-                outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
-                outputModal.show();
-            }
-            setTimeout(() => location.reload(), 2000);
-        } else {
-            showAlert('danger', data.message);
-        }
-    }).fail(function() {
-        hideLoading();
-        showAlert('danger', 'Error running job');
-    });
-}
-
-function showFullOutput(uniqueId) {
-    showLoading();
-    $.ajax({
-        url: `?ajax_get_status=${encodeURIComponent(uniqueId)}`,
-        method: 'GET',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    }).done(function(data) {
-        hideLoading();
-        if (data.success && data.last_output) {
-            $('#fullOutput').text(data.last_output);
+    let result = await apiCall('run_job', 'GET', { unique_id: uniqueId });
+    hideLoading();
+    
+    if (result.success) {
+        showAlert(result.message, result.status === 'success' ? 'success' : 'warning');
+        if (result.plain_output) {
+            $('#fullOutput').text(result.plain_output);
             outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
             outputModal.show();
-        } else {
-            showAlert('info', 'No output available');
         }
-    }).fail(function() {
-        hideLoading();
-        showAlert('danger', 'Error loading output');
-    });
+        await loadJobs();
+    } else {
+        showAlert(result.error || 'Error running job', 'danger');
+    }
 }
 
-function showAlert(type, message) {
-    const alertDiv = $(`
-        <div class="alert alert-${type} alert-dismissible fade show alert-apple mb-3">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `);
-    $('#alertContainer').append(alertDiv);
-    setTimeout(() => alertDiv.fadeOut(() => alertDiv.remove()), 4000);
+async function showFullOutput(uniqueId) {
+    showLoading();
+    let result = await apiCall('get_job', 'GET', { unique_id: uniqueId });
+    hideLoading();
+    
+    if (result.success && result.data.last_output) {
+        $('#fullOutput').text(result.data.last_output);
+        outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
+        outputModal.show();
+    } else {
+        showAlert('No output available', 'info');
+    }
 }
 
-$('#minute, #hour, #day, #month, #weekday').on('input change', updatePreview);
-updatePreview();
+// ========== Logs ==========
+async function loadLogs() {
+    let result = await apiCall('get_logs', 'GET', { lines: 100 });
+    if (result.success && result.logs) {
+        if (result.logs.length === 0) {
+            $('#logViewer').html('<div class="text-center text-muted">No logs yet</div>');
+        } else {
+            let html = '';
+            result.logs.forEach(log => {
+                html += `<div class="log-line">${escapeHtml(log)}</div>`;
+            });
+            $('#logViewer').html(html);
+        }
+    } else {
+        $('#logViewer').html('<div class="text-center text-danger">Failed to load logs</div>');
+    }
+}
+
+async function refreshLogs() {
+    showLoading();
+    await loadLogs();
+    hideLoading();
+    showAlert('Logs refreshed', 'success');
+}
+
+async function clearLogs() {
+    if (!confirm('Clear all cron logs?')) return;
+    showLoading();
+    let result = await apiCall('clear_logs');
+    hideLoading();
+    if (result.success) {
+        showAlert('Logs cleared', 'success');
+        await loadLogs();
+    } else {
+        showAlert(result.error || 'Failed to clear logs', 'danger');
+    }
+}
+
+// ========== Runner Settings ==========
+async function loadRunnerStatus() {
+    let result = await apiCall('get_runner_status');
+    if (result.success) {
+        let statusHtml = `
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div>
+                    <strong>Runner Script:</strong> 
+                    <span class="badge ${result.runner_exists ? 'bg-success' : 'bg-danger'}">${result.runner_exists ? 'Exists' : 'Missing'}</span>
+                </div>
+                <div>
+                    <strong>System Cron:</strong> 
+                    <span class="badge ${result.runner_installed ? 'bg-success' : 'bg-warning'}">${result.runner_installed ? 'Installed' : 'Not Installed'}</span>
+                </div>
+                ${!result.runner_installed ? `<button class="btn btn-sm btn-primary" onclick="installRunner()"><i class="bi bi-download"></i> Install to System Cron</button>` : `<button class="btn btn-sm btn-danger" onclick="uninstallRunner()"><i class="bi bi-x-circle"></i> Remove from System Cron</button>`}
+            </div>
+        `;
+        $('#runnerStatus').html(statusHtml);
+        $('#runnerCommandDisplay').text(result.runner_command);
+        $('#scriptsDirDisplay').text(result.scripts_dir || '/var/www/minib/cron/userscripts');
+    } else {
+        $('#runnerStatus').html('<div class="text-danger">Failed to load runner status</div>');
+    }
+}
+
+async function installRunner() {
+    showLoading();
+    let result = await apiCall('install_runner');
+    hideLoading();
+    if (result.success) {
+        showAlert(result.message, 'success');
+        loadRunnerStatus();
+    } else {
+        showAlert(result.error || 'Failed to install runner', 'danger');
+    }
+}
+
+async function uninstallRunner() {
+    if (!confirm('Remove runner from system crontab? Jobs will stop running automatically.')) return;
+    showLoading();
+    let result = await apiCall('uninstall_runner');
+    hideLoading();
+    if (result.success) {
+        showAlert(result.message, 'success');
+        loadRunnerStatus();
+    } else {
+        showAlert(result.error || 'Failed to remove runner', 'danger');
+    }
+}
+
+// ========== Refresh All ==========
+async function refreshAllData() {
+    showLoading();
+    await Promise.all([loadJobs(), loadLogs(), loadRunnerStatus(), loadScripts()]);
+    hideLoading();
+    showAlert('Data updated', 'success');
+}
+
+// ========== Tabs ==========
+$('.tab-btn').on('click', function() {
+    const tab = $(this).data('tab');
+    $('.tab-btn').removeClass('active');
+    $(this).addClass('active');
+    $('.tab-content').removeClass('active');
+    
+    if (tab === 'jobs') {
+        $('#jobsTab').addClass('active');
+    } else if (tab === 'scripts') {
+        $('#scriptsTab').addClass('active');
+        loadScripts();
+    } else if (tab === 'logs') {
+        $('#logsTab').addClass('active');
+        loadLogs();
+    } else if (tab === 'settings') {
+        $('#settingsTab').addClass('active');
+        loadRunnerStatus();
+    }
+});
+
+// ========== Initialization ==========
+$(document).ready(function() {
+    refreshAllData();
+    
+    $('#minute, #hour, #day, #month, #weekday').on('input change', updatePreview);
+    updatePreview();
+    
+    setTimeout(function() { $('#applePreloader').fadeOut(500); }, 500);
+});
 </script>
 </body>
 </html>

@@ -17,12 +17,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+//P.S. "Joe" Biden - LOH!
+
 require_once 'config.php';
 isAuthenticated();
-//P.S. "Joe" Biden - LOH!
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -33,6 +33,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,9 +84,9 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         :root {
             --apple-blue: #007aff;
@@ -336,7 +337,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
     <div class="top-bar-right">
         <i class="fas fa-layer-group"></i> LVM Manager
-		<div class="legend" onclick="showLegendModal()">
+		<!--<div class="legend" onclick="showLegendModal()">
 		<div class="legend-item"><div class="legend-color" style="background: #4A90D9;"></div><span>Disk</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #F5A623;"></div><span>Partition</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #9013FE;"></div><span>PV (Physical Volume)</span></div>
@@ -344,7 +345,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             <div class="legend-item"><div class="legend-color" style="background: #4CAF50;"></div><span>LV (Logical Volume)</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #ff3b30;"></div><span>Mounted</span></div>
             <div class="legend-item"><i class="fas fa-chevron-right"></i><span>Click for details</span></div>	
-    </div>
+    </div>-->
 	<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
                 <option value="">Loading...</option>
@@ -357,6 +358,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#" onclick="showBlockDiagram()"><i class="fas fa-project-diagram"></i> Scheme</a></li>
                     <li><a class="dropdown-item" href="#" onclick="showSnapshotsList()"><i class="fas fa-camera-retro"></i> Snapshots</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info"></i> Legend</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i> Refresh</a></li>
                 </ul>
@@ -396,6 +398,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Модальное окно легенды -->
 <div class="modal fade" id="legendModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -420,6 +423,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно блок-схемы -->
 <div class="modal fade" id="blockDiagramModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -440,6 +444,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно информации о разделе -->
 <div class="modal fade" id="partitionInfoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -458,6 +463,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно информации о VG -->
 <div class="modal fade" id="vgInfoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -475,6 +481,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно информации о LV -->
 <div class="modal fade" id="lvInfoModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -493,6 +500,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно информации о диске -->
 <div class="modal fade" id="diskInfoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -510,6 +518,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальные окна LVM -->
 <div class="modal fade" id="createPvModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -758,6 +767,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно создания снапшота -->
 <div class="modal fade" id="createSnapshotModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -791,6 +801,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно информации о снапшоте -->
 <div class="modal fade" id="snapshotInfoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -810,6 +821,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
 </div>
 
+<!-- Модальное окно списка снапшотов -->
 <div class="modal fade" id="snapshotsListModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -976,6 +988,7 @@ function renderDisks(disks) {
                     const isPV = part.is_pv === true;
                     const isLV = part.is_lv === true;
                     
+                    // Для PV находим VG
                     let vgName = null;
                     if (isPV) {
                         const pv = currentData.pvs?.find(p => p.name === part.path);
@@ -984,12 +997,14 @@ function renderDisks(disks) {
                         }
                     }
                     
+                    // Для LV находим информацию
                     let lvInfo = null;
                     if (isLV) {
                         lvInfo = currentData.lvs?.find(l => l.path === part.path || l.mapper_path === part.path);
                     }
                     
                     if (isLV && lvInfo) {
+                        // LV - показываем как логический том
                         html += `<div class="partition-item" style="border-left: 3px solid #4CAF50;" onclick="event.stopPropagation(); showLVInfoModal('${part.path}', '${lvInfo.vg_name}', '${lvInfo.name}')">
                             <i class="fas fa-chart-line" style="color: #4CAF50;"></i> ${part.name}
                             <span class="float-end">${part.size_formatted}</span>
@@ -998,6 +1013,7 @@ function renderDisks(disks) {
                             ${!lvInfo.has_filesystem ? '<span class="badge bg-warning mt-1">no fs</span>' : ''}
                         </div>`;
                     } else if (isPV) {
+                        // PV - показываем как physical volume
                         html += `<div class="partition-item" style="border-left: 3px solid #9013FE;" onclick="event.stopPropagation(); showPartitionInfo('${part.name}')">
                             <i class="fas fa-database" style="color: #9013FE;"></i> ${part.name}
                             <span class="float-end">${part.size_formatted}</span>
@@ -1005,6 +1021,7 @@ function renderDisks(disks) {
                             <span class="badge bg-info mt-1">PV</span>
                         </div>`;
                     } else {
+                        // Обычный раздел
                         html += `<div class="partition-item" onclick="event.stopPropagation(); showPartitionInfo('${part.name}')">
                             <i class="fas fa-microchip"></i> ${part.name}
                             <span class="float-end">${part.size_formatted}</span>
@@ -1022,6 +1039,7 @@ function renderDisks(disks) {
 function renderLvm(data) {
     let html = '';
     
+    // PV секция
     if (data.pvs && data.pvs.length) {
         html += `<div class="lvm-card mb-4">
             <div class="lvm-header d-flex justify-content-between align-items-center">
@@ -1066,6 +1084,7 @@ function renderLvm(data) {
         </div>`;
     }
     
+    // VG секция
     if (data.vgs && data.vgs.length) {
         for (const vg of data.vgs) {
             const vgLvs = data.lvs ? data.lvs.filter(lvItem => lvItem.vg_name === vg.name) : [];
@@ -1144,6 +1163,7 @@ function renderLvm(data) {
                                 <div>Статус: ${escapeHtml(mountStatus)}</div>
                                 ${lv.filesystem ? `<div>ФС: ${escapeHtml(lv.filesystem)}</div>` : ''}`;
                     
+                    // Прогресс-бар для смонтированных LV
                     if (isMounted) {
 						html += `<div class="mt-2" data-lv-mount="${escapeAttr(lv.mount_point)}">
 									<div class="d-flex justify-content-between small mb-1">
@@ -1191,6 +1211,7 @@ function renderLvm(data) {
     
     document.getElementById('lvmContainer').innerHTML = html;
     
+    // Загружаем данные использования для смонтированных LV
     setTimeout(() => {
     document.querySelectorAll('[data-lv-mount]').forEach(container => {
     const mountPoint = container.getAttribute('data-lv-mount');
@@ -1245,6 +1266,7 @@ function escapeAttr(str) {
     return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+// Показывать/скрывать выбор ФС при форматировании
 document.addEventListener('DOMContentLoaded', function() {
     const formatCheckbox = document.getElementById('lvFormat');
     const fsDiv = document.getElementById('lvFsTypeDiv');
@@ -1320,6 +1342,8 @@ async function showLVInfoModal(lvPath, vgName, lvName) {
     }
 }
 
+// ==================== БЛОК-СХЕМА ====================
+
 async function showBlockDiagram() {
     const modal = new bootstrap.Modal(document.getElementById('blockDiagramModal'));
     const container = document.getElementById('blockDiagramContent');
@@ -1351,6 +1375,7 @@ function renderConnectionDiagram(data) {
     const deviceToVg = {};
     const deviceToPvData = {};
     
+    // Собираем информацию о PV и их VG
     if (data.pvs) {
         for (const pv of data.pvs) {
             deviceToPvData[pv.name] = pv;
@@ -1403,6 +1428,7 @@ function renderConnectionDiagram(data) {
                 <div class="level-label" style="position: absolute; top: -10px; left: 10px;">Physical devices (Disks and partitions)</div>
     `;
     
+    // Рендер диски и разделы
     for (const disk of data.disks) {
         const diskId = getElementId('disk', disk.name);
         html += `<div class="physical-device" id="${diskId}" data-device="${disk.name}" data-type="disk" onclick="showDiskInfo('${disk.name}')">
@@ -1436,6 +1462,7 @@ function renderConnectionDiagram(data) {
     
     html += `</div><div class="lvm-layer" id="lvmLayer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;">LVM Structure</div>`;
     
+    // Рендер VG и их содержимое
     if (data.vgs && data.vgs.length) {
         for (const vg of data.vgs) {
             const pvsInVg = vgToPvs[vg.name] || [];
@@ -1670,6 +1697,8 @@ window.addEventListener('resize', () => {
     }
 });
 
+// ==================== ИНФОРМАЦИОННЫЕ МОДАЛЬНЫЕ ОКНА ====================
+
 function showVgInfo(vgName) {
     const vg = currentData.vgs?.find(v => v.name === vgName);
     if (!vg) return;
@@ -1792,6 +1821,8 @@ async function umountLvFromModal() {
         bootstrap.Modal.getInstance(document.getElementById('lvInfoModal')).hide();
     }
 }
+
+// ==================== ИНФОРМАЦИЯ О РАЗДЕЛЕ ====================
 
 async function showPartitionInfo(partitionName) {
     const modal = new bootstrap.Modal(document.getElementById('partitionInfoModal'));
@@ -1926,6 +1957,8 @@ function renderDiskInfo(disk) {
     `;
     document.getElementById('diskInfoContent').innerHTML = html;
 }
+
+// ==================== PV ОПЕРАЦИИ ====================
 
 async function showCreatePv() {
     showLoader();
@@ -2067,6 +2100,8 @@ async function deletePv(pvName) {
         showToast(res.error, 'error');
     }
 }
+
+// ==================== VG ОПЕРАЦИИ ====================
 
 async function showCreateVg() {
     showLoader();
@@ -2256,6 +2291,8 @@ async function renameVg() {
     }
 }
 
+// ==================== LV ОПЕРАЦИИ ====================
+
 function showCreateLv(vgName) {
     document.getElementById('lvVgName').value = vgName;
     document.getElementById('lvName').value = '';
@@ -2310,6 +2347,7 @@ async function checkLvStatus(lvPath) {
 async function formatLv(vgName, lvName, checkMount = true) {
     const lvPath = `/dev/${vgName}/${lvName}`;
     
+    // Проверяем статус LV перед форматированием
     showLoader();
     const statusRes = await apiCall('lv_status', { lv_path: lvPath });
     
@@ -2400,6 +2438,8 @@ async function renameLv() {
         showToast(res.error, 'error');
     }
 }
+
+// ==================== МОНТИРОВАНИЕ ====================
 
 function showMountModal(device) {
     document.getElementById('mountDevice').value = device;
@@ -2783,6 +2823,7 @@ function deleteSnapshotFromModal() {
     }
 }
 
+// Инициализация
 refreshAll();
 </script>
 </body>

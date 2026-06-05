@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -81,9 +82,11 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== КОНСТАНТЫ ==========
 define('SMB_CONF_DIR', '/etc/samba/conf.d/');
 define('SMB_SHARES_FILE', SMB_CONF_DIR . 'shares.conf');
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С SMB ==========
 function getSmbServiceStatus() {
     $status = [
         'running' => false,
@@ -269,6 +272,7 @@ function disableSmbService() {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КОНФИГУРАЦИЕЙ ==========
 function getSmbGlobalConfig() {
     $config = [
         'workgroup' => 'WORKGROUP',
@@ -444,6 +448,7 @@ function convertToSmbKey($key) {
     return $map[$key] ?? $key;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
 function getSmbUsers() {
     $users = [];
     $output = shell_exec("sudo pdbedit -L 2>/dev/null");
@@ -520,6 +525,7 @@ function deleteSmbUser($username) {
     return ['success' => false, 'message' => 'Ошибка при удалении'];
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ШАРАМИ ==========
 function getSmbShares() {
     ensureIncludeInSmbConf();
     
@@ -727,14 +733,31 @@ function setFolderPermissions($path, $public = false, $users = []) {
     }
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ФАЙЛОВОЙ СИСТЕМОЙ ==========
 function getDirectoryContents($path) {
     $items = [];
+    
+    $path = preg_replace('#/+#', '/', $path);
+    
+    $basePath = '/';
+    $realBasePath = realpath($basePath);
+    $realRequestedPath = realpath($path);
+    
+    if (!$realRequestedPath || strpos($realRequestedPath, $realBasePath) !== 0) {
+        $path = $basePath;
+        if (!is_dir($basePath)) {
+            mkdir($basePath, 0755, true);
+        }
+    }
+    
     if (!is_dir($path)) return $items;
     
     $dirs = scandir($path);
     foreach ($dirs as $item) {
         if ($item != '.' && $item != '..') {
             $fullPath = $path . '/' . $item;
+            $fullPath = preg_replace('#/+#', '/', $fullPath);
+            
             if (is_dir($fullPath)) {
                 $items[] = [
                     'name' => $item,
@@ -766,6 +789,7 @@ function createDirectory($path) {
     return false;
 }
 
+// ========== ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ ДИСКОВ/РАЗДЕЛОВ ==========
 function getAllStorages() {
     $storages = [];
     
@@ -783,7 +807,7 @@ function getAllStorages() {
                 $usedPercent = (int)rtrim($parts[4], '%');
                 $mount = $parts[5];
                 
-                if ($mount == '/' || $mount == '/boot' || $mount == '/boot/efi') {
+                if ($mount == '/boot' || $mount == '/boot/efi') {
                     continue;
                 }
                 
@@ -819,13 +843,14 @@ function getAllStorages() {
     return array_values($unique);
 }
 
+// Получение активных SMB сессий
 function getSmbSessions() {
     $detailed = getSmbSessionsDetailed();
     $sessions = [];
     
     foreach ($detailed as $session) {
         $sessions[] = [
-            'service' => $session['username'] . "'s session",
+            'service' => $session['username'] . "'s session", // Имитация service
             'pid' => $session['pid'],
             'ip' => $session['machine'],
             'user' => $session['username'],
@@ -1061,7 +1086,6 @@ function parseSmbStatusLine($line) {
         $name = trim($matches[8]);
         $time = trim($matches[9]);
         
-
         if (!preg_match('/\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4}/', $time)) {
             $timeParts = explode(' ', $time);
             $name .= ' ' . $timeParts[0];
@@ -1160,6 +1184,7 @@ function getUserDetails($username) {
     return $details;
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {

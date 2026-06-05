@@ -17,12 +17,13 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 $menu_config = include(__DIR__ . '/config/conf_menu.php');
 $current_page = basename($_SERVER['PHP_SELF']);
 
+// Подключаем плагины
 $plugins_dir = __DIR__ . '/plugins/menu/';
 if (is_dir($plugins_dir)) {
     foreach (glob($plugins_dir . '*.php') as $plugin_file) {
@@ -41,6 +42,7 @@ if (is_dir($plugins_dir)) {
     }
 }
 
+// Сохраняем состояние групп в cookie
 $open_groups = $_COOKIE['open_groups'] ?? '';
 $open_groups = $open_groups ? explode(',', $open_groups) : [];
 
@@ -104,6 +106,7 @@ $menu .= '<hr>
     </div>
 </aside>';
 
+// JS для групп
 $menu .= '<script>
 function toggleMenuGroup(header) {
     var group = header.parentElement;

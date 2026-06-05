@@ -16,9 +16,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 async function loadHostsList() {
     try {
         const response = await fetch('api/host_selector.php?action=get_hosts');
@@ -45,6 +45,7 @@ async function loadHostsList() {
                 selector.appendChild(option);
             });
             
+            // Обработчик смены хоста
             selector.addEventListener('change', async function() {
                 const hostId = this.value;
                 
@@ -84,6 +85,7 @@ async function loadHostsList() {
     }
 }
 
+// Простое уведомление
 function showNotification(message, type = 'success') {
     const existingNotification = document.querySelector('.custom-notification');
     if (existingNotification) existingNotification.remove();
@@ -123,6 +125,7 @@ if (!document.querySelector('#notification-styles')) {
     document.head.appendChild(style);
 }
 
+// Функция обновления времени
 function updateTimestamp() {
     const timestampEl = document.getElementById('timestamp');
     if (timestampEl) {
@@ -132,6 +135,7 @@ function updateTimestamp() {
     }
 }
 
+// Загружаем хосты
 document.addEventListener('DOMContentLoaded', function() {
     loadHostsList();
     updateTimestamp();

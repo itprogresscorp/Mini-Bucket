@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 stream_context_set_default([
     'ssl' => [
         'verify_peer' => false,
@@ -29,7 +29,7 @@ stream_context_set_default([
 ]);
 
 if (!defined('ROOT_PATH')) {
-    define('ROOT_PATH', dirname(dirname(__FILE__)));
+    define('ROOT_PATH', '/var/www/html/admin');
 }
 
 if (file_exists(ROOT_PATH . '/config.php')) {

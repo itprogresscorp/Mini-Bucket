@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 if (!defined('ROOT_PATH')) {
@@ -55,11 +55,10 @@ if (!flock($fp, LOCK_EX | LOCK_NB)) {
 }
 
 try {
-    $db = getDB();
-    initScheduleTables($db);
+    $db2 = getDB2();
     
     $currentTime = date('Y-m-d H:i:s');
-    $stmt = $db->prepare("
+    $stmt = $db2->prepare("
         SELECT * FROM check_schedules 
         WHERE enabled = 1 
           AND (next_run IS NULL OR next_run <= :now)
@@ -73,7 +72,7 @@ try {
     
     while ($schedule = $result->fetchArray(SQLITE3_ASSOC)) {
         $executed++;
-        $checkResult = executeCheckAndGetResult($db, $schedule);
+        $checkResult = executeCheckAndGetResult($db2, $schedule);
         if ($checkResult) {
             $allResults[] = $checkResult;
         }
@@ -83,9 +82,9 @@ try {
         }
     }
     
-    sendConsolidatedReport($db, $allResults, $executed);
+    sendConsolidatedReport($db2, $allResults, $executed);
     
-    $db->exec("DELETE FROM check_history WHERE created_at < datetime('now', '-30 days')");
+    $db2->exec("DELETE FROM check_history WHERE created_at < datetime('now', '-30 days')");
     
     if ($executed > 0) {
         error_log("Health Cron: Executed $executed checks");
@@ -100,7 +99,7 @@ try {
     }
 }
 
-function initScheduleTables($db) {
+function initScheduleTables($db2) {
     $queries = [
         "CREATE TABLE IF NOT EXISTS check_schedules (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,7 +128,7 @@ function initScheduleTables($db) {
     
     foreach ($queries as $query) {
         try {
-            $db->exec($query);
+            $db2->exec($query);
         } catch (Exception $e) {}
     }
     
@@ -143,20 +142,20 @@ function initScheduleTables($db) {
     ];
     
     foreach ($defaultSchedules as $schedule) {
-        $stmt = $db->prepare("INSERT OR IGNORE INTO check_schedules (check_type, interval_seconds, enabled) VALUES (:type, :interval, 1)");
+        $stmt = $db2->prepare("INSERT OR IGNORE INTO check_schedules (check_type, interval_seconds, enabled) VALUES (:type, :interval, 1)");
         $stmt->bindValue(':type', $schedule[0], SQLITE3_TEXT);
         $stmt->bindValue(':interval', $schedule[1], SQLITE3_INTEGER);
         $stmt->execute();
     }
 }
 
-function executeCheckAndGetResult($db, $schedule) {
+function executeCheckAndGetResult($db2, $schedule) {
     $checkType = $schedule['check_type'];
     $startTime = microtime(true);
     
     error_log("Health Cron: Starting check {$checkType}");
     
-    updateScheduleRun($db, $schedule['id'], 'running', null);
+    updateScheduleRun($db2, $schedule['id'], 'running', null);
     
     try {
         $result = callLocalApiCheck($checkType);
@@ -166,8 +165,8 @@ function executeCheckAndGetResult($db, $schedule) {
         $hasProblems = $result['has_problems'] ?? false;
         
         $status = $success ? 'success' : 'failed';
-        updateScheduleRun($db, $schedule['id'], $status, $success ? null : $message);
-        logHistory($db, $checkType, $status, $message, $duration);
+        updateScheduleRun($db2, $schedule['id'], $status, $success ? null : $message);
+        logHistory($db2, $checkType, $status, $message, $duration);
         
         error_log("Health Cron: Completed check {$checkType} in {$duration}ms - Status: {$status}");
         
@@ -185,8 +184,8 @@ function executeCheckAndGetResult($db, $schedule) {
         $duration = round((microtime(true) - $startTime) * 1000);
         $errorMsg = $e->getMessage();
         
-        updateScheduleRun($db, $schedule['id'], 'failed', $errorMsg);
-        logHistory($db, $checkType, 'failed', $errorMsg, $duration);
+        updateScheduleRun($db2, $schedule['id'], 'failed', $errorMsg);
+        logHistory($db2, $checkType, 'failed', $errorMsg, $duration);
         
         error_log("Health Cron: Error in check {$checkType}: " . $errorMsg);
         
@@ -215,7 +214,7 @@ function callLocalApiCheck($checkType) {
         define('ROOT_PATH', '/var/www');
     }
     
-    global $db;
+    global $db2;
     require_once $apiFile;
     ob_end_clean();
     
@@ -342,12 +341,12 @@ function callLocalApiCheck($checkType) {
     }
 }
 
-function sendConsolidatedReport($db, $allResults, $executedCount) {
+function sendConsolidatedReport($db2, $allResults, $executedCount) {
     if (empty($allResults)) {
         return;
     }
     
-    $settings = getSettingsFromDb($db);
+    $settings = getSettingsFromDb($db2);
     
     if (empty($settings['email_enabled']) || $settings['email_enabled'] != 1 || empty($settings['email_recipient'])) {
         error_log("Health Cron: Email disabled, skipping report");
@@ -385,7 +384,7 @@ function sendConsolidatedReport($db, $allResults, $executedCount) {
     $htmlMessage = buildConsolidatedReportHtml($allResults, $hasProblems);
     
     try {
-        $stmt = $db->prepare("
+        $stmt = $db2->prepare("
             INSERT INTO notifications (notification_type, severity, title, message, details) 
             VALUES (:type, :severity, :title, :message, :details)
         ");
@@ -669,10 +668,10 @@ function sendEmailWithUtf8Subject($subject, $htmlMessage, $settings) {
     }
 }
 
-function updateScheduleRun($db, $scheduleId, $status, $error = null) {
+function updateScheduleRun($db2, $scheduleId, $status, $error = null) {
     $now = date('Y-m-d H:i:s');
     
-    $stmt = $db->prepare("SELECT interval_seconds FROM check_schedules WHERE id = :id");
+    $stmt = $db2->prepare("SELECT interval_seconds FROM check_schedules WHERE id = :id");
     $stmt->bindValue(':id', $scheduleId, SQLITE3_INTEGER);
     $res = $stmt->execute();
     $row = $res->fetchArray(SQLITE3_ASSOC);
@@ -680,7 +679,7 @@ function updateScheduleRun($db, $scheduleId, $status, $error = null) {
     
     $nextRun = date('Y-m-d H:i:s', strtotime("+{$interval} seconds"));
     
-    $stmt = $db->prepare("
+    $stmt = $db2->prepare("
         UPDATE check_schedules 
         SET last_run = :now, 
             next_run = :next,
@@ -697,8 +696,8 @@ function updateScheduleRun($db, $scheduleId, $status, $error = null) {
     $stmt->execute();
 }
 
-function logHistory($db, $checkType, $status, $message, $duration) {
-    $stmt = $db->prepare("
+function logHistory($db2, $checkType, $status, $message, $duration) {
+    $stmt = $db2->prepare("
         INSERT INTO check_history (check_type, status, message, duration_ms) 
         VALUES (:type, :status, :message, :duration)
     ");
@@ -709,9 +708,9 @@ function logHistory($db, $checkType, $status, $message, $duration) {
     $stmt->execute();
 }
 
-function getSettingsFromDb($db) {
+function getSettingsFromDb($db2) {
     $settings = [];
-    $result = $db->query("SELECT setting_key, setting_value FROM notification_settings");
+    $result = $db2->query("SELECT setting_key, setting_value FROM notification_settings");
     while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }

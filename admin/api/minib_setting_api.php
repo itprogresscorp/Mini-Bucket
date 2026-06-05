@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 define('ROOT_PATH', dirname(dirname(__FILE__)));
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -80,12 +81,14 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== КОНСТАНТЫ ==========
 define('APACHE_SITES_AVAILABLE', '/etc/apache2/sites-available/');
 define('APACHE_SITES_ENABLED', '/etc/apache2/sites-enabled/');
 define('MINIB_CONFIG_FILE', APACHE_SITES_AVAILABLE . 'minib.conf');
 define('MINIB_CONFIG_ENABLED', APACHE_SITES_ENABLED . 'minib.conf');
 define('CERT_DIR', '/var/www/minib/certs/crt');
 
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function getApacheStatus() {
     $status = shell_exec("systemctl is-active apache2 2>/dev/null");
     return trim($status) === 'active';
@@ -117,12 +120,13 @@ function generateApacheConfig($port, $documentRoot, $sslEnabled = false, $sslCer
     $config .= "# Do not edit manually - changes may be overwritten\n\n";
     
     if ($sslEnabled && !empty($sslCert) && !empty($sslKey)) {
+        // HTTPS configuration
         $config .= "Listen $port\n\n";
         $config .= "<VirtualHost *:$port>\n";
         $config .= "    ServerAdmin webmaster@localhost\n";
         $config .= "    DocumentRoot $documentRoot\n\n";
         $config .= "    <Directory $documentRoot>\n";
-        $config .= "        Options Indexes FollowSymLinks\n";
+        $config .= "        Options FollowSymLinks\n";
         $config .= "        AllowOverride All\n";
         $config .= "        Require all granted\n";
         $config .= "    </Directory>\n\n";
@@ -139,12 +143,13 @@ function generateApacheConfig($port, $documentRoot, $sslEnabled = false, $sslCer
         $config .= "    CustomLog /var/www/minib/logs/web/admin_access.log combined\n";
         $config .= "</VirtualHost>\n";
     } else {
+        // HTTP configuration
         $config .= "Listen $port\n\n";
         $config .= "<VirtualHost *:$port>\n";
         $config .= "    ServerAdmin webmaster@localhost\n";
         $config .= "    DocumentRoot $documentRoot\n\n";
         $config .= "    <Directory $documentRoot>\n";
-        $config .= "        Options Indexes FollowSymLinks\n";
+        $config .= "        Options FollowSymLinks\n";
         $config .= "        AllowOverride All\n";
         $config .= "        Require all granted\n";
         $config .= "    </Directory>\n\n";
@@ -220,7 +225,7 @@ function getCurrentConfig() {
     }
     
     return [
-        'enabled' => file_exists(MINIB_CONFIG_ENABLED),
+        'enabled' => file_exists(MINIB_CONFIG_ENABLED), // Включен если есть симлинк
         'port' => $port,
         'document_root' => $documentRoot,
         'ssl_enabled' => $sslEnabled,
@@ -308,6 +313,8 @@ function getCertificatesList() {
 }
 
 
+// ========== KEY ROTATION FUNCTIONS ==========
+
 function getRotationSetting() {
     global $db;
     
@@ -367,6 +374,7 @@ function getRotationHistory($limit = 50) {
     }
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {

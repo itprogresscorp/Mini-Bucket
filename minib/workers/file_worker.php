@@ -18,9 +18,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 function getSafeFileSize($path) {
     if (!is_file($path)) return 0;
     
@@ -50,7 +50,7 @@ function getSafeFileSize($path) {
 
 
 $baseDir = dirname(__FILE__);
-$tmpDir = $baseDir . '/tmp';
+$tmpDir = '/var/www/minib/tmp';
 
 if (!is_dir($tmpDir)) {
     mkdir($tmpDir, 0777, true);
@@ -373,7 +373,7 @@ function moveItem($src, $dst, &$processedCount, $total, $itemName) {
     }
     
     if ($canRename) {
-        updateProgressForFile($processedCount, $total, $itemName . " (renaming...)", 0);
+        updateProgressForFile($processedCount, $total, $itemName . " (переименование...)", 0);
         
         usleep(100000);
         
@@ -398,7 +398,7 @@ function moveItem($src, $dst, &$processedCount, $total, $itemName) {
         
         logMessage("Copy completed, deleting original: $itemName");
         
-        updateProgressForFile($processedCount, $total, $itemName . " (deleting original...)", 100);
+        updateProgressForFile($processedCount, $total, $itemName . " (удаление оригинала...)", 100);
         usleep(100000);
         
         $deleteSuccess = false;

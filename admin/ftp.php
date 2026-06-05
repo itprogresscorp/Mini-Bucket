@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,9 +84,9 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         .status-group {
             display: flex;
@@ -611,6 +612,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Модальные окна -->
 <div class="modal fade" id="settingsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1140,7 +1142,7 @@ async function loadFolder(path, container, breadcrumbContainer, currentPathInput
         $(currentPathInput).val(result.path);
         
         let parts = result.path.split('/').filter(p => p);
-        let breadcrumbHtml = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\', \'' + container + '\', \'' + breadcrumbContainer + '\', \'' + currentPathInput + '\')">/</a></li>';
+        let breadcrumbHtml = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\', \'' + container + '\', \'' + breadcrumbContainer + '\', \'' + currentPathInput + '\')"></a></li>';
         let cp = '';
         parts.forEach(p => { cp += '/' + p; breadcrumbHtml += `<li class="breadcrumb-item"><a onclick="loadFolder('${cp}', '${container}', '${breadcrumbContainer}', '${currentPathInput}')">${escapeHtml(p)}</a></li>`; });
         $(breadcrumbContainer).html(breadcrumbHtml);

@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
-
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -85,8 +85,8 @@ error_reporting(E_ERROR);
 ini_set('display_errors', 0);
 set_time_limit(0);
 
-define('LOG_FILE', ROOT_PATH . '/tmp/mount_master.log');
-define('ERROR_LOG_FILE', ROOT_PATH . '/tmp/mount_master_error.log');
+define('LOG_FILE', '/var/www/minib/logs/mount_master.log');
+define('ERROR_LOG_FILE', '/var/www/minib/logs/mount_master_error.log');
 
 function writeLog($message, $level = 'INFO') {
     $timestamp = date('Y-m-d H:i:s');
@@ -175,7 +175,7 @@ function getAvailableDevices() {
         if ($data && isset($data['blockdevices'])) {
             foreach ($data['blockdevices'] as $disk) {
                 if ($disk['type'] === 'disk') {
-                    if (isset($disk['children'])) {
+                    if (isset($disk['children']) && count($disk['children']) > 0) {
                         foreach ($disk['children'] as $part) {
                             if ($part['type'] === 'part' && empty($part['mountpoint'])) {
                                 $devices[] = [
@@ -186,16 +186,32 @@ function getAvailableDevices() {
                                     'label' => $part['label'] ?? null,
                                     'uuid' => $part['uuid'] ?? null,
                                     'type' => 'partition',
-                                    'source_type' => 'partition'
+                                    'source_type' => 'partition',
+                                    'is_whole_disk' => false
                                 ];
                             }
                         }
+                    } 
+                    elseif (!empty($disk['fstype']) && empty($disk['mountpoint'])) {
+                        $devices[] = [
+                            'name' => $disk['name'],
+                            'path' => '/dev/' . $disk['name'],
+                            'size' => $disk['size'] ?? 'Unknown',
+                            'fstype' => $disk['fstype'],
+                            'label' => $disk['label'] ?? null,
+                            'uuid' => $disk['uuid'] ?? null,
+                            'type' => 'disk',
+                            'source_type' => 'whole_disk',
+                            'is_whole_disk' => true
+                        ];
+                        writeLog("Detected whole-disk filesystem on /dev/{$disk['name']} with fstype {$disk['fstype']}");
                     }
                 }
             }
         }
     }
     
+    // RAID устройства (md*)
     $mdOutput = execCmd("lsblk -J -o NAME,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT /dev/md* 2>/dev/null", true, 10);
     if (!empty($mdOutput)) {
         $mdData = json_decode($mdOutput, true);
@@ -210,7 +226,8 @@ function getAvailableDevices() {
                         'label' => $raid['label'] ?? null,
                         'uuid' => $raid['uuid'] ?? null,
                         'type' => 'raid',
-                        'source_type' => 'raid'
+                        'source_type' => 'raid',
+                        'is_whole_disk' => false
                     ];
                 }
                 
@@ -225,7 +242,8 @@ function getAvailableDevices() {
                                 'label' => $part['label'] ?? null,
                                 'uuid' => $part['uuid'] ?? null,
                                 'type' => 'raid_partition',
-                                'source_type' => 'raid_partition'
+                                'source_type' => 'raid_partition',
+                                'is_whole_disk' => false
                             ];
                         }
                     }
@@ -234,6 +252,7 @@ function getAvailableDevices() {
         }
     }
     
+    // LVM Logical Volumes
     $lvsOutput = execCmd("lvs --noheadings -o lv_name,vg_name,lv_size,lv_path,lv_attr 2>/dev/null", true, 10);
     if (!empty($lvsOutput)) {
         $lines = explode("\n", trim($lvsOutput));
@@ -256,7 +275,8 @@ function getAvailableDevices() {
                         'fstype' => $fstype ?: null,
                         'vg_name' => $vgName,
                         'type' => 'lvm',
-                        'source_type' => 'lvm'
+                        'source_type' => 'lvm',
+                        'is_whole_disk' => false
                     ];
                 }
             }
@@ -313,6 +333,7 @@ function getMountEntries() {
         }
     }
     
+    // NFS и CIFS монтирования
     $networkOutput = execCmd("mount -t nfs,nfs4,cifs 2>/dev/null", true, 10);
     if (!empty($networkOutput)) {
         $lines = explode("\n", trim($networkOutput));
@@ -488,6 +509,7 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
             $fstype = 'auto';
         }
     }
+    writeLog("Detected filesystem: {$fstype}");
     
     $mountPointCreated = false;
     if (!is_dir($mountPoint)) {
@@ -520,8 +542,6 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         if (empty($gidNum)) $gidNum = 33;
     }
     
-    $mountOptions = $options['mount_options'] ?? 'defaults';
-    
     if ($fstype === 'ntfs' || $fstype === 'ntfs-3g') {
         $mountOptions = "uid={$uidNum},gid={$gidNum},umask=000,fmask=000,dmask=000,big_writes";
     } elseif ($fstype === 'exfat') {
@@ -529,12 +549,19 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
     } elseif ($fstype === 'vfat' || $fstype === 'fat32') {
         $mountOptions = "uid={$uidNum},gid={$gidNum},umask=000,fmask=000,dmask=000,shortname=mixed,utf8";
     } elseif ($fstype === 'ext4' || $fstype === 'ext3' || $fstype === 'ext2') {
-        $mountOptions = "uid={$uidNum},gid={$gidNum},umask=000";
+        $mountOptions = "defaults,noatime";
+    } elseif ($fstype === 'xfs') {
+        $mountOptions = "defaults,noatime";
+    } elseif ($fstype === 'btrfs') {
+        $mountOptions = "defaults,noatime";
     } else {
-        $mountOptions = $options['mount_options'] ?? "uid={$uidNum},gid={$gidNum},umask=000";
+        $mountOptions = "defaults";
     }
     
+    writeLog("Mount options: {$mountOptions}");
+    
     $cmd = "mount -t {$fstype} -o {$mountOptions} {$devicePath} \"{$mountPoint}\" 2>&1";
+    writeLog("Executing: {$cmd}");
     $output = execCmd($cmd, true, 30);
     
     sleep(1);
@@ -544,11 +571,16 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         if ($mountPointCreated) {
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
         }
+        writeError("Mount failed: {$output}");
         return ['success' => false, 'error' => "Mount failed: " . ($output ?: 'Unknown error')];
     }
     
+    if ($fstype === 'ext4' || $fstype === 'ext3' || $fstype === 'ext2') {
+        execCmd("chown {$uidNum}:{$gidNum} \"{$mountPoint}\"", true, 3);
+        execCmd("chmod 755 \"{$mountPoint}\"", true, 3);
+    }
+    
     execCmd("touch \"{$mountPoint}/.mount_created_by_mount_master\"", true, 3);
-    execCmd("chmod 755 \"{$mountPoint}\"", true, 3);
     
     if ($addToFstab) {
         $uuid = trim(execCmd("blkid -s UUID -o value {$devicePath} 2>/dev/null", true, 5));
@@ -557,7 +589,8 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         } else {
             $fstabDevice = $devicePath;
         }
-        addToFstab($fstabDevice, $mountPoint, $fstype, $mountOptions);
+        $fstabOptions = "defaults,noatime";
+        addToFstab($fstabDevice, $mountPoint, $fstype, $fstabOptions);
     }
     
     writeLog("Device {$device} mounted successfully at {$mountPoint}");
@@ -569,7 +602,6 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         'fstype' => $fstype
     ];
 }
-
 function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab = false) {
     writeLog("Mounting CIFS share: //{$server}/{$share} -> {$mountPoint}");
     
@@ -977,6 +1009,7 @@ function clearLogs() {
     return true;
 }
 
+// ==================== ОБРАБОТЧИК ЗАПРОСОВ ====================
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $input = [];

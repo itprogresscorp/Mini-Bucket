@@ -237,6 +237,11 @@ log "Настройка прав для mdadm..."
 chmod -R 777 /etc/mdadm 2>&1 | tee -a "$LOG_FILE"
 chown -R www-data:www-data /etc/mdadm 2>&1 | tee -a "$LOG_FILE"
 
+# Настройка прав для fstab
+log "Настройка прав для fstab..."
+chmod -R 777 /etc/fstab 2>&1 | tee -a "$LOG_FILE"
+chown -R www-data:www-data /etc/fstab 2>&1 | tee -a "$LOG_FILE"
+
 # Настройка прав для lvm
 log "Настройка прав для lvm..."
 chmod -R 777 /etc/lvm 2>&1 | tee -a "$LOG_FILE"
@@ -246,6 +251,11 @@ chown -R www-data:www-data /etc/lvm 2>&1 | tee -a "$LOG_FILE"
 log "Настройка Samba..."
 chmod -R 777 /etc/samba/conf.d/ 2>&1 | tee -a "$LOG_FILE"
 chown -R www-data:www-data /etc/samba/conf.d/ 2>&1 | tee -a "$LOG_FILE"
+
+log "Настройка Samba добавляем конфиг"
+echo "include = /etc/samba/conf.d/shares.conf" | sudo tee -a /etc/samba/smb.conf > /dev/null
+
+systemctl restart smbd 2>&1 | tee -a "$LOG_FILE"
 
 # Добавляем www-data в группу sudo
 log "Добавление www-data в группу sudo..."
@@ -257,6 +267,12 @@ log "Настройка sudo без пароля для www-data..."
 echo "www-data ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/www-data
 chmod 440 /etc/sudoers.d/www-data
 check_error "Ошибка при настройке sudo для www-data"
+
+# Отключение уведомлений sudo
+log "Отключение уведомлений sudo..."
+echo "Defaults !lecture, !fqdn" | sudo tee /etc/sudoers.d/disable-warnings > /dev/null
+chmod 440 /etc/sudoers.d/disable-warnings
+check_error "Ошибка при Отключение уведомлений sudo"
 
 # Настройка ACL
 log "Настройка ACL для /mnt..."
@@ -282,12 +298,12 @@ else
 fi
 
 # Копирование базы данных SQLite
-if [ -f "db.sqlite" ]; then
-    cp db.sqlite /var/www/minib/ 2>&1 | tee -a "$LOG_FILE"
-    log "База данных скопирована"
-else
-    log "Файл db.sqlite не найден, пропускаем..."
-fi
+#if [ -f "db.sqlite" ]; then
+#    cp db.sqlite /var/www/minib/ 2>&1 | tee -a "$LOG_FILE"
+#    log "База данных скопирована"
+#else
+#    log "Файл db.sqlite не найден, пропускаем..."
+#fi
 
 # Настройка прав для директорий
 log "Настройка прав для директорий..."
@@ -323,17 +339,18 @@ Listen 1488
     ServerName localhost
     
     <Directory /var/www/html/admin>
-        Options Indexes FollowSymLinks
+        Options FollowSymLinks
         AllowOverride All
         Require all granted
+        Options -Indexes
     </Directory>
     
-    ErrorLog /var/www/minib/admin_error.log
-    CustomLog /var/www/minib/admin_access.log combined
+    ErrorLog /var/www/minib/logs/web/admin_error.log
+    CustomLog /var/www/minib/logs/web/admin_access.log combined
     
     php_value max_execution_time 300
     php_value max_input_time 300
-    php_value memory_limit 256M
+    #php_value memory_limit 256M
 </VirtualHost>
 EOF
 
@@ -415,9 +432,9 @@ systemctl enable vsftpd 2>&1 | tee -a "$LOG_FILE"
 
 # Настройка cron
 log "Настройка cron для выполнения заданий..."
-CRON_JOB_CRON="* * * * * php /var/www/html/admin/cron_runner.php > /dev/null 2>&1"
-CRON_JOB_HEALTH="* * * * * php /var/www/html/admin/health_cron.php > /dev/null 2>&1"
-CRON_JOB_ROTATE_KEY="* * * * * php /var/www/html/admin/api/key_rotation_task.php >> /var/www/minib/logs/cron_key_rotation.log 2>&1"
+CRON_JOB_CRON="* * * * * php /var/www/minib/cron/cron_runner.php > /dev/null 2>&1"
+CRON_JOB_HEALTH="* * * * * php /var/www/minib/cron/health_cron.php > /dev/null 2>&1"
+CRON_JOB_ROTATE_KEY="* * * * * php /var/www/minib/cron/key_rotation_task.php >> /var/www/minib/logs/cron_key_rotation.log 2>&1"
 CRON_JOB_GENERATE_KEY="*/30 * * * * php /var/www/minib/cron/auto_rotate_key.php >> /var/www/minib/logs/cron_autorotate_key.log 2>&1"
 
 if [ -f /var/www/html/admin/cron_runner.php ]; then

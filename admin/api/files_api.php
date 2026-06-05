@@ -17,9 +17,21 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
+ini_set('upload_tmp_dir', '/var/www/minib/data/tmp');
+putenv('TMPDIR=/var/www/minib/data/tmp');
+
+if (!is_dir('/var/www/minib/data/tmp')) {
+    mkdir('/var/www/minib/data/tmp', 0777, true);
+}
+
+ini_set('memory_limit', '32M');
+ini_set('upload_max_filesize', '10G');
+ini_set('post_max_size', '10G');
+ini_set('max_execution_time', '3600');
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -84,7 +98,11 @@ validateApiKey();
 set_time_limit(0);
 ignore_user_abort(true);
 
+// ========== Helper Functions ==========
 
+/**
+ * Send JSON response and exit
+ */
 function sendJsonResponse($data, $statusCode = 200) {
     http_response_code($statusCode);
     header('Content-Type: application/json');
@@ -92,7 +110,9 @@ function sendJsonResponse($data, $statusCode = 200) {
     exit;
 }
 
-
+/**
+ * Format file size in bytes
+ */
 function formatSize($bytes) {
     if ($bytes === 0) return '0 B';
     $units = array('B', 'KB', 'MB', 'GB', 'TB');
@@ -100,7 +120,9 @@ function formatSize($bytes) {
     return round($bytes / pow(1024, $i), 1) . ' ' . $units[$i];
 }
 
-
+/**
+ * Get permissions text representation (like ls -l)
+ */
 function getPermsText($perms) {
     if (($perms & 0xC000) == 0xC000) $info = 's';
     elseif (($perms & 0xA000) == 0xA000) $info = 'l';
@@ -122,6 +144,9 @@ function getPermsText($perms) {
     return $info;
 }
 
+/**
+ * Convert fnmatch pattern to regex
+ */
 function fnmatchToRegex($pattern) {
     $pattern = preg_quote($pattern, '/');
     $pattern = str_replace('\*', '.*', $pattern);
@@ -129,6 +154,9 @@ function fnmatchToRegex($pattern) {
     return '/^' . $pattern . '$/i';
 }
 
+/**
+ * Safe file size for large files (>2GB on 32-bit systems)
+ */
 function getSafeFileSize($path) {
     if (!is_file($path)) return 0;
     
@@ -156,32 +184,45 @@ function getSafeFileSize($path) {
     return $size;
 }
 
+// ========== Operation Management Functions ==========
+
+/**
+ * Generate unique operation ID
+ */
 function getOperationId() {
     return uniqid() . '_' . time() . '_' . rand(1000, 9999);
 }
 
-
+/**
+ * Get progress file path for operation
+ */
 function getOperationProgressFile($operationId) {
-    $tmpDir = dirname(__DIR__) . '/tmp';
+    $tmpDir = '/var/www/minib/tmp';
     if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
     return $tmpDir . '/fm_progress_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $operationId) . '.json';
 }
 
-
+/**
+ * Get lock file path for operation
+ */
 function getOperationLockFile($operationId) {
-    $tmpDir = dirname(__DIR__) . '/tmp';
+    $tmpDir = '/var/www/minib/tmp';
     if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
     return $tmpDir . '/fm_lock_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $operationId) . '.lock';
 }
 
-
+/**
+ * Get log file path for operation
+ */
 function getOperationLogFile($operationId) {
-    $tmpDir = dirname(__DIR__) . '/tmp';
+    $tmpDir = '/var/www/minib/tmp';
     if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
     return $tmpDir . '/fm_log_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $operationId) . '.txt';
 }
 
-
+/**
+ * Start background operation (copy or move)
+ */
 function startBackgroundOperation($operation, $sourceDir, $targetDir, $files) {
     $operationId = getOperationId();
     
@@ -227,7 +268,7 @@ function startBackgroundOperation($operation, $sourceDir, $targetDir, $files) {
     file_put_contents($logFile, date('Y-m-d H:i:s') . " - Total items: $total\n", FILE_APPEND);
     chmod($logFile, 0666);
     
-    $workerScript = dirname(__DIR__) . '/file_worker.php';
+    $workerScript = '/var/www/minib/workers/file_worker.php';
     $cmd = 'nohup php ' . escapeshellarg($workerScript) . ' ' . escapeshellarg($operationId) . ' > /dev/null 2>&1 &';
     exec($cmd);
     
@@ -236,9 +277,11 @@ function startBackgroundOperation($operation, $sourceDir, $targetDir, $files) {
     return $operationId;
 }
 
-
+/**
+ * Clean up stale operations (older than 1 hour)
+ */
 function cleanupStaleOperations() {
-    $tmpDir = dirname(__DIR__) . '/tmp';
+    $tmpDir = '/var/www/minib/tmp';
     if (!is_dir($tmpDir)) return;
     
     $files = glob($tmpDir . '/fm_progress_*.json');
@@ -266,8 +309,14 @@ function cleanupStaleOperations() {
     }
 }
 
+// Run cleanup on each request
 cleanupStaleOperations();
 
+// ========== File System Functions ==========
+
+/**
+ * Get mounted drives
+ */
 function getMountedDrives() {
     $drives = array();
     $dataPath = defined('DATA_PATH') ? DATA_PATH : '/mnt/data';
@@ -311,6 +360,9 @@ function getMountedDrives() {
     return $drives;
 }
 
+/**
+ * Recursive search in directory
+ */
 function searchRecursive($dir, $pattern, $basePath, &$results, $maxDepth = 30, $depth = 0) {
     if ($depth > $maxDepth || !is_dir($dir)) return;
     if (!is_readable($dir)) return;
@@ -359,6 +411,9 @@ function searchRecursive($dir, $pattern, $basePath, &$results, $maxDepth = 30, $
     }
 }
 
+/**
+ * Get directory contents with optional search
+ */
 function getDirectoryContents($dir, $basePath, $search = '', $recursive = false) {
     $items = array();
     
@@ -416,6 +471,9 @@ function getDirectoryContents($dir, $basePath, $search = '', $recursive = false)
     return $items;
 }
 
+/**
+ * Get system users for ACL
+ */
 function getSystemUsers() {
     $users = array('www-data', 'nobody', 'root', 'daemon', 'davfs2', 'ftpuser');
     
@@ -434,6 +492,9 @@ function getSystemUsers() {
     return array_unique($users);
 }
 
+/**
+ * Get system groups for ACL
+ */
 function getSystemGroups() {
     $groups = array('www-data', 'nogroup', 'root', 'staff', 'ftpuser');
     
@@ -450,6 +511,30 @@ function getSystemGroups() {
     return array_unique($groups);
 }
 
+function uploadErrorCode($code) {
+    switch ($code) {
+        case UPLOAD_ERR_INI_SIZE:
+            return 'File exceeds upload_max_filesize directive in php.ini';
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'File exceeds MAX_FILE_SIZE directive in HTML form';
+        case UPLOAD_ERR_PARTIAL:
+            return 'File was only partially uploaded';
+        case UPLOAD_ERR_NO_FILE:
+            return 'No file was uploaded';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Missing temporary folder';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Failed to write file to disk';
+        case UPLOAD_ERR_EXTENSION:
+            return 'File upload stopped by extension';
+        default:
+            return 'Unknown upload error';
+    }
+}
+
+/**
+ * Validate path for security (prevent directory traversal)
+ */
 function validatePath($path, $basePath = null) {
     $realPath = realpath($path);
     if ($realPath === false) return false;
@@ -464,9 +549,11 @@ function validatePath($path, $basePath = null) {
     return $realPath;
 }
 
+// ========== API Route Handler ==========
 
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 
+// Handle GET requests
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     switch ($action) {
         case 'get_drives':
@@ -651,6 +738,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
+// Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     if ($input === null && !empty($_POST)) {
@@ -980,54 +1068,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             
         case 'upload':
-            if (!isset($_FILES['files'])) {
-                sendJsonResponse(['success' => false, 'error' => 'No files uploaded']);
-                break;
-            }
-            
-            $targetDir = isset($_POST['target_dir']) ? $_POST['target_dir'] : '';
-            if (empty($targetDir)) {
-                sendJsonResponse(['success' => false, 'error' => 'Target directory required']);
-                break;
-            }
-            
-            $uploaded = 0;
-            $errors = 0;
-            $files = $_FILES['files'];
-            
-            if (isset($files['name']) && is_array($files['name'])) {
-                for ($i = 0; $i < count($files['name']); $i++) {
-                    if ($files['error'][$i] === UPLOAD_ERR_OK) {
-                        $target = $targetDir . '/' . basename($files['name'][$i]);
-                        if (move_uploaded_file($files['tmp_name'][$i], $target)) {
-                            $uploaded++;
-                        } else {
-                            $errors++;
-                        }
-                    } else {
-                        $errors++;
-                    }
-                }
-            } else {
-                if ($files['error'] === UPLOAD_ERR_OK) {
-                    $target = $targetDir . '/' . basename($files['name']);
-                    if (move_uploaded_file($files['tmp_name'], $target)) {
-                        $uploaded++;
-                    } else {
-                        $errors++;
-                    }
-                } else {
-                    $errors++;
-                }
-            }
-            
-            sendJsonResponse(['success' => true, 'message' => "Uploaded $uploaded file(s)" . ($errors ? " $errors failed" : "")]);
-            break;
+			if (!isset($_FILES['files'])) {
+				sendJsonResponse(['success' => false, 'error' => 'No files uploaded']);
+				break;
+			}
+			
+			$targetDir = isset($_POST['target_dir']) ? $_POST['target_dir'] : '';
+			if (empty($targetDir)) {
+				sendJsonResponse(['success' => false, 'error' => 'Target directory required']);
+				break;
+			}
+			
+			if (!is_dir($targetDir)) {
+				if (!mkdir($targetDir, 0777, true)) {
+					sendJsonResponse(['success' => false, 'error' => 'Cannot create target directory']);
+					break;
+				}
+			}
+			
+			$uploaded = 0;
+			$errors = 0;
+			$files = $_FILES['files'];
+			
+			function moveUploadedFileSafe($tmpPath, $targetPath) {
+				if (move_uploaded_file($tmpPath, $targetPath)) {
+					chmod($targetPath, 0644);
+					return true;
+				}
+				return false;
+			}
+			
+			if (isset($files['name']) && is_array($files['name'])) {
+				for ($i = 0; $i < count($files['name']); $i++) {
+					if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+						$errors++;
+						error_log("Upload error for {$files['name'][$i]}: " . uploadErrorCode($files['error'][$i]));
+						continue;
+					}
+					
+					$target = $targetDir . '/' . basename($files['name'][$i]);
+					
+					if (moveUploadedFileSafe($files['tmp_name'][$i], $target)) {
+						$uploaded++;
+					} else {
+						$errors++;
+						error_log("Failed to move {$files['name'][$i]} to $target");
+					}
+				}
+			} else {
+				if ($files['error'] === UPLOAD_ERR_OK) {
+					$target = $targetDir . '/' . basename($files['name']);
+					if (moveUploadedFileSafe($files['tmp_name'], $target)) {
+						$uploaded++;
+					} else {
+						$errors++;
+					}
+				} else {
+					$errors++;
+					sendJsonResponse(['success' => false, 'error' => uploadErrorCode($files['error'])]);
+					break;
+				}
+			}
+			
+			sendJsonResponse([
+				'success' => true, 
+				'message' => "Uploaded $uploaded file(s)" . ($errors ? " ($errors failed)" : "")
+			]);
+			break;
             
         default:
             sendJsonResponse(['success' => false, 'error' => 'Unknown action'], 400);
     }
 }
 
+// Handle unsupported methods
 sendJsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 ?>

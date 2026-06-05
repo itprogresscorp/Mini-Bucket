@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,12 +84,10 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
-
-        /* Status Badges */
         .status-group {
             display: flex;
             align-items: center;
@@ -125,7 +124,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             color: #721c24;
         }
 
-        /* Layout */
         .app-container {
             display: flex;
         }
@@ -151,7 +149,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             }
         }
 
-        /* Widgets */
         .widget {
             background: white;
             border-radius: 16px;
@@ -190,7 +187,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             padding: 0;
         }
 
-        /* Storage Cards */
         .storage-card {
             margin: 0 0 12px 0;
             background: #f8f9fa;
@@ -259,7 +255,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             margin-right: 4px;
         }
 
-        /* Export Badges */
         .export-badge {
             display: inline-flex;
             align-items: center;
@@ -285,7 +280,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             text-decoration: none;
         }
 
-        /* Tables */
         .table-export th {
             background: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
@@ -309,7 +303,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             display: inline-block;
         }
 
-        /* Buttons */
         .btn {
             border-radius: 10px;
             font-weight: 500;
@@ -328,7 +321,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             transform: translateY(-1px);
         }
 
-        /* Folder Browser */
         .folder-browser {
             min-height: 350px;
             max-height: 450px;
@@ -364,7 +356,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             text-decoration: underline;
         }
 
-        /* Client Lists */
         .client-list {
             max-height: 200px;
             overflow-y: auto;
@@ -394,7 +385,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             color: #6c757d;
         }
 
-        /* Alerts */
         .alert {
             padding: 2px;
             border-radius: 4px;
@@ -430,7 +420,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             }
         }
 
-        /* Refresh Button */
         .refresh-btn {
             cursor: pointer;
             transition: transform 0.2s;
@@ -441,7 +430,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             transform: rotate(180deg);
         }
 
-        /* Loading Spinner */
         .loading-spinner-sm {
             display: inline-block;
             width: 16px;
@@ -457,7 +445,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             100% { transform: rotate(360deg); }
         }
 
-        /* Modal Customization */
         .modal-header.bg-primary,
         .modal-header.bg-success,
         .modal-header.bg-warning {
@@ -468,7 +455,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             filter: brightness(0) invert(1);
         }
 
-        /* Options Help */
         .options-help {
             background: #f8f9fa;
             border-radius: 8px;
@@ -489,7 +475,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             border-radius: 4px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .table-responsive {
                 font-size: 12px;
@@ -510,7 +495,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             }
         }
 
-        /* Utility Classes */
         .cursor-pointer {
             cursor: pointer;
         }
@@ -655,6 +639,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Модальные окна -->
 <div class="modal fade" id="settingsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -851,6 +836,7 @@ let currentTargetInput = null;
 let currentBrowsePath = '/';
 let currentBrowsePathEdit = '/';
 
+// ========== Утилиты ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert"><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     $('#alertContainer').append(alertHtml);
@@ -859,6 +845,7 @@ function showAlert(message, type = 'success') {
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]; }); }
 
+// ========== API Calls ==========
 async function apiCall(action, method = 'GET', data = null) {
     let fullUrl = `${url}shares_nfs_api.php?action=${action}`;
     let options = { 
@@ -886,6 +873,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+// ========== Загрузка статуса ==========
 async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
@@ -916,6 +904,7 @@ async function toggleAutostart() {
     }
 }
 
+// ========== Загрузка конфигурации ==========
 async function loadConfig() {
     let result = await apiCall('get_config');
     if (result.success) {
@@ -940,6 +929,7 @@ $('#globalConfigForm').on('submit', async function(e) {
     else showAlert('Save error', 'danger');
 });
 
+// ========== Загрузка экспортов ==========
 async function loadExports() {
     let result = await apiCall('get_exports');
     if (result.success) {
@@ -998,6 +988,7 @@ async function deleteExport(index) {
     else showAlert(result.error || 'Error', 'danger');
 }
 
+// ========== Загрузка хранилищ ==========
 async function loadStorages() {
     let result = await apiCall('get_storages');
     if (result.success) {
@@ -1015,6 +1006,7 @@ async function loadStorages() {
     }
 }
 
+// ========== Загрузка статистики ==========
 async function loadStats() {
     let result = await apiCall('get_stats');
     if (result.success) {
@@ -1040,7 +1032,10 @@ async function loadStats() {
     }
 }
 
+// ========== Файловый браузер ==========
 async function loadFolder(path, container, breadcrumbContainer, currentPathInput) {
+    path = path.replace(/\/+/g, '/');
+    
     let result = await apiCall('browse', 'GET', { path: path });
     if (result.success) {
         if (container === '#folderBrowser') {
@@ -1051,17 +1046,29 @@ async function loadFolder(path, container, breadcrumbContainer, currentPathInput
         $(currentPathInput).val(result.path);
         
         let parts = result.path.split('/').filter(p => p);
-        let breadcrumbHtml = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\', \'' + container + '\', \'' + breadcrumbContainer + '\', \'' + currentPathInput + '\')">/</a></li>';
+        let breadcrumbHtml = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\', \'' + container + '\', \'' + breadcrumbContainer + '\', \'' + currentPathInput + '\')"><i class="fas fa-home"></i></a></li>';
         let cp = '';
-        parts.forEach(p => { cp += '/' + p; breadcrumbHtml += `<li class="breadcrumb-item"><a onclick="loadFolder('${cp}', '${container}', '${breadcrumbContainer}', '${currentPathInput}')">${escapeHtml(p)}</a></li>`; });
+        parts.forEach(p => { 
+            cp += '/' + p; 
+            breadcrumbHtml += `<li class="breadcrumb-item"><a onclick="loadFolder('${cp}', '${container}', '${breadcrumbContainer}', '${currentPathInput}')">${escapeHtml(p)}</a></li>`; 
+        });
         $(breadcrumbContainer).html(breadcrumbHtml);
         
         let listHtml = '<div class="list-group">';
-        if (result.path !== '/') listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="loadFolder('${result.parent}', '${container}', '${breadcrumbContainer}', '${currentPathInput}')"><i class="fas fa-level-up-alt"></i> ..</div>`;
+        if (result.path !== '/') {
+            listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="loadFolder('${result.parent}', '${container}', '${breadcrumbContainer}', '${currentPathInput}')">
+                <i class="fas fa-level-up-alt"></i> ..
+            </div>`;
+        }
         result.items.forEach(item => {
-            listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="selectDirectory('${item.path}', '${container}', '${currentPathInput}')"><i class="fas fa-folder"></i> ${escapeHtml(item.name)}</div>`;
+            let escapedPath = item.path.replace(/'/g, "\\'");
+            listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="selectDirectory('${escapedPath}', '${container}', '${currentPathInput}')">
+                <i class="fas fa-folder"></i> ${escapeHtml(item.name)}
+            </div>`;
         });
-        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+        if (result.items.length === 0 && result.path !== '/') {
+            listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+        }
         listHtml += '</div>';
         $(container).html(listHtml);
     } else {
@@ -1146,6 +1153,7 @@ async function createNewFolderEdit() {
     }
 }
 
+// ========== Инициализация и обновление ==========
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadExports(), loadStorages(), loadStats()]);
     showAlert('Data updated', 'success');

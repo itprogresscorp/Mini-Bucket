@@ -16,14 +16,15 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 let certWindowOpened = false;
 let certWindowCheckInterval = null;
 let certCheckInterval = null;
 let lastCheckTime = 0;
 
+// Функция проверки доступности API
 async function checkApiAvailability() {
     const currentHostId = window.apiConfig?.isLocalhost ? 1 : null;
     
@@ -222,12 +223,14 @@ function refreshAfterCertAccept() {
     window.location.reload();
 }
 
+// Слушаем сообщение о принятии сертификата
 window.addEventListener('message', function(event) {
     if (event.data === 'certificate_accepted') {
         refreshAfterCertAccept();
     }
 });
 
+// Запускаем проверку при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         checkApiAvailability();

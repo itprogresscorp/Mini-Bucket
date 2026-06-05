@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -37,10 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -82,9 +82,12 @@ function validateApiKey() {
 
 validateApiKey();
 
-$cacheDir = ROOT_PATH . '/tmp/';
+// Кеш-директория
+define('ROOT_PATH_BACK', '/var/www/minib/');
+$cacheDir = ROOT_PATH_BACK . '/tmp/';
 if (!file_exists($cacheDir)) mkdir($cacheDir, 0755, true);
 
+// Хранилище для предыдущих значений между запросами
 $prevDataFile = $cacheDir . 'prev_metrics_data.json';
 $diskCacheFile = $cacheDir . 'physical_disks_cache.json';
 
@@ -102,8 +105,9 @@ function savePrevData($data) {
     file_put_contents($prevDataFile, json_encode($data));
 }
 
+// Получение CPU процентов
 function getCpuUsage() {
-    $cacheFile = ROOT_PATH . '/tmp/cpu_usage_cache.json';
+    $cacheFile = ROOT_PATH_BACK . '/tmp/cpu_usage_cache.json';
     $prevData = [];
     
     if (file_exists($cacheFile)) {
@@ -144,7 +148,7 @@ function getCpuUsage() {
 }
 
 function getCpuCores() {
-    $cacheFile = ROOT_PATH . '/tmp/cpu_cores_cache.json';
+    $cacheFile = ROOT_PATH_BACK . '/tmp/cpu_cores_cache.json';
     $prevCores = [];
     
     if (file_exists($cacheFile)) {
@@ -241,6 +245,7 @@ function getLoadAverage() {
     return sys_getloadavg();
 }
 
+// Получение списка дисков с IO статистикой
 function getDisksWithIO() {
     $prevData = getPrevData();
     $prevDiskStats = $prevData['disk_stats'] ?? null;
@@ -264,12 +269,12 @@ function getDisksWithIO() {
         if (count($data) >= 14) {
             $diskName = $data[2];
             if (in_array($diskName, $diskNames)) {
-                $readsCompleted = intval($data[3]);
-                $sectorsRead = intval($data[5]);
-                $writesCompleted = intval($data[7]);
-                $sectorsWritten = intval($data[9]);
-                $ioInProgress = intval($data[11]);
-                $ioTime = intval($data[12]);
+                $readsCompleted = intval($data[3]);    // чтения завершены
+                $sectorsRead = intval($data[5]);       // сектора прочитаны
+                $writesCompleted = intval($data[7]);   // записи завершены  
+                $sectorsWritten = intval($data[9]);    // сектора записаны
+                $ioInProgress = intval($data[11]);     // I/O в процессе
+                $ioTime = intval($data[12]);           // время на I/O (мс)
                 
                 $currentStats[$diskName] = [
                     'read_bytes' => $sectorsRead * 512,
@@ -297,6 +302,7 @@ function getDisksWithIO() {
                     
                     $queueLength = min(20, $stats['io_in_progress']);
                     
+                    // Расчет IOPS
                     $readOpsDiff = max(0, $stats['read_ops'] - ($prevDiskStats[$diskName]['read_ops'] ?? 0));
                     $writeOpsDiff = max(0, $stats['write_ops'] - ($prevDiskStats[$diskName]['write_ops'] ?? 0));
                     
@@ -352,6 +358,7 @@ function getDisksWithIO() {
     return $disks;
 }
 
+// Получение сетевой статистики с расчетом скорости
 function getNetworkTraffic() {
     $prevData = getPrevData();
     $prevNetStats = $prevData['net_stats'] ?? null;
@@ -360,6 +367,7 @@ function getNetworkTraffic() {
     $result = [];
     $interfaces = [];
     
+    // Получаем сетевые интерфейсы
     $netDevices = scandir('/sys/class/net/');
     foreach ($netDevices as $iface) {
         if ($iface == '.' || $iface == '..' || $iface == 'lo') continue;
@@ -381,6 +389,7 @@ function getNetworkTraffic() {
         }
     }
     
+    // Рассчитываем скорости
     if ($prevNetStats !== null) {
         foreach ($currentStats as $iface => $stats) {
             if (isset($prevNetStats[$iface])) {
@@ -462,6 +471,7 @@ function getIpAddress($interface) {
     return trim($ip) ?: 'N/A';
 }
 
+// Получение физических ддисков с кешированием (обновл раз в 30 сек)
 function getPhysicalDisks() {
     global $diskCacheFile;
     
@@ -477,32 +487,96 @@ function getPhysicalDisks() {
     
     $disks = [];
     
-    $lsblk = shell_exec("lsblk -o NAME,TYPE,SIZE,MODEL -d -n 2>/dev/null | grep -E 'disk' | grep -vE 'mtdblock|loop|ram'");
-    $diskLines = array_filter(explode("\n", trim($lsblk)));
+    $lsblkJson = shell_exec("lsblk -J -d -o NAME,TYPE,SIZE,MODEL 2>/dev/null | grep -v 'loop'");
     
-    foreach ($diskLines as $line) {
-        $parts = preg_split('/\s+/', trim($line));
-        if (count($parts) < 3) continue;
+    if ($lsblkJson) {
+        $data = json_decode($lsblkJson, true);
+        if ($data && isset($data['blockdevices'])) {
+            foreach ($data['blockdevices'] as $disk) {
+                if (strpos($disk['name'] ?? '', 'loop') === 0) continue;
+                if (($disk['type'] ?? '') !== 'disk') continue;
+                
+                $diskName = $disk['name'];
+                $diskSize = $disk['size'] ?? 'Unknown';
+                $diskModel = $disk['model'] ?? $diskName;
+                
+                $device = '/dev/' . $diskName;
+                $smart = getSmartInfo($device);
+                $partitions = getDiskPartitions($diskName);
+                $totalUsage = calculateDiskUsage($partitions);
+                
+                if (empty($partitions)) {
+                    $fsCheck = shell_exec("lsblk -o FSTYPE -n /dev/" . $diskName . " 2>/dev/null | head -1");
+                    if ($fsCheck && trim($fsCheck) && trim($fsCheck) !== '-') {
+                        $mountPoint = trim(shell_exec("lsblk -o MOUNTPOINT -n /dev/" . $diskName . " 2>/dev/null | head -1"));
+                        $partitions[] = [
+                            'name' => $diskName,
+                            'size' => $diskSize,
+                            'mount' => ($mountPoint && $mountPoint !== '-') ? $mountPoint : '',
+                            'fstype' => trim($fsCheck),
+                            'is_swap' => false,
+                            'used' => '0',
+                            'avail' => '0',
+                            'percent' => 0
+                        ];
+                        
+                        if ($mountPoint && $mountPoint !== '-' && file_exists($mountPoint)) {
+                            $df = shell_exec("df -h " . escapeshellarg($mountPoint) . " 2>/dev/null | tail -1");
+                            if ($df && trim($df)) {
+                                $dfParts = preg_split('/\s+/', trim($df));
+                                if (count($dfParts) >= 6) {
+                                    $partitions[0]['size'] = $dfParts[1];
+                                    $partitions[0]['used'] = $dfParts[2];
+                                    $partitions[0]['avail'] = $dfParts[3];
+                                    $partitions[0]['percent'] = intval(rtrim($dfParts[4], '%'));
+                                }
+                            }
+                        }
+                        
+                        $totalUsage = calculateDiskUsage($partitions);
+                    }
+                }
+                
+                $disks[] = [
+                    'name' => $diskName,
+                    'model' => trim($diskModel),
+                    'size' => $diskSize,
+                    'smart' => $smart,
+                    'partitions' => $partitions,
+                    'total_used' => $totalUsage['used'],
+                    'total_size' => $totalUsage['size'],
+                    'total_percent' => $totalUsage['percent']
+                ];
+            }
+        }
+    } else {
+        $lsblk = shell_exec("lsblk -o NAME,TYPE,SIZE,MODEL -d -n 2>/dev/null | grep -E 'disk' | grep -vE 'mtdblock|loop|ram'");
+        $diskLines = array_filter(explode("\n", trim($lsblk)));
         
-        $diskName = $parts[0];
-        $diskSize = $parts[2];
-        $diskModel = count($parts) > 3 ? implode(' ', array_slice($parts, 3)) : $diskName;
-        $device = '/dev/' . $diskName;
-        
-        $smart = getSmartInfo($device);
-        $partitions = getDiskPartitions($diskName);
-        $totalUsage = calculateDiskUsage($partitions);
-        
-        $disks[] = [
-            'name' => $diskName,
-            'model' => trim($diskModel),
-            'size' => $diskSize,
-            'smart' => $smart,
-            'partitions' => $partitions,
-            'total_used' => $totalUsage['used'],
-            'total_size' => $totalUsage['size'],
-            'total_percent' => $totalUsage['percent']
-        ];
+        foreach ($diskLines as $line) {
+            $parts = preg_split('/\s+/', trim($line));
+            if (count($parts) < 3) continue;
+            
+            $diskName = $parts[0];
+            $diskSize = $parts[2];
+            $diskModel = count($parts) > 3 ? implode(' ', array_slice($parts, 3)) : $diskName;
+            $device = '/dev/' . $diskName;
+            
+            $smart = getSmartInfo($device);
+            $partitions = getDiskPartitions($diskName);
+            $totalUsage = calculateDiskUsage($partitions);
+            
+            $disks[] = [
+                'name' => $diskName,
+                'model' => trim($diskModel),
+                'size' => $diskSize,
+                'smart' => $smart,
+                'partitions' => $partitions,
+                'total_used' => $totalUsage['used'],
+                'total_size' => $totalUsage['size'],
+                'total_percent' => $totalUsage['percent']
+            ];
+        }
     }
     
     file_put_contents($diskCacheFile, json_encode($disks));
@@ -526,6 +600,7 @@ function getSmartInfo($device) {
     ];
     
     if (strpos($device, '/dev/sd') === 0 || strpos($device, '/dev/nvme') === 0) {
+        // Reallocated_Sector_Ct
         $realloc = shell_exec("sudo smartctl -A " . $device . " 2>/dev/null | grep -E 'Reallocated_Sector_Ct|Reallocated_Event_Count' | awk '{print $10}'");
         if ($realloc && intval($realloc) > 0) {
             $smart['bad_sectors'] = intval($realloc);
@@ -534,6 +609,7 @@ function getSmartInfo($device) {
             $smart['health'] = "Realloc: " . trim($realloc);
         }
         
+        // Current_Pending_Sector - ожидающие переназначения
         $pending = shell_exec("sudo smartctl -A " . $device . " 2>/dev/null | grep 'Current_Pending_Sector' | awk '{print $10}'");
         if ($pending && intval($pending) > 0) {
             $smart['bad_sectors'] += intval($pending);
@@ -542,6 +618,7 @@ function getSmartInfo($device) {
             $smart['health'] = "Pending: " . trim($pending);
         }
         
+        // Offline_Uncorrectable
         $offline = shell_exec("sudo smartctl -A " . $device . " 2>/dev/null | grep 'Offline_Uncorrectable' | awk '{print $10}'");
         if ($offline && intval($offline) > 0) {
             $smart['bad_sectors'] += intval($offline);
@@ -549,7 +626,9 @@ function getSmartInfo($device) {
             $smart['status'] = 'FAILED';
         }
         
+        // Если нет плохих секторов - PASSED
         if ($smart['bad_sectors'] == 0) {
+            // Дополнительная проверка общей health
             $healthCheck = shell_exec("sudo smartctl -H " . $device . " 2>/dev/null | grep 'SMART overall-health'");
             if ($healthCheck && strpos($healthCheck, 'FAILED') !== false) {
                 $smart['status'] = 'FAILED';
@@ -560,6 +639,7 @@ function getSmartInfo($device) {
             }
         }
         
+        // Температура
         $temp = shell_exec("sudo smartctl -A " . $device . " 2>/dev/null | grep -E 'Temperature_Celsius|Temperature:|Current Drive Temperature' | head -1");
         if ($temp) {
             if (preg_match('/(\d+)/', $temp, $matches)) {
@@ -580,6 +660,59 @@ function getDiskPartitions($diskName) {
     $lsblk = shell_exec("lsblk -o NAME,TYPE,MOUNTPOINT,SIZE,FSTYPE -n /dev/" . $diskName . " 2>/dev/null | grep -E 'part'");
     $partLines = array_filter(explode("\n", trim($lsblk)));
     
+    if (empty($partLines)) {
+        $diskInfo = shell_exec("lsblk -o NAME,TYPE,MOUNTPOINT,SIZE,FSTYPE -n /dev/" . $diskName . " 2>/dev/null | head -1");
+        if ($diskInfo && trim($diskInfo)) {
+            $parts = preg_split('/\s+/', trim($diskInfo));
+            if (count($parts) >= 3) {
+                $fsType = $parts[3] ?? '';
+                $mountPoint = $parts[2] ?? '';
+                
+                if (!empty($fsType) && $fsType !== '-') {
+                    $partition = [
+                        'name' => $diskName,
+                        'size' => $parts[1] ?? '0',
+                        'mount' => ($mountPoint && $mountPoint !== '-') ? $mountPoint : '',
+                        'fstype' => $fsType,
+                        'is_swap' => ($fsType === 'swap'),
+                        'used' => '0',
+                        'avail' => '0',
+                        'percent' => 0
+                    ];
+                    
+                    if ($partition['mount'] && file_exists($partition['mount'])) {
+                        $df = shell_exec("df -h " . escapeshellarg($partition['mount']) . " 2>/dev/null | tail -1");
+                        if ($df && trim($df)) {
+                            $dfParts = preg_split('/\s+/', trim($df));
+                            if (count($dfParts) >= 6) {
+                                $partition['size'] = $dfParts[1];
+                                $partition['used'] = $dfParts[2];
+                                $partition['avail'] = $dfParts[3];
+                                $partition['percent'] = intval(rtrim($dfParts[4], '%'));
+                            }
+                        }
+                    } elseif ($partition['mount'] === '' && !empty($fsType)) {
+                        $df = shell_exec("df -h /dev/" . $diskName . " 2>/dev/null | tail -1");
+                        if ($df && trim($df)) {
+                            $dfParts = preg_split('/\s+/', trim($df));
+                            if (count($dfParts) >= 6) {
+                                $partition['size'] = $dfParts[1];
+                                $partition['used'] = $dfParts[2];
+                                $partition['avail'] = $dfParts[3];
+                                $partition['percent'] = intval(rtrim($dfParts[4], '%'));
+                            }
+                        }
+                    }
+                    
+                    $partitions[] = $partition;
+                    return $partitions;
+                }
+            }
+        }
+        return $partitions;
+    }
+    
+    // Обработка обычных разделов
     foreach ($partLines as $line) {
         $parts = preg_split('/\s+/', trim($line));
         if (count($parts) < 3) continue;
@@ -714,6 +847,7 @@ function getSystemInfo() {
     ];
 }
 
+// API роутинг
 $action = $_GET['action'] ?? '';
 
 if ($action === 'metrics') {

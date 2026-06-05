@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(dirname(__FILE__)));
 }
@@ -42,7 +42,7 @@ if (php_sapi_name() !== 'cli') {
     }
 }
 
-
+// Проверка API ключа
 function validateApiKey() {
     if (php_sapi_name() === 'cli') {
         return true;
@@ -92,6 +92,19 @@ if (php_sapi_name() !== 'cli') {
 
 $action = $_GET['action'] ?? '';
 
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+global $db2;
+       
+if (!$db2) {
+   try {
+      $db2 = getDB2();
+    } catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Database connection failed']);
+    exit;
+	}
+}
 
 function addNotification($type, $severity, $title, $message, $details = null) {
     addNotificationSimple($type, $severity, $title, $message, $details);
@@ -99,9 +112,10 @@ function addNotification($type, $severity, $title, $message, $details = null) {
 }
 
 function getSettings() {
-    global $db;
-    $settings = [];
-    $result = $db->query("SELECT setting_key, setting_value FROM notification_settings");
+    global $db2;
+	
+	$settings = [];
+    $result = $db2->query("SELECT setting_key, setting_value FROM notification_settings");
     while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
@@ -180,8 +194,10 @@ function sendEmail($subject, $message) {
     }
 }
 
+// ========== ПРОВЕРКА ДИСКОВ ==========
+
 function checkDisks() {
-    global $db;
+    global $db2;
     
     $result = ['disks' => [], 'db_disks' => [], 'stats' => ['total' => 0, 'ok' => 0, 'warning' => 0, 'critical' => 0]];
     
@@ -213,7 +229,7 @@ function checkDisks() {
     }
     
     $dbDisks = [];
-    $stmt = $db->prepare("SELECT * FROM monitored_disks ORDER BY id");
+    $stmt = $db2->prepare("SELECT * FROM monitored_disks ORDER BY id");
     $res = $stmt->execute();
     while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
         $dbDisks[$row['disk_name']] = $row;
@@ -223,7 +239,7 @@ function checkDisks() {
     
     foreach ($currentDisks as $diskName => $disk) {
         if (!isset($dbDisks[$diskName])) {
-            $stmt = $db->prepare("INSERT INTO monitored_disks (disk_name, disk_model, disk_size, disk_path, is_new, is_active) 
+            $stmt = $db2->prepare("INSERT INTO monitored_disks (disk_name, disk_model, disk_size, disk_path, is_new, is_active) 
                                   VALUES (:name, :model, :size, :path, 1, 1)");
             $stmt->bindValue(':name', $diskName, SQLITE3_TEXT);
             $stmt->bindValue(':model', $disk['model'], SQLITE3_TEXT);
@@ -235,7 +251,7 @@ function checkDisks() {
                           "New disk {$diskName} ({$disk['model']}) has been detected",
                           json_encode($disk));
         } else {
-            $stmt = $db->prepare("UPDATE monitored_disks SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE disk_name = :name");
+            $stmt = $db2->prepare("UPDATE monitored_disks SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE disk_name = :name");
             $stmt->bindValue(':name', $diskName, SQLITE3_TEXT);
             $stmt->execute();
         }
@@ -255,7 +271,7 @@ function checkDisks() {
     
     foreach ($dbDisks as $diskName => $dbDisk) {
         if (!isset($currentDisks[$diskName]) && $dbDisk['is_active'] == 1) {
-            $stmt = $db->prepare("UPDATE monitored_disks SET is_active = 0 WHERE disk_name = :name");
+            $stmt = $db2->prepare("UPDATE monitored_disks SET is_active = 0 WHERE disk_name = :name");
             $stmt->bindValue(':name', $diskName, SQLITE3_TEXT);
             $stmt->execute();
             
@@ -269,7 +285,7 @@ function checkDisks() {
     }
     
     $finalDbDisks = [];
-    $stmt = $db->prepare("SELECT * FROM monitored_disks ORDER BY id");
+    $stmt = $db2->prepare("SELECT * FROM monitored_disks ORDER BY id");
     $res = $stmt->execute();
     while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
         $finalDbDisks[] = $row;
@@ -315,8 +331,10 @@ function getSmartInfoForDisk($device) {
     return $smart;
 }
 
+// ========== ПРОВЕРКА RAID ==========
+
 function checkRaid() {
-    global $db;
+    global $db2;
     
     $result = ['raid' => [], 'db_raids' => []];
     
@@ -389,7 +407,7 @@ function checkRaid() {
     
     $settings = getSettings();
     $dbRaids = [];
-    $stmt = $db->prepare("SELECT * FROM monitored_raids");
+    $stmt = $db2->prepare("SELECT * FROM monitored_raids");
     $res = $stmt->execute();
     while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
         $dbRaids[$row['raid_name']] = $row;
@@ -397,7 +415,7 @@ function checkRaid() {
     
     foreach ($currentRaids as $raidName => $raid) {
         if (!isset($dbRaids[$raidName])) {
-            $stmt = $db->prepare("INSERT INTO monitored_raids (raid_name, raid_level, raid_size, devices, is_new, is_active) 
+            $stmt = $db2->prepare("INSERT INTO monitored_raids (raid_name, raid_level, raid_size, devices, is_new, is_active) 
                                   VALUES (:name, :level, :size, :devices, 1, 1)");
             $stmt->bindValue(':name', $raidName, SQLITE3_TEXT);
             $stmt->bindValue(':level', $raid['level'], SQLITE3_TEXT);
@@ -409,7 +427,7 @@ function checkRaid() {
                           "New RAID array {$raidName} ({$raid['level']}) has been detected",
                           json_encode($raid));
         } else {
-            $stmt = $db->prepare("UPDATE monitored_raids SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE raid_name = :name");
+            $stmt = $db2->prepare("UPDATE monitored_raids SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE raid_name = :name");
             $stmt->bindValue(':name', $raidName, SQLITE3_TEXT);
             $stmt->execute();
         }
@@ -425,7 +443,7 @@ function checkRaid() {
     
     foreach ($dbRaids as $raidName => $dbRaid) {
         if (!isset($currentRaids[$raidName]) && $dbRaid['is_active'] == 1) {
-            $stmt = $db->prepare("UPDATE monitored_raids SET is_active = 0 WHERE raid_name = :name");
+            $stmt = $db2->prepare("UPDATE monitored_raids SET is_active = 0 WHERE raid_name = :name");
             $stmt->bindValue(':name', $raidName, SQLITE3_TEXT);
             $stmt->execute();
             addNotification('raid', 'warning', 'RAID Array Missing',
@@ -435,7 +453,7 @@ function checkRaid() {
     }
     
     $finalDbRaids = [];
-    $stmt = $db->prepare("SELECT * FROM monitored_raids ORDER BY id");
+    $stmt = $db2->prepare("SELECT * FROM monitored_raids ORDER BY id");
     $res = $stmt->execute();
     while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
         $finalDbRaids[] = $row;
@@ -444,6 +462,8 @@ function checkRaid() {
     
     return $result;
 }
+
+// ========== ПРОВЕРКА LVM ==========
 
 function checkLvm() {
     $result = ['vgs' => [], 'lvs' => []];
@@ -515,6 +535,8 @@ function checkLvm() {
     return $result;
 }
 
+// ========== ПРОВЕРКА ТЕМПЕРАТУР ==========
+
 function checkTemperatures() {
     $settings = getSettings();
     $cpuThreshold = intval($settings['cpu_temp_threshold'] ?? 85);
@@ -531,8 +553,8 @@ function checkTemperatures() {
         $tempCelsius = round(intval($tempRaw) / 1000, 1);
         $result['cpu_temp'] = $tempCelsius . '°C';
         
-        global $db;
-        $stmt = $db->prepare("INSERT INTO temperature_history (sensor_type, sensor_name, temperature) VALUES ('cpu', 'cpu0', :temp)");
+        global $db2;
+        $stmt = $db2->prepare("INSERT INTO temperature_history (sensor_type, sensor_name, temperature) VALUES ('cpu', 'cpu0', :temp)");
         $stmt->bindValue(':temp', $tempCelsius, SQLITE3_FLOAT);
         $stmt->execute();
         
@@ -556,8 +578,8 @@ function checkTemperatures() {
                 $temp = $tempVal . '°C';
                 $result['disk_temps'][] = ['name' => $diskName, 'temp' => $temp];
                 
-                global $db;
-                $stmt = $db->prepare("INSERT INTO temperature_history (sensor_type, sensor_name, temperature) VALUES ('disk', :name, :temp)");
+                global $db2;
+                $stmt = $db2->prepare("INSERT INTO temperature_history (sensor_type, sensor_name, temperature) VALUES ('disk', :name, :temp)");
                 $stmt->bindValue(':name', $diskName, SQLITE3_TEXT);
                 $stmt->bindValue(':temp', $tempVal, SQLITE3_FLOAT);
                 $stmt->execute();
@@ -574,14 +596,16 @@ function checkTemperatures() {
     return $result;
 }
 
+// ========== ПРОВЕРКА СЕТЕВЫХ ШАР ==========
+
 function checkShares() {
-    global $db;
+    global $db2;
     
     $result = ['shares' => []];
     
     scanAndAddShares();
     
-    $stmt = $db->prepare("SELECT * FROM monitored_shares WHERE is_active = 1");
+    $stmt = $db2->prepare("SELECT * FROM monitored_shares WHERE is_active = 1");
     $res = $stmt->execute();
     
     while ($share = $res->fetchArray(SQLITE3_ASSOC)) {
@@ -604,7 +628,7 @@ function checkShares() {
             }
         }
         
-        $stmt2 = $db->prepare("UPDATE monitored_shares SET last_check = CURRENT_TIMESTAMP, last_status = :status, error_message = :error WHERE id = :id");
+        $stmt2 = $db2->prepare("UPDATE monitored_shares SET last_check = CURRENT_TIMESTAMP, last_status = :status, error_message = :error WHERE id = :id");
         $stmt2->bindValue(':status', $isAvailable ? 'available' : 'down', SQLITE3_TEXT);
         $stmt2->bindValue(':error', $error, SQLITE3_TEXT);
         $stmt2->bindValue(':id', $share['id'], SQLITE3_INTEGER);
@@ -635,7 +659,7 @@ function checkShares() {
 }
 
 function scanAndAddShares() {
-    global $db;
+    global $db2;
     
     $shares = [];
     
@@ -682,13 +706,13 @@ function scanAndAddShares() {
     }
     
     foreach ($shares as $key => $share) {
-        $stmt = $db->prepare("SELECT id FROM monitored_shares WHERE share_type = :type AND share_name = :name");
+        $stmt = $db2->prepare("SELECT id FROM monitored_shares WHERE share_type = :type AND share_name = :name");
         $stmt->bindValue(':type', $share['type'], SQLITE3_TEXT);
         $stmt->bindValue(':name', $share['name'], SQLITE3_TEXT);
         $res = $stmt->execute();
         
         if (!$res->fetchArray()) {
-            $stmt2 = $db->prepare("INSERT INTO monitored_shares (share_type, share_name, share_path, is_active) 
+            $stmt2 = $db2->prepare("INSERT INTO monitored_shares (share_type, share_name, share_path, is_active) 
                                    VALUES (:type, :name, :path, 1)");
             $stmt2->bindValue(':type', $share['type'], SQLITE3_TEXT);
             $stmt2->bindValue(':name', $share['name'], SQLITE3_TEXT);
@@ -697,6 +721,8 @@ function scanAndAddShares() {
         }
     }
 }
+
+// ========== SMTP ФУНКЦИИ ==========
 
 function testSmtpConnection($host, $port, $username, $password, $encryption, $toEmail, $fromEmail = null, $domain = null) {
     $phpmailerPath = ROOT_PATH . '/lib/PHPMailer/PHPMailer/src/PHPMailer.php';
@@ -739,7 +765,7 @@ function testSmtpConnection($host, $port, $username, $password, $encryption, $to
 }
 
 function getAllStats() {
-    global $db;
+    global $db2;
     
     $stats = [
         'total' => 0,
@@ -748,6 +774,7 @@ function getAllStats() {
         'critical' => 0
     ];
     
+    // 1. Диски
     try {
         $disks = checkDisks();
         $stats['total'] += $disks['stats']['total'];
@@ -756,6 +783,7 @@ function getAllStats() {
         $stats['critical'] += $disks['stats']['critical'];
     } catch (Exception $e) {}
     
+    // 2. RAID
     try {
         $raid = checkRaid();
         if (isset($raid['raid'])) {
@@ -770,6 +798,7 @@ function getAllStats() {
         }
     } catch (Exception $e) {}
     
+    // 3. LVM
     try {
         $lvm = checkLvm();
         if (isset($lvm['lvs'])) {
@@ -785,6 +814,7 @@ function getAllStats() {
         }
     } catch (Exception $e) {}
     
+    // 4. Температуры
     try {
         $temp = checkTemperatures();
         $settings = getSettings();
@@ -813,6 +843,7 @@ function getAllStats() {
         }
     } catch (Exception $e) {}
     
+    // 5. Шары
     try {
         $shares = checkShares();
         if (isset($shares['shares'])) {
@@ -830,13 +861,14 @@ function getAllStats() {
     return $stats;
 }
 
+// Функция для сохранения уведомления
 function addNotificationSimple($type, $severity, $title, $message, $details = null) {
-    global $db;
+    global $db2;
     
     $plainMessage = strip_tags($message);
     $plainTitle = strip_tags($title);
     
-    $stmt = $db->prepare("INSERT INTO notifications (notification_type, severity, title, message, details) 
+    $stmt = $db2->prepare("INSERT INTO notifications (notification_type, severity, title, message, details) 
                           VALUES (:type, :severity, :title, :message, :details)");
     $stmt->bindValue(':type', $type, SQLITE3_TEXT);
     $stmt->bindValue(':severity', $severity, SQLITE3_TEXT);
@@ -848,6 +880,7 @@ function addNotificationSimple($type, $severity, $title, $message, $details = nu
 
 
 
+// ========== API РОУТИНГ ==========
 
 if (php_sapi_name() !== 'cli') {
 
@@ -860,7 +893,7 @@ switch ($action) {
         $input = json_decode(file_get_contents('php://input'), true);
         if ($input) {
             foreach ($input as $key => $value) {
-                $stmt = $db->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
+                $stmt = $db2->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
                                       VALUES (:key, :value, CURRENT_TIMESTAMP)");
                 $stmt->bindValue(':key', $key, SQLITE3_TEXT);
                 $stmt->bindValue(':value', $value, SQLITE3_TEXT);
@@ -873,7 +906,7 @@ switch ($action) {
         break;
         
     case 'get_notifications':
-        $stmt = $db->prepare("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100");
+        $stmt = $db2->prepare("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100");
         $res = $stmt->execute();
         $notifications = [];
         while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
@@ -885,7 +918,7 @@ switch ($action) {
     case 'mark_read':
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['id'])) {
-            $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE id = :id");
+            $stmt = $db2->prepare("UPDATE notifications SET is_read = 1 WHERE id = :id");
             $stmt->bindValue(':id', $input['id'], SQLITE3_INTEGER);
             $stmt->execute();
             echo json_encode(['success' => true]);
@@ -895,19 +928,19 @@ switch ($action) {
         break;
         
     case 'mark_all_read':
-        $db->exec("UPDATE notifications SET is_read = 1");
+        $db2->exec("UPDATE notifications SET is_read = 1");
         echo json_encode(['success' => true]);
         break;
         
     case 'clear_notifications':
-        $db->exec("DELETE FROM notifications");
+        $db2->exec("DELETE FROM notifications");
         echo json_encode(['success' => true]);
         break;
         
     case 'delete_notification':
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['id'])) {
-            $stmt = $db->prepare("DELETE FROM notifications WHERE id = :id");
+            $stmt = $db2->prepare("DELETE FROM notifications WHERE id = :id");
             $stmt->bindValue(':id', $input['id'], SQLITE3_INTEGER);
             $stmt->execute();
             echo json_encode(['success' => true]);
@@ -976,7 +1009,7 @@ switch ($action) {
     case 'acknowledge_disk':
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['disk_name'])) {
-            $stmt = $db->prepare("UPDATE monitored_disks SET is_new = 0, notes = 'Acknowledged at ' || CURRENT_TIMESTAMP WHERE disk_name = :name");
+            $stmt = $db2->prepare("UPDATE monitored_disks SET is_new = 0, notes = 'Acknowledged at ' || CURRENT_TIMESTAMP WHERE disk_name = :name");
             $stmt->bindValue(':name', $input['disk_name'], SQLITE3_TEXT);
             $stmt->execute();
             echo json_encode(['success' => true]);
@@ -988,7 +1021,7 @@ switch ($action) {
     case 'remove_missing_disk':
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['disk_name'])) {
-            $stmt = $db->prepare("DELETE FROM monitored_disks WHERE disk_name = :name AND is_active = 0");
+            $stmt = $db2->prepare("DELETE FROM monitored_disks WHERE disk_name = :name AND is_active = 0");
             $stmt->bindValue(':name', $input['disk_name'], SQLITE3_TEXT);
             $stmt->execute();
             echo json_encode(['success' => true]);
@@ -998,7 +1031,7 @@ switch ($action) {
         break;
     
     case 'get_schedules':
-        $stmt = $db->prepare("SELECT * FROM check_schedules ORDER BY check_type");
+        $stmt = $db2->prepare("SELECT * FROM check_schedules ORDER BY check_type");
         $res = $stmt->execute();
         $schedules = [];
         while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
@@ -1010,7 +1043,7 @@ switch ($action) {
     case 'update_schedule':
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['check_type'])) {
-            $stmt = $db->prepare("
+            $stmt = $db2->prepare("
                 UPDATE check_schedules 
                 SET enabled = :enabled, 
                     interval_seconds = :interval,
@@ -1071,10 +1104,10 @@ switch ($action) {
         $checkType = $_GET['check_type'] ?? null;
         
         if ($checkType) {
-            $stmt = $db->prepare("SELECT * FROM check_history WHERE check_type = :type ORDER BY created_at DESC LIMIT :limit");
+            $stmt = $db2->prepare("SELECT * FROM check_history WHERE check_type = :type ORDER BY created_at DESC LIMIT :limit");
             $stmt->bindValue(':type', $checkType, SQLITE3_TEXT);
         } else {
-            $stmt = $db->prepare("SELECT * FROM check_history ORDER BY created_at DESC LIMIT :limit");
+            $stmt = $db2->prepare("SELECT * FROM check_history ORDER BY created_at DESC LIMIT :limit");
         }
         $stmt->bindValue(':limit', $limit, SQLITE3_INTEGER);
         $res = $stmt->execute();
@@ -1091,7 +1124,7 @@ switch ($action) {
         $rules = ['notify_on_auto_check', 'notify_only_on_error', 'notification_cooldown_minutes'];
         foreach ($rules as $key) {
             if (isset($input[$key])) {
-                $stmt = $db->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
+                $stmt = $db2->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
                                       VALUES (:key, :value, CURRENT_TIMESTAMP)");
                 $stmt->bindValue(':key', $key, SQLITE3_TEXT);
                 $stmt->bindValue(':value', $input[$key], SQLITE3_TEXT);
@@ -1123,7 +1156,7 @@ switch ($action) {
     
     foreach ($smtpKeys as $key) {
         if (isset($input[$key])) {
-            $stmt = $db->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
+            $stmt = $db2->prepare("INSERT OR REPLACE INTO notification_settings (setting_key, setting_value, updated_at) 
                                   VALUES (:key, :value, CURRENT_TIMESTAMP)");
             $stmt->bindValue(':key', $key, SQLITE3_TEXT);
             $stmt->bindValue(':value', trim($input[$key]), SQLITE3_TEXT);

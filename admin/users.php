@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -27,6 +27,7 @@ $db = getDB();
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
+// Получаем API ключ и URL для текущего хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -93,12 +94,11 @@ $menu = require_once 'menu.php';
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
-    
     <script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-window.hostsList = <?php echo json_encode($hosts); ?>;
-window.currentHostId = <?php echo (int)$current_host_id; ?>;
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	window.hostsList = <?php echo json_encode($hosts); ?>;
+	window.currentHostId = <?php echo (int)$current_host_id; ?>;
+	</script>
     
     <style>
         * { box-sizing: border-box; }
@@ -437,6 +437,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     <main class="main-content">
         <div id="alertContainer"></div>
 
+        <!-- FILTERS -->
         <div class="filters-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -457,6 +458,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
             </div>
         </div>
 
+        <!-- USERS CARD -->
         <div class="card">
             <div class="card-header">
                 <span><i class="fas fa-user me-2"></i>Users</span>
@@ -480,6 +482,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
             </div>
         </div>
 
+        <!-- GROUPS CARD -->
         <div class="card">
             <div class="card-header collapse-header" onclick="toggleGroups()">
                 <span><i class="fas fa-users me-2"></i>System Groups <span class="badge bg-secondary ms-2" id="groupsCount">0</span></span>
@@ -501,6 +504,8 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </main>
 </div>
 
+<!-- MODALS -->
+<!-- Add Panel User Modal -->
 <div class="modal fade" id="addPanelUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -551,6 +556,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Edit Panel User Modal -->
 <div class="modal fade" id="editPanelUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -586,6 +592,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Change Panel Password Modal -->
 <div class="modal fade" id="changePanelPassModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -623,6 +630,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Add System User Modal -->
 <div class="modal fade" id="addSystemUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -666,6 +674,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Edit System User Groups Modal -->
 <div class="modal fade" id="editSystemUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -690,6 +699,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Change System Password Modal -->
 <div class="modal fade" id="changeSystemPassModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -726,6 +736,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Set SMB Password Modal -->
 <div class="modal fade" id="setSmbPassModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -754,6 +765,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Add Group Modal -->
 <div class="modal fade" id="addGroupModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -777,6 +789,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
     </div>
 </div>
 
+<!-- Rename Group Modal -->
 <div class="modal fade" id="renameGroupModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -807,6 +820,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 <script src="js/loader.js"></script>
 
 <script>
+// ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
 let panelUsers = [];
 let systemUsers = [];
 let allGroups = [];
@@ -815,6 +829,7 @@ let searchTerm = '';
 let activeOnly = false;
 let groupsCollapsed = true;
 
+// ========== УТИЛИТЫ ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i> 
@@ -830,6 +845,7 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); 
 }
 
+// ========== API CALLS ==========
 async function apiCall(action, method = 'GET', data = null) {
     let fullUrl = `${window.apiConfig.apiBaseUrl}users_api.php?action=${action}`;
     let options = { 
@@ -857,6 +873,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+// ========== HOST SELECTOR ==========
 function initHostSelector() {
     const selector = $('#hostSelector');
     selector.empty();
@@ -893,6 +910,7 @@ function initHostSelector() {
     });
 }
 
+// ========== ЗАГРУЗКА ДАННЫХ ==========
 async function loadAllData() {
     try {
         const result = await apiCall('get_all_data');
@@ -940,6 +958,7 @@ function updateGroupCheckboxes() {
     $('#addSysGroupsContainer').html(html || '<div class="text-muted">No groups available</div>');
 }
 
+// ========== РЕНДЕРИНГ ПОЛЬЗОВАТЕЛЕЙ ==========
 function renderUsers() {
     let filtered = [];
     
@@ -1066,6 +1085,7 @@ function getSystemUserActions(u) {
     </div>`;
 }
 
+// ========== РЕНДЕРИНГ ГРУПП ==========
 function renderGroups() {
     const container = $('#groupsTableBody');
     if (allGroups.length === 0) {
@@ -1089,6 +1109,7 @@ function renderGroups() {
     container.html(html);
 }
 
+// ========== PANEL USER ACTIONS ==========
 async function addPanelUser(e) {
     e.preventDefault();
     const username = $('#add_panel_username').val();
@@ -1189,6 +1210,7 @@ async function deletePanelUser(id) {
     }
 }
 
+// ========== SYSTEM USER ACTIONS ==========
 async function addSystemUser(e) {
     e.preventDefault();
     const username = $('#add_sys_username').val();
@@ -1316,6 +1338,7 @@ async function deleteSystemUser(username) {
     }
 }
 
+// ========== GROUP ACTIONS ==========
 async function addGroup(e) {
     e.preventDefault();
     const groupname = $('#add_group_name').val();
@@ -1363,6 +1386,7 @@ async function deleteGroup(name) {
     }
 }
 
+// ========== UI CONTROLS ==========
 function filterUsers() {
     searchTerm = $('#searchInput').val();
     activeOnly = $('#showActiveOnly').is(':checked');
@@ -1388,6 +1412,7 @@ function toggleGroups() {
     groupsCollapsed = !groupsCollapsed;
     $('#groupsContent').slideToggle();
     $('#groupsToggleIcon').toggleClass('fa-chevron-down fa-chevron-up');
+    
     localStorage.setItem('groups_collapsed', groupsCollapsed ? '1' : '0');
 }
 
@@ -1414,7 +1439,7 @@ async function refreshAllData() {
     showAlert('Data updated', 'success');
 }
 
-
+// ========== PASSWORD UTILITIES ==========
 function checkPasswordStrength(password) {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -1455,10 +1480,12 @@ function updatePasswordStrength(fieldId) {
     }
 }
 
+// ========== INITIALIZATION ==========
 $(document).ready(function() {
     initHostSelector();
     loadAllData();
     
+    // Form submissions
     $('#addPanelUserForm').on('submit', addPanelUser);
     $('#editPanelUserForm').on('submit', updatePanelUser);
     $('#changePanelPassForm').on('submit', changePanelPasswordSubmit);
@@ -1469,10 +1496,12 @@ $(document).ready(function() {
     $('#addGroupForm').on('submit', addGroup);
     $('#renameGroupForm').on('submit', renameGroupSubmit);
     
+    // Password strength listeners
     $('#add_panel_password, #change_panel_password, #add_sys_password').on('input', function() {
         updatePasswordStrength(this.id);
     });
     
+    // Auto-refresh every 30 seconds
     setInterval(() => {
         if (!document.hidden) {
             loadStats();

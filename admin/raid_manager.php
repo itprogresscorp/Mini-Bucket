@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -82,9 +83,9 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         :root {
             --apple-blue: #007aff;
@@ -388,7 +389,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             .devices-sidebar { width: 100%; max-height: 300px; }
         }
         
-        /* НОВЫЙ СТИЛЬ: Проблемные RAID — аккуратно и скрыто если нет */
         .broken-section {
             margin-top: 20px;
             margin-bottom: 24px;
@@ -540,7 +540,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 			box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 		}
 		
-		/* Пульсация для проблемных RAID */
 .raid-card.critical {
     animation: criticalPulse 1.5s ease-in-out infinite;
     border: 2px solid var(--apple-red);
@@ -587,7 +586,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     }
 }
 
-/* Бейдж статуса */
 .raid-status-badge {
     display: inline-flex;
     align-items: center;
@@ -646,14 +644,12 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     animation: statusBadgePulse 1s ease-in-out infinite;
 }
 
-/* Пульсация для красных бейджей */
 @keyframes statusBadgePulse {
     0% { opacity: 1; background: #ffebee; }
     50% { opacity: 0.8; background: #ffcdd2; }
     100% { opacity: 1; background: #ffebee; }
 }
 
-/* Стили для легенды RAID */
 .legend-item-card {
     display: flex;
     align-items: center;
@@ -788,14 +784,14 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </div>
     <div class="top-bar-right">
         <i class="fas fa-server"></i> RAID Manager
-		<div class="legend" onclick="showLegendModal()">
+		<!--<div class="legend" onclick="showLegendModal()">
                 <div class="legend-item"><div class="legend-color" style="background: #5856d6;"></div><span>RAID array</span></div>
                 <div class="legend-item"><div class="legend-color" style="background: #4A90D9;"></div><span>Disk/partition</span></div>
                 <div class="legend-item"><div class="legend-color" style="background: #9013FE;"></div><span>Used in LVM</span></div>
                 <div class="legend-item"><div class="legend-color" style="background: #ff9f0a;"></div><span>Spare disk</span></div>
                 <div class="legend-item"><div class="legend-color" style="background: #ff3b30;"></div><span>Failed disk</span></div>
                 <div class="legend-item"><i class="fas fa-chevron-right"></i><span>Click for details</span></div>
-            </div>
+            </div>-->
 			<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
                 <option value="">Loading...</option>
@@ -808,6 +804,8 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#" onclick="raidManager.showBlockDiagram()"><i class="fas fa-project-diagram"></i> Scheme</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info"></i> Legend</a></li>
+                    
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" onclick="raidManager.refreshAll(true)"><i class="fas fa-sync-alt"></i> Refresh</a></li>
                 </ul>
@@ -854,6 +852,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     </main>
 </div>
 
+<!-- Модальные окна -->
 <div class="modal fade" id="legendModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -862,6 +861,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Color legend -->
                 <div class="legend-section mb-4">
                     <h6 class="fw-bold mb-3"><i class="fas fa-palette"></i> Color Indication</h6>
                     <div class="row g-3">
@@ -906,9 +906,11 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 
                 <hr>
 
+                <!-- RAID levels schema -->
                 <div class="legend-section">
                     <h6 class="fw-bold mb-3"><i class="fas fa-chart-simple"></i> RAID Levels</h6>
                     <div class="row g-3">
+                        <!-- RAID 0 -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -931,6 +933,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             </div>
                         </div>
 
+                        <!-- RAID 1 -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -953,6 +956,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             </div>
                         </div>
 
+                        <!-- RAID 5 -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -978,6 +982,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             </div>
                         </div>
 
+                        <!-- RAID 6 -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -1003,6 +1008,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             </div>
                         </div>
 
+                        <!-- RAID 10 -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -1027,6 +1033,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             </div>
                         </div>
 
+                        <!-- LINEAR (JBOD) -->
                         <div class="col-md-6 col-lg-4">
                             <div class="raid-legend-card">
                                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -1057,6 +1064,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 
                 <hr class="my-3">
 
+                <!-- RAID statuses -->
                 <div class="legend-section">
                     <h6 class="fw-bold mb-2"><i class="fas fa-heartbeat"></i> RAID Statuses</h6>
                     <div class="row g-3">
@@ -1235,6 +1243,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 
 <script>
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
+// ==================== RAID Manager Class ====================
 class RAIDManager {
     constructor() {
         this.data = { raid: [], available_devices: [] };

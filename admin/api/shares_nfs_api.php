@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -81,8 +82,10 @@ function validateApiKey() {
 
 validateApiKey();
 
+// ========== КОНСТАНТЫ ==========
 define('NFS_EXPORTS_FILE', '/etc/exports');
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С NFS ==========
 function getNfsServiceStatus() {
     $status = [
         'running' => false,
@@ -159,6 +162,7 @@ function disableNfsService() {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КОНФИГУРАЦИЕЙ ==========
 function getNfsGlobalConfig() {
     $config = [
         'threads' => '8',
@@ -251,6 +255,7 @@ function saveNfsGlobalConfig($config) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ЭКСПОРТАМИ ==========
 function getNfsExports() {
     $exports = [];
     
@@ -380,6 +385,7 @@ function saveNfsExports($exports) {
     return true;
 }
 
+// ========== ФУНКЦИИ ДЛЯ СТАТИСТИКИ ==========
 function getNfsStats() {
     $stats = [
         'total_exports' => 0,
@@ -421,6 +427,7 @@ function getNfsClients() {
     return $clients;
 }
 
+// ========== ФУНКЦИИ ДЛЯ ФАЙЛОВОЙ СИСТЕМЫ ==========
 function getDirectoryContents($path) {
     $items = [];
     if (!is_dir($path)) return $items;
@@ -471,7 +478,7 @@ function getAllStorages() {
                 $usedPercent = (int)rtrim($parts[4], '%');
                 $mount = $parts[5];
                 
-                if ($mount == '/' || $mount == '/boot' || $mount == '/boot/efi') {
+                if ($mount == '/boot' || $mount == '/boot/efi') {
                     continue;
                 }
                 
@@ -507,6 +514,7 @@ function getAllStorages() {
     return array_values($unique);
 }
 
+// ========== API ОБРАБОТЧИК ==========
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {

@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -52,7 +52,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <link rel="stylesheet" href="css/loader.css">
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
 	<script src="lib/chart.js-4.5.1/package/dist/chart.umd.min.js"></script>
-    
     <style>
         * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
@@ -70,7 +69,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
             min-height: calc(100vh - 60px);
         }
         
-        /* Tabs */
         .nav-tabs-custom {
             border-bottom: 1px solid #e9ecef;
             
@@ -113,7 +111,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
             background: transparent;
         }
         
-        /* Cards */
         .host-card, .request-card {
             background: white;
             border-radius: 20px;
@@ -327,7 +324,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
 			color: #495057;
 		}
 		
-		/* Master host card styling */
 .master-host-card {
     border: 1px solid #ffc107;
     background: linear-gradient(135deg, #ffffff 0%, #fffef7 100%);
@@ -338,13 +334,11 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     box-shadow: 0 8px 20px rgba(255, 193, 7, 0.15);
 }
 
-/* Для Slave хостов тоже небольшой эффект */
 .host-card:not(.master-host-card):hover {
     border-color: #007aff40;
     box-shadow: 0 8px 20px rgba(0,122,255,0.1);
 }
 
-/* Адаптивность для мобильных */
 @media (max-width: 768px) {
     .section-header h3 {
         font-size: 1.2rem;
@@ -368,7 +362,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
 	font-size: 13px;
 }
 
-/* Host Info Modal Styles */
 #hostInfoModal .modal-xl {
     max-width: 1200px;
 }
@@ -394,7 +387,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     -webkit-user-select: all;
 }
 
-/* Layout with right sidebar tabs */
 .content-with-sidebar {
     display: flex;
     gap: 20px;
@@ -414,7 +406,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     height: fit-content;
 }
 
-/* Vertical tabs styling */
 .sidebar-tabs .nav-pills {
     background: white;
     border-radius: 20px;
@@ -472,7 +463,6 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     color: white;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .sidebar-tabs {
         width: 60px;
@@ -518,9 +508,9 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item text-warning" href="#" onclick="openAddServerModal()"><i class="bi bi-cloud-plus"></i> Add Server</a></li>
-                <li><a class="dropdown-item text-success" href="#" onclick="openHostModal()"><i class="bi bi-plus-lg"></i> Add Host</a></li>
-                <li><a class="dropdown-item text-success" href="#" onclick="showHostInfo('1')"><i class="bi bi-info-circle"></i> Host Info</a></li>
+                <li><a class="dropdown-item text-warning" href="#" onclick="openAddServerModal()"><i class="bi bi-cloud-plus"></i> Add Master host</a></li>
+                <li><a class="dropdown-item text-success" href="#" onclick="openHostModal()"><i class="bi bi-plus-lg"></i> Add Slave host</a></li>
+                <li><a class="dropdown-item text-success" href="#" onclick="showHostInfo('1')"><i class="bi bi-info-circle"></i> Its Host Info</a></li>
 				<li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-info" href="#" onclick="openSpeedTestModal()"><i class="bi bi-speedometer2"></i> Speed Test</a></li>
 				<li><a class="dropdown-item text-danger" href="minib_settings.php#apiceycontent" onclick=""><i class="bi bi-code"></i> API Settings</a></li>
@@ -536,8 +526,10 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
         <div id="alertContainer"></div>
         
         <div class="content-with-sidebar">
+            <!-- Основной контент -->
             <div class="main-panel">
                 <div class="tab-content">
+                    <!-- HOSTS TAB -->
                     <div class="tab-pane fade show active" id="hostsContent" role="tabpanel">
                         <div id="hostsContainer" class="row">
                             <div class="col-12 text-center py-5">
@@ -547,6 +539,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                         </div>
                     </div>
                     
+                    <!-- INCOMING REQUESTS TAB -->
                     <div class="tab-pane fade" id="incomingContent" role="tabpanel">
                         <div id="incomingContainer" class="row">
                             <div class="col-12 text-center py-5">
@@ -558,6 +551,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 </div>
             </div>
             
+            <!-- Сайдбар с вкладками справа -->
             <div class="sidebar-tabs">
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                     <button class="nav-link active" id="hosts-tab" data-bs-toggle="pill" data-bs-target="#hostsContent" type="button" role="tab">
@@ -576,6 +570,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     </main>
 </div>
 
+<!-- Modal: Add/Edit Host -->
 <div class="modal fade modal-apple" id="hostModal" tabindex="-1">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
@@ -638,6 +633,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     </div>
 </div>
 
+<!-- Modal: Test Result -->
 <div class="modal fade modal-apple" id="testModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -653,6 +649,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     </div>
 </div>
 
+<!-- Modal: Add Server (Outgoing Request) -->
 <div class="modal fade modal-apple" id="addServerModal" tabindex="-1">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
@@ -701,6 +698,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     </div>
 </div>
 
+<!-- Modal: Speed Test -->
 <div class="modal fade modal-apple" id="speedTestModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -860,6 +858,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
 const API_URL = '../api/host_manager_api.php';
 let currentModal = null;
 
+// ========== UTILITIES ==========
 function showAlert(message, type = 'success') {
     const icons = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'info-circle', info: 'info-circle' };
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-2" role="alert">
@@ -905,6 +904,7 @@ function updateApiUrlPreview() {
     $('#apiUrlPreview').text(url);
 }
 
+// ========== API CALLS ==========
 async function apiCall(action, method = 'GET', data = null) {
     let url = `${API_URL}?action=${action}`;
     let options = { method: method, headers: {} };
@@ -925,6 +925,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+// ========== HOSTS ==========
 async function loadHosts() {
     let result = await apiCall('get_hosts');
     if (result.success) {
@@ -940,6 +941,7 @@ async function loadHosts() {
         } else {
             let html = '';
             
+            // MASTER HOSTS SECTION
             if (masterHosts.length > 0) {
                 html += `<div class="col-12 mb-3 mt-2">
                     <div class="d-flex align-items-center">
@@ -958,6 +960,7 @@ async function loadHosts() {
                 html += `</div>`;
             }
             
+            // SLAVE HOSTS SECTION
             if (slaveHosts.length > 0) {
                 html += `<div class="col-12 mb-3 mt-4">
                     <div class="d-flex align-items-center">
@@ -967,7 +970,7 @@ async function loadHosts() {
                     </div>
                     <hr class="mt-2 mb-4" style="border-top: 2px solid #6c757d;">
                 </div>
-                <div class="row g-4 mb-5">`;
+                <div class="row g-4 mb-5">`;  // Добавили g-4 для отступов между карточками и mb-5 для нижнего отступа
                 
                 for (let host of slaveHosts) {
                     html += renderHostCard(host);
@@ -1019,7 +1022,7 @@ function renderHostCard(host) {
     `;
     
     if (host.hostType !== 'master' || isCurrentHost) {
-        dropdownItems += `<a onclick="rotateHostKey('${host.idHost}')" style="color:#ff9f0a;"><i class="bi bi-arrow-repeat"></i> Rotate API Key</a>`;
+        dropdownItems += `<a onclick="rotateHostKey('${host.idHost}')" style="color:#ff9f0a;"><i class="bi bi-arrow-repeat"></i> New API Key</a>`;
     }
     
     dropdownItems += `<a onclick="showHostInfo('${host.idHost}')"><i class="bi bi-info-circle"></i> Info</a>
@@ -1087,7 +1090,6 @@ async function editHost(idHost) {
         $('#hostApiKey').val(h.hostApiKey);
         $('#hostSn').val(h.hostSn || '').prop('disabled', true);
         $('#hostComment').val(h.hostComment || '');
-        // Remove hostType handling
         updateApiUrlPreview();
         currentModal = new bootstrap.Modal(document.getElementById('hostModal'));
         currentModal.show();
@@ -1097,7 +1099,13 @@ async function editHost(idHost) {
 }
 
 async function saveHost(forceSave = false) {
+    let idHost = $('#idHost').val();
     let formData = $('#hostForm').serialize();
+    
+    if (idHost && idHost !== '') {
+        formData = formData.replace(/&hostSn=[^&]*/g, '');
+        formData = formData.replace(/^hostSn=[^&]*&?/, '');
+    }
     
     if (forceSave) {
         formData += '&skip_api_test=1';
@@ -1113,17 +1121,18 @@ async function saveHost(forceSave = false) {
         
         await loadHosts();
         
-        let idHost = result.idHost || $('#idHost').val();
-        if (idHost && !result.warning) {
+        let newIdHost = result.idHost || idHost;
+        if (newIdHost && !result.warning && !idHost) {
             setTimeout(async () => {
                 if (confirm('Auto-test connection and retrieve SN?')) {
-                    await testConnection(idHost);
+                    await testConnection(newIdHost);
                 }
             }, 500);
         }
         
         $('#hostForm')[0].reset();
         $('#idHost').val('');
+        $('#hostSn').val('').prop('disabled', true);
     } else if (result.api_test && !result.success && result.can_force) {
         let forceSaveConfirm = confirm(
             `⚠️ API Test Failed!\n\n` +
@@ -1276,6 +1285,7 @@ function openHostModal() {
 
 let refreshInterval = null;
 
+// Функция для проверки статуса исходящих запросов
 async function checkOutgoingRequestStatus(arId) {
     let result = await apiCall('check_outgoing_request', 'GET', { arId: arId });
     if (result.success && !result.exists) {
@@ -1287,6 +1297,7 @@ async function checkOutgoingRequestStatus(arId) {
     return true;
 }
 
+// ========== INCOMING REQUESTS ==========
 async function loadIncomingRequests() {
     let result = await apiCall('get_incoming_requests');
     if (result.success) {
@@ -1374,6 +1385,7 @@ function toggleSection(sectionId) {
     }
 }
 
+// ========== ADD REMOTE SERVER ==========
 function openAddServerModal() {
     $('#addServerForm')[0].reset();
     $('#serverProto').val('http');
@@ -1690,12 +1702,14 @@ function copyToClipboard(text) {
     });
 }
 
+// Функция для копирования всей информации о хосте
 function copyHostInfoToClipboard() {
     let content = document.getElementById('hostInfoContent');
     let text = content.innerText;
     copyToClipboard(text);
 }
 
+// Функция для показа/скрытия API ключа
 function toggleApiKeyVisibility() {
     let input = document.getElementById('apiKeyInput');
     let icon = document.getElementById('apiKeyEyeIcon');
@@ -1745,6 +1759,7 @@ async function testHostApiOnly(idHost) {
     testModal.show();
 }
 
+// Глобальные переменные для графика
 let speedChart = null;
 let chartData = {
     download: [],
@@ -1753,6 +1768,7 @@ let chartData = {
 };
 let currentSpeedTestInterval = null;
 
+// Загрузка списка хостов для выбора
 async function loadHostsForSpeedTest() {
     let result = await apiCall('get_hosts');
     if (result.success) {
@@ -1771,6 +1787,7 @@ async function loadHostsForSpeedTest() {
     }
 }
 
+// Открытие модального окна теста скорости
 function openSpeedTestModal() {
     loadHostsForSpeedTest();
     $('#speedTestSelection').show();
@@ -2095,6 +2112,7 @@ function resetSpeedChart() {
     }
 }
 
+// Анимация счетчика скорости
 function animateValue(element, start, end, duration, suffix = '') {
     if (!element) return;
     let startTime = null;
@@ -2116,6 +2134,7 @@ function animateValue(element, start, end, duration, suffix = '') {
 }
 
 
+// Отображение результатов теста
 function displaySpeedResults(result) {
     let results = result.results;
     
@@ -2296,6 +2315,7 @@ async function regeneratePin() {
 }
 
 
+// ========== TRAP STATUS ==========
 async function loadTrapStatus() {
     let result = await apiCall('get_trap_status');
     if (result.success) {
@@ -2418,6 +2438,7 @@ async function rotateHostKey(idHost) {
 }
 
 
+// Функция для проверки статуса задачи
 async function checkRotationStatus(taskId, hostId) {
     showLoading();
     
@@ -2529,6 +2550,7 @@ async function checkRotationStatus(taskId, hostId) {
 
 
 
+// ========== DROPDOWN & PIN HOVER ==========
 function toggleDropdown(btn) {
     $('.dropdown-menu-actions').not($(btn).next()).removeClass('show');
     $(btn).next('.dropdown-menu-actions').toggleClass('show');
@@ -2556,6 +2578,7 @@ $(document).ready(function() {
     
     $('#hostProto, #hostIp, #hostPort, #hostApiPath').on('input change', updateApiUrlPreview);
     
+    // Load all data
     loadHosts();
     loadIncomingRequests();
 	loadTrapStatus();

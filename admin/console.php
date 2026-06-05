@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -59,7 +60,7 @@ if ($host) {
     }
 } else {
     $api_key = null;
-    $api_base_url = '/api/'; 
+    $api_base_url = '/api/';
 }
 
 $js_config = [
@@ -82,8 +83,9 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	// Конфигурация API из PHP
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	//console.log('API Config loaded:', window.apiConfig);
+	console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
 	
@@ -320,6 +322,7 @@ $menu = require_once 'menu.php';
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
 <script>
+// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
 let currentSession = null;
 let consoleOutput = null;
@@ -327,6 +330,7 @@ let consoleInput = null;
 let commandHistory = [];
 let historyIndex = 0;
 
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
 function showLoader() {
     document.getElementById('loader').style.display = 'flex';
 }
@@ -394,6 +398,7 @@ async function apiCall(action, data = {}) {
     }
 }
 
+// ==================== КОНСОЛЬНЫЕ ФУНКЦИИ ====================
 function appendToConsole(text, type = 'output') {
     if (!consoleOutput) {
         consoleOutput = document.getElementById('consoleOutput');
@@ -466,6 +471,7 @@ async function sendCommand() {
     
     consoleInput.value = '';
     
+    // Check for exit
     if (command.toLowerCase() === 'exit' || command.toLowerCase() === 'logout') {
         appendToConsole('Ending session...', 'warning');
         await closeConsole();
@@ -534,6 +540,7 @@ function clearConsole() {
     }
 }
 
+// ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
 document.addEventListener('DOMContentLoaded', function() {
     consoleOutput = document.getElementById('consoleOutput');
     consoleInput = document.getElementById('consoleInput');
@@ -550,6 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (commandHistory.length > 0 && historyIndex > 0) {
                 historyIndex--;
                 consoleInput.value = commandHistory[historyIndex];
+                // Курсор в конец
                 setTimeout(() => {
                     consoleInput.selectionStart = consoleInput.selectionEnd = consoleInput.value.length;
                 }, 0);

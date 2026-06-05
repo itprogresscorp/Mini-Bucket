@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 header('Content-Type: application/json');
 
 
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -226,10 +227,12 @@ class FirewallAPI {
             $cmd = $this->buildCommand($direction, $action, $port, $protocol, $from, $comment);
             if ($cmd) $commands[] = $cmd;
         }
+
         elseif ($ipVersion === 'ipv6') {
             $cmd = $this->buildCommand($direction, $action, $port, $protocol, $from, $comment);
             if ($cmd) $commands[] = $cmd;
         }
+
         else {
             $cmd = $this->buildCommand($direction, $action, $port, $protocol, $from, $comment);
             if ($cmd) $commands[] = $cmd;
@@ -277,7 +280,7 @@ class FirewallAPI {
     public function deleteRule($ruleId) {
         $result = $this->executeCommand("ufw --force delete {$ruleId}");
         
-        if (strpos($result['output'], 'Rule deleted') !== false || strpos($result['output'], '规则已删除') !== false) {
+        if (strpos($result['output'], 'Rule deleted') !== false || strpos($result['output'], 'Rules have been deleted') !== false) {
             $this->executeCommand('ufw reload');
             $this->jsonResponse(['message' => 'Rule deleted']);
         } else {

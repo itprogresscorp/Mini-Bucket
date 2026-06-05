@@ -1,6 +1,26 @@
-// Service Worker для Mini-Bucket PWA
-const CACHE_NAME = 'mini-bucket';
-const API_CACHE_NAME = 'mini-bucket-api';
+/*
+ * Copyright (C) 2026 Mamontov Roman Igorevich
+ *
+ * This file is part of "Mini-Bucket - NAS Control Panel".
+ *
+ * Mini-Bucket - NAS Control Panel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version, with the plugin exception (see LICENSE file).
+ * Commercial use requires purchasing a separate commercial license from the copyright holder.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * https://mini-bucket.ru/
+ */
+
+const CACHE_NAME = 'mini-bucket-v1.0.0';
+const API_CACHE_NAME = 'mini-bucket-api-v1';
 
 // Ресурсы для кэширования при установке
 const STATIC_ASSETS = [
@@ -28,7 +48,6 @@ self.addEventListener('install', event => {
       const cache = await caches.open(CACHE_NAME);
       console.log('[SW] Caching static assets');
       
-      // Кэшируем статические файлы с обработкой ошибок
       await Promise.allSettled(
         STATIC_ASSETS.map(async (asset) => {
           try {
@@ -42,7 +61,6 @@ self.addEventListener('install', event => {
         })
       );
       
-      // Кэшируем офлайн страницу
       const offlineResponse = new Response(
         '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f7;text-align:center}</style></head><body><div><h1>📡 Нет соединения</h1><p>Пожалуйста, проверьте подключение к сети.</p><button onclick="location.reload()">Повторить</button></div></body></html>',
         { headers: { 'Content-Type': 'text/html' } }
@@ -105,7 +123,6 @@ async function networkOnly(request) {
   } catch (error) {
     console.log('[SW] Network failed for:', request.url);
     
-    // Для GET запросов к API пробуем кэш
     if (request.method === 'GET') {
       const cache = await caches.open(API_CACHE_NAME);
       const cachedResponse = await cache.match(request);
@@ -133,14 +150,14 @@ async function networkOnly(request) {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // ===== ВАЖНО: Пропускаем все POST/PUT/DELETE запросы =====
+  // ===== Пропускаем все POST/PUT/DELETE запросы =====
   if (event.request.method !== 'GET') {
     console.log('[SW] Skipping non-GET request:', event.request.method, url.pathname);
     event.respondWith(fetch(event.request));
     return;
   }
   
-  // Пропускаем все API запросы (оставляем только сеть)
+  // Пропускаем все API запросы
   if (url.pathname.includes('/api/') || 
       url.pathname.includes('/system_settings_api.php') ||
       url.pathname.includes('/dashboard_api.php') ||

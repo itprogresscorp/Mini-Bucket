@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -88,7 +89,7 @@ $menu = require_once 'menu.php';
 	<script src="js/crt_checker.js"></script>
 	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	//console.log('API Config loaded:', window.apiConfig);
+	console.log('API Config loaded:', window.apiConfig);
 	</script>
 
     <style>
@@ -550,6 +551,8 @@ $menu = require_once 'menu.php';
     <?php echo $menu; ?>
     
     <main class="main-content">
+        
+        <!-- System Stats Overview -->
         <div class="stats-grid">
             <div class="stat-card">
                 <i class="bi bi-cpu"></i>
@@ -583,6 +586,7 @@ $menu = require_once 'menu.php';
             </div>
         </div>
         
+        <!-- Network Traffic Graph -->
         <div class="apple-card">
             <div class="card-header-apple">
                 <h3><i class="bi bi-graph-up"></i> Network Traffic (Real-time)</h3>
@@ -599,6 +603,7 @@ $menu = require_once 'menu.php';
             </div>
         </div>
         
+        <!-- Quick Tools Grid -->
         <div class="tool-grid">
             <div class="tool-btn" onclick="openPingModal()">
                 <i class="bi bi-wifi"></i>
@@ -626,6 +631,7 @@ $menu = require_once 'menu.php';
             </div>
         </div>
         
+        <!-- Tabs for Processes, Connections, Services -->
         <ul class="nav nav-tabs-apple" id="diagTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#processesTab" type="button" role="tab">
@@ -652,6 +658,7 @@ $menu = require_once 'menu.php';
         </ul>
         
         <div class="tab-content">
+            <!-- Processes Tab -->
             <div class="tab-pane fade show active" id="processesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -692,6 +699,7 @@ $menu = require_once 'menu.php';
                 </div>
             </div>
             
+            <!-- Network Connections Tab -->
             <div class="tab-pane fade" id="connectionsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -709,6 +717,7 @@ $menu = require_once 'menu.php';
                 </div>
             </div>
             
+            <!-- Services Tab -->
             <div class="tab-pane fade" id="servicesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -745,6 +754,7 @@ $menu = require_once 'menu.php';
                 </div>
             </div>
             
+            <!-- System Logs Tab -->
             <div class="tab-pane fade" id="logsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
@@ -783,6 +793,7 @@ $menu = require_once 'menu.php';
     </main>
 </div>
 
+<!-- Ping Modal -->
 <div class="modal fade modal-apple" id="pingModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -809,6 +820,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Traceroute Modal -->
 <div class="modal fade modal-apple" id="traceModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -829,6 +841,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Netstat Modal -->
 <div class="modal fade modal-apple" id="netstatModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
@@ -849,6 +862,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Port Scanner Modal -->
 <div class="modal fade modal-apple" id="nmapModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -869,6 +883,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- DNS Lookup Modal -->
 <div class="modal fade modal-apple" id="dnsModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -895,6 +910,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Bandwidth Test Modal -->
 <div class="modal fade modal-apple" id="bandwidthModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -913,6 +929,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Kill Process Modal -->
 <div class="modal fade modal-apple" id="killProcessModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -981,6 +998,7 @@ function escapeHtml(str) {
     });
 }
 
+// ==================== System Stats ====================
 function loadSystemStats() {
     const headers = {};
     if (window.apiConfig && window.apiConfig.apiKey) {
@@ -1021,6 +1039,7 @@ function loadSystemStats() {
     });
 }
 
+// ==================== Network Traffic Graph ====================
 function initNetworkChart() {
     const ctx = document.getElementById('networkChart').getContext('2d');
     networkChart = new Chart(ctx, {
@@ -1103,6 +1122,7 @@ function resetNetworkGraph() {
     showToast('Graph reset', 'success');
 }
 
+// ==================== Processes ====================
 let currentProcesses = [];
 
 function refreshProcesses() {
@@ -1240,6 +1260,7 @@ function killProcess() {
     });
 }
 
+// ==================== Network Connections ====================
 function refreshConnections() {
     const filter = $('#connFilter').val().toLowerCase();
     
@@ -1341,6 +1362,7 @@ function killConnectionById(ip, port, protocol) {
     }
 }
 
+// ==================== Services ====================
 function refreshServices() {
     const filter = $('#serviceFilter').val();
     
@@ -1436,6 +1458,7 @@ function serviceAction(service, action) {
     });
 }
 
+// ==================== System Logs ====================
 function refreshLogs() {
     const lines = $('#logLines').val();
     const type = $('#logType').val();
@@ -1493,6 +1516,7 @@ function exportLogs() {
     showToast('Logs exported', 'success');
 }
 
+// ==================== Ping Tool ====================
 let pingActive = false;
 
 function openPingModal() {
@@ -1583,6 +1607,7 @@ function clearPingOutput() {
     $('#pingOutput').html('');
 }
 
+// ==================== Traceroute ====================
 function openTracerouteModal() {
     $('#traceTarget').val('');
     $('#traceOutput').html('');
@@ -1639,6 +1664,7 @@ function clearTraceOutput() {
     $('#traceOutput').html('');
 }
 
+// ==================== Netstat ====================
 function openNetstatModal() {
     $('#netstatOutput').html('Loading...');
     $('#netstatModal').modal('show');
@@ -1669,6 +1695,7 @@ function refreshNetstat(type) {
     });
 }
 
+// ==================== Port Scanner ====================
 function openNmapModal() {
     $('#scanTarget').val('');
     $('#scanPorts').val('22,80,443,3306,5432,8080');
@@ -1716,7 +1743,7 @@ function clearScanOutput() {
     $('#scanOutput').html('');
 }
 
-
+// ==================== DNS Lookup ====================
 function openDnsModal() {
     $('#dnsTarget').val('');
     $('#dnsOutput').html('');
@@ -1759,6 +1786,7 @@ function startDnsLookup() {
     });
 }
 
+// ==================== Bandwidth Test ====================
 let speedChart = null;
 
 function openBandwidthModal() {
@@ -1850,6 +1878,7 @@ function startBandwidthTest() {
     });
 }
 
+// ==================== Auto-refresh ====================
 let autoRefreshInterval;
 
 function startAutoRefresh() {
@@ -1867,7 +1896,7 @@ function startAutoRefresh() {
     setInterval(() => refreshServices(), 10000);
 }
 
-
+// Event handlers
 $(document).ready(function() {
     initNetworkChart();
     startAutoRefresh();

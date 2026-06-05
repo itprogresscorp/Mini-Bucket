@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 
 if (file_exists(ROOT_PATH . '/config.php')) {
@@ -39,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+
+// ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
     global $db;
     
@@ -593,6 +595,8 @@ function getDiskInfo($disk) {
     return null;
 }
 
+// ==================== LVM ОПЕРАЦИИ ====================
+
 function createPV($device) {
     $checkDevice = execCmd("lsblk " . escapeshellarg($device) . " 2>/dev/null", true, 5);
     if (empty($checkDevice)) {
@@ -803,7 +807,9 @@ function formatLV($lvPath, $fsType = 'ext4') {
         return ['success' => false, 'error' => 'Cannot format mounted LV. Please unmount it first: ' . $mountPoint];
     }
     
-
+    // ============================================================
+    // АКТИВАЦИЯ LV если не активен
+    // ============================================================
     $activeCheck = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($devicePath) . " 2>/dev/null", true, 5);
     if (empty($activeCheck) || strpos($activeCheck, 'a') === false) {
         execCmd("lvchange -ay " . escapeshellarg($devicePath) . " 2>/dev/null", true, 10);
@@ -824,6 +830,9 @@ function formatLV($lvPath, $fsType = 'ext4') {
         sleep(1);
     }
     
+    // ============================================================
+    // ФОРМАТИРОВАНИЕ
+    // ============================================================
     $formatCmd = "";
     switch ($fsType) {
         case 'ext4':
@@ -946,6 +955,7 @@ function renameLV($vgName, $oldName, $newName) {
     return ['success' => false, 'error' => $result];
 }
 
+// ==================== ФУНКЦИИ МОНТИРОВАНИЯ ====================
 
 function mountLV($device, $mountPoint, $fsType = 'auto', $addToFstab = false) {
     $originalDevice = $device;
@@ -1179,6 +1189,8 @@ function umountLV($mountPoint) {
     return ['success' => false, 'error' => $result];
 }
 
+// ==================== ФУНКЦИИ ДЛЯ СНАПШОТОВ ====================
+
 function getAllSnapshots() {
     $snapshots = [];
     
@@ -1296,16 +1308,19 @@ function createSnapshot($vgName, $originLvName, $snapshotName, $size) {
         if ($counter > 100) break;
     }
     
+
     $originCheck = execCmd("lvs --noheadings -o lv_name " . escapeshellarg($vgName . '/' . $originLvName) . " 2>/dev/null", true, 5);
     if (empty(trim($originCheck))) {
         return ['success' => false, 'error' => 'Original LV ' . $originLvName . ' not found'];
     }
     
+
     $originAttr = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($vgName . '/' . $originLvName) . " 2>/dev/null", true, 5);
     if (strpos($originAttr, 's') !== false || strpos($originAttr, 'S') !== false) {
         return ['success' => false, 'error' => 'Cannot create snapshot of a snapshot'];
     }
     
+
     $sizeArg = '';
     if (preg_match('/^(\d+(?:\.\d+)?)%$/', $size, $matches)) {
         $percent = $matches[1];
@@ -1335,6 +1350,7 @@ function createSnapshot($vgName, $originLvName, $snapshotName, $size) {
 }
 
 function restoreSnapshot($vgName, $snapshotName, $originLvName = null) {
+
     if (!$originLvName) {
         $originInfo = execCmd("lvs --noheadings -o origin " . escapeshellarg($vgName . '/' . $snapshotName) . " 2>/dev/null", true, 5);
         $originLvName = trim($originInfo);
@@ -1346,6 +1362,7 @@ function restoreSnapshot($vgName, $snapshotName, $originLvName = null) {
     $originPath = "/dev/{$vgName}/{$originLvName}";
     $snapshotPath = "/dev/{$vgName}/{$snapshotName}";
     
+
     $mountCheck = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($originPath, '/') . "\\s' | awk '{print $2}'", true, 5);
     if (!empty($mountCheck)) {
         $mountPoint = trim($mountCheck);
@@ -1436,6 +1453,8 @@ function getSnapshotInfo($vgName, $snapshotName) {
     
     return $info;
 }
+
+// ==================== ОБРАБОТЧИК ЗАПРОСОВ ====================
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 

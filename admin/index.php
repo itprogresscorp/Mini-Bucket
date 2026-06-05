@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
 
 require_once 'config.php';
@@ -28,19 +28,9 @@ if ($status_install == "0") {
     exit;
 }
 
-
 $menu = require_once 'menu.php';
-//$licru = '';
-//$licenseRuFile = $licenseDir . 'LICENSE.ru.txt';
-//if (file_exists($licenseRuFile)) {
-//    $licru = file_get_contents($licenseRuFile);
-//    if ($licru === false) {
-//        $licru = 'Ошибка: Не удалось прочитать файл LICENSE.ru.txt';
-//    }
-//} else {
-//    $licru = 'Файл LICENSE.ru.txt не найден';
-//}
 
+// лицензия
 $licen = '';
 $licenseEnFile = $licenseDir . 'LICENSE';
 if (file_exists($licenseEnFile)) {
@@ -61,6 +51,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -113,7 +104,6 @@ $js_config = [
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/loader.css">
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
-	<!-- PWA Support -->
 	<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23007aff'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white'%3E📦%3C/text%3E%3C/svg%3E">
 	<link rel="manifest" href="manifest.json">
 	<meta name="theme-color" content="#007aff">
@@ -128,9 +118,9 @@ $js_config = [
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	//console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -637,10 +627,12 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="diagnose.php"><i class="fa fa-heartbeat"></i> Diag Utils</a></li>
-                <li><a class="dropdown-item" href="system_check.php" target="_blank"><i class="fa fa-bar-chart"></i> System Checker</a></li>
-				<li><a class="dropdown-item" href="#" onclick="showLicenseModal()"><i class="fa fa-balance-scale"></i> License</a></li>
-                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="diagnose.php"><i class="fas fa-heartbeat me-2"></i>Diag Utils</a></li>
+                <li><a class="dropdown-item" href="system_check.php" target="_blank"><i class="fas fa-bar-chart me-2"></i>System Checker</a></li>
+				<li><a class="dropdown-item" href="#" onclick="showLicenseModal()"><i class="fas fa-balance-scale me-2"></i>License</a></li>
+				<li><a class="dropdown-item" href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer"><i class="fas fa-dollar me-2"></i>Donation</a></li>
+                <li><a class="dropdown-item" href="https://mini-bucket.ru/wiki/knowledge-base/dashboard" target="_blank"><i class="fas fa-question-circle me-2"></i>WiKi</a></li>
+				<li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i>Refresh</a></li>
             </ul>
         </div>
@@ -702,6 +694,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- Аккордеоны -->
         <div class="accordion-section" data-accordion="diskio">
             <div class="accordion-header">
                 <h3><i class="fas fa-tachometer-alt"></i> Disk I/O Performance <span id="diskioHealthIcon" class="health-badge"></span></h3>
@@ -725,6 +718,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- RAID секция -->
         <div id="raidSectionWrapper" class="accordion-section" data-accordion="raid" data-has-data="pending" style="display:none;">
             <div class="accordion-header">
                 <h3><i class="fas fa-shield-alt"></i> RAID Arrays <span id="raidHealthIcon" class="health-badge"></span></h3>
@@ -738,6 +732,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
             </div>
         </div>
 
+        <!-- LVM секция -->
         <div id="lvmSectionWrapper" class="accordion-section" data-accordion="lvm" data-has-data="pending" style="display:none;">
             <div class="accordion-header">
                 <h3><i class="fas fa-cubes"></i> LVM Volumes <span id="lvmHealthIcon" class="health-badge"></span></h3>
@@ -836,7 +831,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                     <pre>
                     <?php echo $licen; ?>
 					<hr>
-					<?php //echo $licru; ?>
                     </pre>
                 </div>
             </div>
@@ -858,6 +852,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
 <script>
  const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
  
+    // ========== ГРАФИКИ ==========
     let cpuHistoryChart, networkChart, memoryChart, cpuCoresChart;
     let diskCharts = {};
     let cpuHistory = Array(20).fill(0);
@@ -866,11 +861,13 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     let diskReadHistory = {}, diskWriteHistory = {}, diskQueueHistory = {};
     let isFirstLoad = true;
     
+    // Флаги для кэширования наличия RAID/LVM
     let raidChecked = false;
     let lvmChecked = false;
     let hasRaid = false;
     let hasLvm = false;
     
+    // Для предотвращения дублирования загрузок
     let raidLoadPromise = null;
     let lvmLoadPromise = null;
     
@@ -976,6 +973,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         const grid = document.getElementById('disksIOGrid');
         if (!grid) return;
         
+        // Если нет данных о дисках
         if (!disksIO || Object.keys(disksIO).length === 0) {
             if (grid.innerHTML !== '<div class="disk-card-loading">No disk I/O data available</div>') {
                 grid.innerHTML = '<div class="disk-card-loading">No disk I/O data available</div>';
@@ -1054,6 +1052,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-check-circle health-green"></i> Active';
     }
     
+    // Функции здоровья для SMART (по количеству плохих секторов)
     function getSmartHealthStatus(disks) {
         if (!disks || disks.length === 0) return { class: '', text: '', icon: '' };
         let hasBadSectors = false;
@@ -1089,6 +1088,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         return { class: 'health-green', text: '✓ Active', icon: 'fa-check-circle' };
     }
     
+    // Аккордеон
     function initAccordion() {
         const sections = document.querySelectorAll('.accordion-section');
         sections.forEach(section => {
@@ -1120,6 +1120,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         return body ? body.classList.contains('open') : false;
     }
     
+    // Обновление лёгких метрик
     async function updateLightMetrics() {
         try {
             const metricsRes = await fetch(url + 'dashboard_api.php?action=metrics', {
@@ -1181,6 +1182,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 }
             }
             
+            // Disk I/O (только если развёрнут)
             if (isSectionOpen('diskio') && data.disks_io && Object.keys(data.disks_io).length > 0) {
                 updateDiskCards(data.disks_io);
             } else if (isSectionOpen('diskio')) {
@@ -1191,11 +1193,13 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 }
             }
             
+            // Physical Disks (только если развёрнут)
             if (isSectionOpen('physical') && data.disks && data.disks.length) {
 				let disksHtml = '';
 				for (let disk of data.disks) {
 					const smartStatus = disk.smart.status;
 					const badSectors = disk.smart.bad_sectors || 0;
+					// Проверяем проблему ИМЕННО для этого диска
 					const isDiskProblem = (badSectors > 0 || smartStatus === 'FAILED');
 					const smartClass = isDiskProblem ? 'smart-failed' : 'smart-passed';
 					const smartText = isDiskProblem ? `⚠️ ${badSectors} bad sectors` : `✓ SMART: ${smartStatus}`;
@@ -1232,6 +1236,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                 document.getElementById('smartHealthIcon').innerHTML = `<i class="fas ${smartHealth.icon} ${smartHealth.class}"></i> ${smartHealth.text}`;
             }
             
+            // Network Interfaces (только если развёрнут)
             if (isSectionOpen('network') && data.network_interfaces && data.network_interfaces.length) {
                 document.getElementById('networkInterfaces').innerHTML = data.network_interfaces.map(net => `
                     <div class="disk-card">
@@ -1254,9 +1259,11 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     }
 }
     
+    // Обновление RAID
     async function loadRaidData() {
         if (raidChecked && !hasRaid) return;
         
+        // Предотвращаем параллельные запросы
         if (raidLoadPromise) return raidLoadPromise;
         
         raidLoadPromise = (async () => {
@@ -1278,6 +1285,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                     let raidHasProblem = false;
                     
                     for (let r of raidData.raid) {
+                        // Нормализуем статус - auto-read-only считаем как проблемный
                         const isProblemStatus = r.status === 'inactive' || r.status === 'auto-read-only' || r.status === 'readonly' || r.status === 'failed';
                         const hasProblem = r.degraded || r.failed_disks > 0 || isProblemStatus;
                         if (hasProblem) raidHasProblem = true;
@@ -1293,10 +1301,12 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             statusClass = 'text-danger';
                         }
                         
+                        // Формируем список устройств
                         let devicesHtml = '';
                         let deviceNames = [];
                         
                         if (r.devices && Array.isArray(r.devices)) {
+                            // Извлекаем имена устройств из объектов
                             deviceNames = r.devices.map(dev => {
                                 if (typeof dev === 'string') return dev;
                                 if (dev && typeof dev === 'object') {
@@ -1308,6 +1318,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                             deviceNames = r.devices.split(',').map(d => d.trim());
                         }
                         
+                        // Отображаем количество работающих устройств
                         const workingCount = r.working_disks !== undefined ? r.working_disks : 
                                             (r.active_devices !== undefined ? r.active_devices : 
                                             (deviceNames.filter(d => d && d !== 'removed' && d !== 'failed').length));
@@ -1319,6 +1330,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                         }
                         devicesHtml += `</div>`;
                         
+                        // Определяем размер
                         let raidSize = r.size || r.size_formatted || 'N/A';
                         if (raidSize === 'N/A' && r.total_size) {
                             raidSize = r.total_size;
@@ -1338,6 +1350,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
                                 ${r.sync_percent ? `<div class="progress-bar-sm mt-2"><div class="progress-bar-fill" style="width:${r.sync_percent}%"></div><small>Sync ${r.sync_percent}%</small></div>` : ''}
                         `;
                         
+                        // Добавляем информацию о mount point и использовании, если есть
                         if (r.mount_point && r.mount_point !== '' && r.mount_point !== 'N/A' && r.mount_point !== '-') {
                             let usagePercent = 0;
                             let usedSize = '?';
@@ -1397,6 +1410,7 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
         return raidLoadPromise;
     }
     
+	// Show license modal
 function showLicenseModal() {
     const modal = document.getElementById('licenseModal');
     if (modal) {
@@ -1405,6 +1419,7 @@ function showLicenseModal() {
     }
 }
 
+// Close license modal
 function closeLicenseModal() {
     const modal = document.getElementById('licenseModal');
     if (modal) {
@@ -1413,6 +1428,7 @@ function closeLicenseModal() {
     }
 }
 
+// Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('licenseModal');
     if (event.target === modal) {
@@ -1420,6 +1436,7 @@ window.onclick = function(event) {
     }
 }
 
+// Close modal with Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         const modal = document.getElementById('licenseModal');
@@ -1429,6 +1446,7 @@ document.addEventListener('keydown', function(event) {
     }
 });
 	
+    // Обновление LVM
     async function loadLvmData() {
         if (lvmChecked && !hasLvm) return;
         
@@ -1451,6 +1469,7 @@ document.addEventListener('keydown', function(event) {
                     
                     let lvmHtml = '';
                     
+                    // Volume Groups
                     if (lvmData.vgs && lvmData.vgs.length) {
                         const sortedVgs = [...lvmData.vgs].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                         lvmHtml += `<div class="lvm-section-header"><i class="fas fa-database"></i> Volume Groups (${sortedVgs.length})</div>`;
@@ -1475,6 +1494,7 @@ document.addEventListener('keydown', function(event) {
                         lvmHtml += `</div>`;
                     }
                     
+                    // Logical Volumes
                     if (lvmData.lvs && lvmData.lvs.length) {
                         const sortedLvs = [...lvmData.lvs].sort((a, b) => {
                             const vgCompare = (a.vg_name || '').localeCompare(b.vg_name || '');
@@ -1487,6 +1507,7 @@ document.addEventListener('keydown', function(event) {
                         
                         let currentVg = '';
                         for (let lv of sortedLvs) {
+                            // разделитель между разными VG
                             if (currentVg !== lv.vg_name && currentVg !== '') {
                                 lvmHtml += `</div><div style="margin-top: 8px;"></div><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">`;
                             }
@@ -1502,10 +1523,10 @@ document.addEventListener('keydown', function(event) {
                             } else if (lv.mount_point && lv.mount_point !== '' && lv.mount_point !== 'N/A' && lv.mount_point !== 'none') {
                                 try {
                                     const dfRes = await fetch(url + `disk_usage_api.php?path=${encodeURIComponent(lv.mount_point)}`, {
-				headers: {
-					'X-API-Key': window.apiConfig.apiKey
-				}
-			});
+										headers: {
+											'X-API-Key': window.apiConfig.apiKey
+										}
+									});
                                     const dfData = await dfRes.json();
                                     if (dfData.success) {
                                         usagePercent = dfData.percent || 0;
@@ -1566,16 +1587,19 @@ document.addEventListener('keydown', function(event) {
         return lvmLoadPromise;
     }
     
+    // Запуск
     function init() {
         initCharts();
         initAccordion();
         updateLightMetrics();
         
+        // Загружаем RAID и LVM при старте (один раз)
         loadRaidData();
         loadLvmData();
         
         setInterval(updateLightMetrics, 2000);
         
+        // RAID/LVM обновляем раз в 30 секунд, только если они есть и блок развёрнут
         setInterval(() => {
             if (hasRaid && isSectionOpen('raid')) loadRaidData();
             if (hasLvm && isSectionOpen('lvm')) loadLvmData();
@@ -1588,6 +1612,7 @@ document.addEventListener('keydown', function(event) {
 
 <!-- PWA Registration -->
 <script>
+// Регистрация Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
@@ -1596,6 +1621,7 @@ if ('serviceWorker' in navigator) {
             });
             console.log('Service Worker registered successfully:', registration);
             
+            // Обработка ошибок регистрации
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
@@ -1615,12 +1641,14 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Запрос разрешения на push уведомления
 async function requestPushPermission(registration) {
     if (!('PushManager' in window)) {
         console.log('Push messaging not supported');
         return;
     }
     
+    // Проверяем, можно ли показывать уведомления
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
         console.log('Notification permission denied');
@@ -1628,11 +1656,13 @@ async function requestPushPermission(registration) {
     }
     
     try {
+        // Получаем VAPID ключ
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array('YOUR_VAPID_PUBLIC_KEY')
         });
         
+        // Отправляем подписку на сервер
         await fetch('/api/push_subscribe.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1645,6 +1675,7 @@ async function requestPushPermission(registration) {
     }
 }
 
+// Конвертация VAPID ключа
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -1659,6 +1690,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 function showUpdateNotification() {
+    // Показываем уведомление о доступном обновлении
     const updateToast = document.createElement('div');
     updateToast.className = 'update-notification';
     updateToast.innerHTML = `
@@ -1678,6 +1710,7 @@ async function updateApp() {
     window.location.reload();
 }
 
+// Сохранение состояния для офлайн режима
 function saveOfflineState(key, data) {
     localStorage.setItem(`offline_${key}`, JSON.stringify(data));
 }
@@ -1687,6 +1720,7 @@ function getOfflineState(key) {
     return data ? JSON.parse(data) : null;
 }
 
+// Показываем индикатор офлайн статуса
 window.addEventListener('online', () => {
     console.log('Online');
     document.body.classList.remove('offline-mode');

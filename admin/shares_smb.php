@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -32,6 +32,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,12 +84,10 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+	</script>
     <style>
-
-/* Status Badges */
 .status-group {
     display: flex;
     align-items: center;
@@ -125,13 +124,9 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     color: #721c24;
 }
 
-/* Layout */
 .app-container {
     display: flex;
 }
-
-  
-
 
 .main-content {
     margin-left: 260px;
@@ -154,7 +149,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     }
 }
 
-/* Widgets */
 .widget {
     background: white;
     border-radius: 16px;
@@ -193,7 +187,6 @@ window.apiConfig = <?php echo json_encode($js_config); ?>;
     padding: 0;
 }
 
-/* Storage Cards */
 .storage-card {
     margin: 0 0 12px 0;
     background: #f8f9fa;
@@ -849,6 +842,7 @@ let currentTargetInput = null;
 let currentBrowsePath = '/';
 let smbUsersList = [];
 
+// ========== Утилиты ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert"><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     $('#alertContainer').append(alertHtml);
@@ -857,6 +851,7 @@ function showAlert(message, type = 'success') {
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]; }); }
 
+// ========== API Calls ==========
 async function apiCall(action, method = 'GET', data = null) {
     let fullUrl = `${url}shares_smb_api.php?action=${action}`;
     let options = { 
@@ -884,6 +879,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+// ========== Загрузка статуса ==========
 async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
@@ -914,6 +910,7 @@ async function toggleAutostart() {
     }
 }
 
+// ========== Загрузка конфигурации ==========
 async function loadConfig() {
     let result = await apiCall('get_config');
     if (result.success) {
@@ -938,6 +935,7 @@ $('#globalConfigForm').on('submit', async function(e) {
     else showAlert('Save error', 'danger');
 });
 
+// ========== Загрузка пользователей ==========
 async function loadUsers() {
     let result = await apiCall('get_users');
     if (result.success) {
@@ -998,6 +996,7 @@ async function deleteUser(username) {
     else showAlert(result.message, 'danger');
 }
 
+// ========== Загрузка шаров ==========
 async function loadShares() {
     let result = await apiCall('get_shares');
     if (result.success) {
@@ -1071,6 +1070,7 @@ async function deleteShare(name) {
     else showAlert(result.error || 'Error', 'danger');
 }
 
+// ========== Загрузка хранилищ ==========
 async function loadStorages() {
     let result = await apiCall('get_storages');
     if (result.success) {
@@ -1088,6 +1088,7 @@ async function loadStorages() {
     }
 }
 
+// ========== Загрузка сессий ==========
 async function loadSessions() {
     let result = await apiCall('get_sessions');
     if (result.success) {
@@ -1201,6 +1202,7 @@ async function closeUserFiles(username) {
     }
 }
 
+// ========== Файловый браузер ==========
 async function loadFolder(path) {
     let result = await apiCall('browse', 'GET', { path: path });
     if (result.success) {
@@ -1208,7 +1210,7 @@ async function loadFolder(path) {
         $('#currentPath').val(result.path);
         
         let parts = result.path.split('/').filter(p => p);
-        let html = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\')">/</a></li>';
+        let html = '<li class="breadcrumb-item"><a onclick="loadFolder(\'/\')"></a></li>';
         let cp = '';
         parts.forEach(p => { cp += '/' + p; html += `<li class="breadcrumb-item"><a onclick="loadFolder('${cp}')">${escapeHtml(p)}</a></li>`; });
         $('#folderBreadcrumb').html(html);
@@ -1266,6 +1268,7 @@ async function createNewFolder() {
     }
 }
 
+// ========== Обработчики модальных окон ==========
 $('#smb_public, #edit_public').change(function() {
     let isPublic = $(this).prop('checked');
     let isEdit = this.id === 'edit_public';
@@ -1288,6 +1291,7 @@ $('#addSmbModal').on('show.bs.modal', function() {
     updateUserCheckboxes();
 });
 
+// ========== Инициализация и обновление ==========
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadUsers(), loadShares(), loadStorages(), loadSessions()]);
     showAlert('Data updated', 'success');

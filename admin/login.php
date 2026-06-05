@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 
 if (isset($_SESSION['user_id'])) {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Login — Mini-B</title>
     <link href="lib/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .logo-icon {
             width: 64px;
             height: 64px;
-            background: linear-gradient(135deg, #007AFF, #5856D6);
+            background: linear-gradient(135deg, #ffffff, #ffffff);
             border-radius: 18px;
             display: flex;
             align-items: center;
@@ -353,7 +353,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="glass-card">
         <div class="logo">
             <div class="logo-icon">
-                <i class="fas fa-bucket"></i>
+			<img src="css/MINIB_LOGO.png" width="64px" height="64px"></img>
+                <!--<i class="fas fa-bucket"></i>-->
             </div>
             <h1>Mini-b</h1>
             <p>NAS Control Panel</p>
@@ -369,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="POST">
             <div class="input-group-custom">
                 <label class="input-label">Username</label>
-                <input type="text" name="username" class="input-field" placeholder="admin" autofocus required>
+                <input type="text" name="username" class="input-field" placeholder="login" autofocus required>
             </div>
             <div class="input-group-custom">
                 <label class="input-label">Password</label>

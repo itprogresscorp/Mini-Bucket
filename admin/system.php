@@ -17,9 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
 
@@ -29,6 +29,7 @@ $error = '';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
+// Получаем API ключ и URL для текущего хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -103,11 +104,12 @@ $menu = require_once 'menu.php';
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
     <script>
-window.apiConfig = <?php echo json_encode($js_config); ?>;
-//console.log('API Config loaded:', window.apiConfig);
-window.hostsList = <?php echo json_encode($hosts); ?>;
-window.currentHostId = <?php echo (int)$current_host_id; ?>;
-</script>
+	window.apiConfig = <?php echo json_encode($js_config); ?>;
+	console.log('API Config loaded:', window.apiConfig);
+
+	window.hostsList = <?php echo json_encode($hosts); ?>;
+	window.currentHostId = <?php echo (int)$current_host_id; ?>;
+	</script>
     
     <style>
         * {
@@ -158,7 +160,6 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
             margin-bottom: 20px;
         }
         
-        /* Apple Cards */
         .apple-card {
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(0px);
@@ -213,7 +214,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
             box-shadow: 0 4px 12px rgba(0,122,255,0.1);
         }
         
-        /* Toggle Switch (Apple style) */
+        /* Toggle Switch */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -485,6 +486,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
         <div id="alertContainer"></div>
         <!--<div id="alertMessages"></div>-->
         
+        <!-- Tabs -->
         <ul class="nav nav-tabs-apple" id="systemTab" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button" role="tab">
@@ -509,7 +511,9 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
         </ul>
         
         <div class="tab-content">
+            <!-- ==================== SERVICES TAB ==================== -->
             <div class="tab-pane fade show active" id="services" role="tabpanel">
+                <!-- Power & Resources Row -->
                 <div class="row g-4">
                     <div class="col-lg-5">
                         <div class="apple-card">
@@ -579,7 +583,8 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Services Grid -->
                 <div class="apple-card">
                     <div class="card-header-apple">
                         <h3><i class="bi bi-grid-3x3-gap-fill"></i> Services Management</h3>
@@ -594,6 +599,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                 </div>
             </div>
             
+            <!-- ==================== DATE & TIME TAB ==================== -->
             <div class="tab-pane fade" id="datetime" role="tabpanel">
                 <div class="row g-4">
                     <div class="col-lg-6">
@@ -670,6 +676,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                 </div>
             </div>
             
+            <!-- ==================== NETWORK TAB ==================== -->
             <div class="tab-pane fade" id="network" role="tabpanel">
                 <div class="row g-4">
                     <div class="col-lg-6">
@@ -798,6 +805,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                 </div>
             </div>
             
+            <!-- ==================== SYSTEM INFO TAB ==================== -->
             <div class="tab-pane fade" id="systeminfo" role="tabpanel">
                 <div class="row g-4">
                     <div class="col-lg-6">
@@ -848,12 +856,12 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
                                 </div>
                                 <div class="info-box" id="">
                                     <i class="bi bi-c-circle me-2 text-primary"></i>
-                                    <strong>Copyright (C) 2026 Mamontov Roman Igorevich</strong><br>Mail: <a href="mailto:sa@itp-corp.ru">sa@itp-corp.ru</a> | WEB Site: <a href="https://mini-b.itp-corp.ru/" target="_blank" rel="noopener noreferrer">mini-b.itp-corp.ru</a>
+                                    <strong>Copyright (C) 2026 Mamontov Roman Igorevich</strong><br>Mail: <a href="mailto:sa@itp-corp.ru">sa@itp-corp.ru</a> | WEB Site: <a href="https://mini-bucket.ru/" target="_blank" rel="noopener noreferrer">mini-bucket.ru</a>
                                 </div>
-                                <!--<div class="info-box" id="sysinfoPhp">
-                                    <i class="bi bi-code-slash me-2 text-primary"></i>
-                                    <strong>PHP Version:</strong><br>
-                                </div>-->
+                                <div class="info-box" id="">
+                                    <i class="bi bi-currency-dollar me-2 text-primary"></i>
+                                    <strong>Donation</strong><br> Donation methods: <a href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer">Donation</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -909,6 +917,7 @@ window.currentHostId = <?php echo (int)$current_host_id; ?>;
 
 <script>
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
+// ========== Утилиты ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-3" role="alert">
         <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i> 
@@ -919,6 +928,7 @@ function showAlert(message, type = 'success') {
     setTimeout(() => $('.alert').fadeOut(500, function() { $(this).remove(); }), 5000);
 }
 
+// ========== API Calls ==========
 async function apiCall(action, method = 'GET', data = null) {
     let fullUrl = `${window.apiConfig.apiBaseUrl}system_settings_api.php?action=${action}`;
     let options = { 
@@ -946,6 +956,7 @@ async function apiCall(action, method = 'GET', data = null) {
     }
 }
 
+// ========== Host Selector ==========
 function initHostSelector() {
     const selector = $('#hostSelector');
     selector.empty();
@@ -989,6 +1000,7 @@ function escapeHtml(str) {
     });
 }
 
+// ========== Power Actions ==========
 async function powerAction(action) {
     if (!confirm(`${action === 'reboot' ? 'Reboot' : 'Shutdown'} system?`)) return;
     
@@ -1001,6 +1013,7 @@ async function powerAction(action) {
     }
 }
 
+// ========== Resources ==========
 async function loadResources() {
     const result = await apiCall('get_resources');
     if (result.success) {
@@ -1022,6 +1035,7 @@ async function loadResources() {
     }
 }
 
+// ========== Services ==========
 async function loadServices() {
     try {
         const result = await apiCall('get_services_status');
@@ -1107,6 +1121,7 @@ async function serviceAction(service, action) {
     }
 }
 
+// ========== Timezone ==========
 async function loadTimezones() {
     const result = await apiCall('get_timezones');
     if (result.success) {
@@ -1149,6 +1164,7 @@ async function setTimezone() {
     }
 }
 
+// ========== NTP ==========
 async function loadNtpStatus() {
     const result = await apiCall('get_ntp_status');
     if (result.success) {
@@ -1197,6 +1213,7 @@ async function setManualDateTime() {
     }
 }
 
+// ========== Hostname ==========
 async function loadHostname() {
     const result = await apiCall('get_hostname');
     if (result.success) {
@@ -1222,6 +1239,7 @@ async function setHostname() {
     }
 }
 
+// ========== Network ==========
 async function loadNetwork() {
     try {
         const savedInterface = $('#networkInterface').val();
@@ -1304,6 +1322,7 @@ async function setNetworkConfig() {
     }
 }
 
+// ========== System Info ==========
 async function loadSystemInfo() {
     const result = await apiCall('get_system_info');
     if (result.success) {
@@ -1330,6 +1349,7 @@ async function loadSystemInfo() {
     }
 }
 
+// ========== Refresh All ==========
 let isRefreshing = false;
 
 async function refreshAllData() {
@@ -1380,6 +1400,7 @@ function hideLoadingIndicators() {
     $('.apple-card').removeClass('loading');
 }
 
+// System Checker Modal Functions
 function openSystemChecker() {
     if (!$('#globalCheckModal').length) {
         $('body').append(`
@@ -1496,6 +1517,7 @@ function openSystemChecker() {
     });
 }
 
+// ========== INITIALIZATION ==========
 $(document).ready(function() {
     initHostSelector();
     

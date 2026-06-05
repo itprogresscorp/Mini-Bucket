@@ -17,12 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * https://mini-b.itp-corp.ru/
+ * https://mini-bucket.ru/
  */
- 
+
 require_once 'config.php';
 isAuthenticated();
-
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
 try {
@@ -32,6 +31,7 @@ try {
     exit;
 }
 
+// Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
 $stmt->bindValue(':id', $current_host_id, SQLITE3_INTEGER);
 $result = $stmt->execute();
@@ -83,7 +83,7 @@ $menu = require_once 'menu.php';
 	<script src="js/crt_checker.js"></script>
 	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	//console.log('API Config loaded:', window.apiConfig);
+	console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         .disk-manager {
@@ -482,7 +482,6 @@ $menu = require_once 'menu.php';
         }
         .resize-hint { font-size: 12px; color: #6c757d; margin-top: 5px; }
         
-        /* Стили для скрытых элементов фильтра */
         .disk-item.hidden-category {
             display: none;
         }
@@ -872,6 +871,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Parted Console -->
 <div class="modal fade" id="partedModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -930,6 +930,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Initialize Disk -->
 <div class="modal fade" id="initModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -963,6 +964,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Create Partition -->
 <div class="modal fade" id="createPartitionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1030,6 +1032,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Format Partition -->
 <div class="modal fade" id="formatModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1079,6 +1082,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Resize Partition -->
 <div class="modal fade" id="resizeModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1138,6 +1142,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Mount -->
 <div class="modal fade" id="mountModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1184,6 +1189,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Smart Umount -->
 <div class="modal fade" id="smartUmountModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1220,6 +1226,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Disk Info -->
 <div class="modal fade" id="diskInfoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1236,6 +1243,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: SMART Info -->
 <div class="modal fade" id="smartModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -1251,6 +1259,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Logs -->
 <div class="modal fade" id="logsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1272,6 +1281,7 @@ $menu = require_once 'menu.php';
     </div>
 </div>
 
+<!-- Modal: Progress -->
 <div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1297,6 +1307,7 @@ $menu = require_once 'menu.php';
 
 <script src="lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
 let currentDisk = null;
 let currentDiskName = null;
@@ -1315,8 +1326,17 @@ let currentFilter = 'all';
 let currentLvInfo = null;
 let currentSnapshotInfo = null;
 
-function showLoader() { const loader = document.getElementById('loader'); if (loader) loader.style.display = 'flex'; }
-function hideLoader() { const loader = document.getElementById('loader'); if (loader) loader.style.display = 'none'; }
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+function showLoader() { 
+    const loader = document.getElementById('loader'); 
+    if (loader) loader.style.display = 'flex'; 
+    else console.warn('Loader element not found');
+}
+
+function hideLoader() { 
+    const loader = document.getElementById('loader'); 
+    if (loader) loader.style.display = 'none'; 
+}
 
 function showToast(message, type = 'success') {
     const container = document.querySelector('.toast-container');
@@ -1331,14 +1351,34 @@ function showToast(message, type = 'success') {
 }
 
 function showProgress(message, showBar = true) {
-    if (!progressModal) progressModal = new bootstrap.Modal(document.getElementById('progressModal'), { backdrop: 'static', keyboard: false });
-    document.getElementById('progressMessage').innerHTML = message;
-    if (showBar) {
-        document.getElementById('progressBar').style.width = '100%';
-        document.getElementById('progressBar').className = 'progress-bar progress-bar-striped progress-bar-animated';
-    } else { document.getElementById('progressBar').style.width = '0%'; }
-    document.getElementById('progressDetails').innerHTML = '';
+    const modalElement = document.getElementById('progressModal');
+    if (!modalElement) {
+        console.warn('progressModal element not found, creating fallback');
+        showToast(message, 'info');
+        return;
+    }
+    
+    if (!progressModal) {
+        progressModal = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false });
+    }
+    
+    const messageEl = document.getElementById('progressMessage');
+    const progressBarEl = document.getElementById('progressBar');
+    const detailsEl = document.getElementById('progressDetails');
+    
+    if (messageEl) messageEl.innerHTML = message;
+    if (progressBarEl) {
+        if (showBar) {
+            progressBarEl.style.width = '100%';
+            progressBarEl.className = 'progress-bar progress-bar-striped progress-bar-animated';
+        } else {
+            progressBarEl.style.width = '0%';
+        }
+    }
+    if (detailsEl) detailsEl.innerHTML = '';
+    
     progressModal.show();
+    
     if (progressCheckInterval) clearInterval(progressCheckInterval);
     progressCheckInterval = setInterval(checkOperationStatus, 2000);
 }
@@ -1367,16 +1407,24 @@ async function hideProgress() {
     }
     
     if (progressModal) {
-        progressModal.hide();
+        try {
+            progressModal.hide();
+        } catch(e) {
+            console.warn('Error hiding progress modal:', e);
+        }
     }
     
     await clearOperationStatus();
     
     setTimeout(() => {
-        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
+        try {
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        } catch(e) {
+            console.warn('Error cleaning up modal backdrop:', e);
+        }
     }, 100);
 }
 
@@ -1404,6 +1452,7 @@ function getFsClass(fstype) {
     return 'none';
 }
 
+// ==================== API ВЫЗОВЫ ====================
 async function apiCall(action, data = {}) {
     try {
         const controller = new AbortController();
@@ -1474,6 +1523,8 @@ function showProgress(message) {
     }
 }
 
+
+// ==================== ЗАГРУЗКА ДАННЫХ ====================
 async function refreshAll(showLoading = false) {
     if (isRefreshing) return;
     isRefreshing = true;
@@ -1505,9 +1556,15 @@ async function refreshAll(showLoading = false) {
         }
         lastUsbCount = usbCount;
         
-        document.getElementById('connectionStatus').className = 'badge bg-success me-2';
-        document.getElementById('connectionStatus').innerHTML = '● On-Line';
-    } catch(e) { console.error('Refresh error:', e); }
+        const connectionStatusEl = document.getElementById('connectionStatus');
+        if (connectionStatusEl) {
+            connectionStatusEl.className = 'badge bg-success me-2';
+            connectionStatusEl.innerHTML = '● On-Line';
+        }
+    } catch(e) { 
+        console.error('Refresh error:', e); 
+        if (e.message) console.error('Error details:', e.message);
+    }
     
     isRefreshing = false;
     if (showLoading) hideLoader();
@@ -1517,6 +1574,7 @@ function showEmptyState() {
     document.getElementById('diskDetailsPanel').innerHTML = `<div class="empty-state"><i class="fas fa-hdd fa-4x mb-3"></i><p>Select a disk from the list on the left</p></div>`;
 }
 
+// ==================== ФИЛЬТР ====================
 function setupFilters() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1586,21 +1644,16 @@ function applyFilter() {
     }
 }
 
+// ==================== РЕНДЕР САЙДБАРА ====================
 function renderSidebar() {
     const physicalDisks = allDisks.filter(d => !d.is_virtual);
     
     const lvmVgs = allDisks.filter(d => d.is_virtual && d.virtual_type === 'lvm_vg');
-
     const raidArrays = allDisks.filter(d => d.is_virtual && d.virtual_type === 'raid_array');
-
     const lvmPvDisks = physicalDisks.filter(d => d.is_managed_by_lvm === true);
-
     const raidMemberDisks = physicalDisks.filter(d => d.is_managed_by_raid === true);
-
     const systemDisks = physicalDisks.filter(d => d.is_system && !d.is_managed_by_lvm && !d.is_managed_by_raid);
-
     const internalDisks = physicalDisks.filter(d => !d.removable && !d.is_system && !d.is_managed_by_lvm && !d.is_managed_by_raid);
-
     const externalDisks = physicalDisks.filter(d => d.removable && !d.is_managed_by_lvm && !d.is_managed_by_raid);
     
     const renderDisk = (disk, category) => {
@@ -1690,6 +1743,7 @@ function renderSidebar() {
     }
 }
 
+// ==================== ВЫБОР ДИСКА ====================
 function selectDisk(diskName, event) {
     const disk = allDisks.find(d => d.name === diskName);
     
@@ -1754,6 +1808,7 @@ function showManagedDiskMessage(disk, type) {
     currentDiskName = null;
 }
 
+// ==================== РЕНДЕР ДЕТАЛЕЙ ДИСКА ====================
 function renderDiskDetails(diskName) {
     const disk = allDisks.find(d => d.name === diskName);
     if (!disk) return;
@@ -1788,45 +1843,69 @@ function renderPhysicalDiskDetails(disk) {
         return;
     }
     
-    const partitions = (disk.partitions || []).filter((part, index, self) => 
-        index === self.findIndex(p => p.name === part.name)
-    );
+    // ========== ДЕДУПЛИКАЦИЯ РАЗДЕЛОВ ПО ИМЕНИ ==========
+    const rawPartitions = disk.partitions || [];
+    const uniquePartitions = [];
+    const seenNames = new Set();
+    
+    for (const part of rawPartitions) {
+        if (!seenNames.has(part.name)) {
+            seenNames.add(part.name);
+            uniquePartitions.push(part);
+        }
+    }
+    const partitions = uniquePartitions;
+    
+    const validPartitions = partitions.filter(part => part.size_bytes > 1024 * 1024);
     
     const totalSize = disk.size_bytes;
     
-    let usedBytes = 0, freeBytes = totalSize;
-    for (const part of partitions) { 
+    let usedBytes = 0;
+    for (const part of validPartitions) { 
         usedBytes += part.size_bytes; 
-        freeBytes -= part.size_bytes; 
+    }
+    let freeBytes = totalSize - usedBytes;
+    
+    if (freeBytes < 0) {
+        console.warn('Negative free space detected, recalculating...');
+        freeBytes = 0;
     }
     
-    const usedPercent = (usedBytes / totalSize) * 100;
-    const freePercent = 100 - usedPercent;
+    const usedPercent = totalSize > 0 ? (usedBytes / totalSize) * 100 : 0;
+    const freePercent = totalSize > 0 ? 100 - usedPercent : 0;
     const freeSpaceGb = (freeBytes / 1024 / 1024 / 1024).toFixed(1);
     const usedSpaceGb = (usedBytes / 1024 / 1024 / 1024).toFixed(1);
     const totalSizeGb = (totalSize / 1024 / 1024 / 1024).toFixed(1);
     
+    // ========== ВИЗУАЛИЗАЦИЯ РАЗДЕЛОВ ==========
     let visualHtml = '';
-    const processedPartitions = new Set();
+    const processedInVisual = new Set();
     
-    for (const part of partitions) {
-        if (processedPartitions.has(part.name)) continue;
-        processedPartitions.add(part.name);
+    for (const part of validPartitions) {
+        if (processedInVisual.has(part.name)) continue;
+        processedInVisual.add(part.name);
         
-        const percent = (part.size_bytes / totalSize) * 100;
+        const percent = totalSize > 0 ? (part.size_bytes / totalSize) * 100 : 0;
+        if (percent < 0.1) continue;
+        
         const fsClass = part.has_filesystem ? getFsClass(part.fstype) : 'no-fs';
         const title = `${part.name} | ${part.has_filesystem ? (part.fstype || 'unknown') : 'NOT FORMATTED'} | ${formatSize(part.size_bytes)}`;
         visualHtml += `<div class="part-visual ${fsClass}" style="width: ${percent}%;" title="${escapeHtml(title)}">${percent > 8 ? part.name : ''}</div>`;
     }
     
-    if (freePercent > 0.5 && partitions.length > 0) {
+    if (freePercent > 0.5 && validPartitions.length > 0) {
         visualHtml += `<div class="part-visual free" style="width: ${freePercent}%;" title="Free space: ${formatSize(freeBytes)} (${freePercent.toFixed(1)}%)">${freePercent > 8 ? 'Free' : ''}</div>`;
     }
     
+    if (validPartitions.length === 0 && freePercent > 0) {
+        visualHtml = `<div class="part-visual free" style="width: 100%;" title="Free space: ${formatSize(freeBytes)}">Free (${formatSize(freeBytes)})</div>`;
+    }
+    
+    // ========== ТАБЛИЦА РАЗДЕЛОВ ==========
     let tableHtml = '';
     const processedInTable = new Set();
     
-    for (const part of partitions) {
+    for (const part of validPartitions) {
         if (processedInTable.has(part.name)) continue;
         processedInTable.add(part.name);
         
@@ -1834,7 +1913,7 @@ function renderPhysicalDiskDetails(disk) {
         const hasFstab = part.fstab_entry !== null;
         const hasFilesystem = part.has_filesystem === true;
         const noFsWarning = !hasFilesystem ? '<span class="no-fs-warning"><i class="fas fa-exclamation-triangle"></i> Not formatted</span>' : '';
-        const isMounted = part.mount_point !== null;
+        const isMounted = part.mount_point !== null && part.mount_point !== '';
         
         let actionBtns = `
             <div class="btn-group btn-group-sm">
@@ -1846,18 +1925,22 @@ function renderPhysicalDiskDetails(disk) {
             </div>
         `;
         
+        const safePartName = part.name.replace(/'/g, "\\'");
+        const safeFsType = (part.fstype || '').replace(/'/g, "\\'");
+        
         tableHtml += `
-            <tr data-partition="${part.name}" class="${!hasFilesystem ? 'no-fs' : ''}" oncontextmenu="showPartitionContextMenu(event, '${disk.name}', '${part.name}', '${part.fstype || ''}', ${isMounted}, ${hasFilesystem})">
+            <tr data-partition="${part.name}" class="${!hasFilesystem ? 'no-fs' : ''}" oncontextmenu="showPartitionContextMenu(event, '${disk.name}', '${safePartName}', '${safeFsType}', ${isMounted}, ${hasFilesystem})">
                 <td><code>${escapeHtml(part.name)}</code> ${noFsWarning}${isMounted ? '<span class="mounted-indicator" title="Mounted"></span>' : ''}</td>
                 <td>${formatSize(part.size_bytes)}</td>
-                <td><span class="fs-badge fs-${fsClass}">${part.has_filesystem ? (part.fstype || '—') : 'Not FS'}</span></td>
-                <td>${part.mount_point || '<span class="text-muted">—</span>'}</td>
+                <td><span class="fs-badge fs-${fsClass}">${part.has_filesystem ? (part.fstype || '—') : 'No FS'}</span></td>
+                <td>${part.mount_point && part.mount_point !== '' ? escapeHtml(part.mount_point) : '<span class="text-muted">—</span>'}</td>
                 <td>${hasFstab ? '<span class="fstab-badge"><i class="fas fa-bookmark"></i> fstab</span>' : '—'}</td>
                 <td class="text-end">${actionBtns}</td>
             </tr>
         `;
     }
     
+    // ========== ИНФОРМАЦИЯ О СВОБОДНОМ МЕСТЕ ==========
     const freeSpaceHtml = freePercent > 0 ? `
         <div class="alert alert-info mt-3" style="font-size: 13px; background: #e7f1ff; border: none;">
             <i class="fas fa-chart-pie"></i> <strong>Disk information:</strong><br>
@@ -1870,10 +1953,12 @@ function renderPhysicalDiskDetails(disk) {
         </div>
     ` : '';
     
+    // ========== ПРЕДУПРЕЖДЕНИЕ ДЛЯ MBR > 2TB ==========
     const mbrWarningHtml = (disk.partition_table_type === 'mbr' && totalSize > 2 * 1024 * 1024 * 1024 * 1024) ? `
         <div class="alert alert-warning mt-2"><i class="fas fa-exclamation-triangle"></i> <strong>Attention!</strong> The disk uses an MBR partition table, but its size exceeds 2 TB. It is recommended to use GPT for disks larger than 2 TB.</div>
     ` : '';
     
+    // ========== ОЧИСТКА И РЕНДЕР ==========
     const panel = document.getElementById('diskDetailsPanel');
     panel.innerHTML = '';
     
@@ -1887,7 +1972,12 @@ function renderPhysicalDiskDetails(disk) {
                 <button class="btn btn-outline-primary btn-sm" onclick="showSmartInfo('${disk.name}')"><i class="fas fa-chart-line"></i> SMART</button>
             </div>
         </div>
-        <div class="disk-map"><div class="partition-visual">${visualHtml}</div><div class="free-space-info mt-2"><small class="text-muted"><i class="fas fa-mouse-pointer"></i> Hover over a section for detailed information | <i class="fas fa-arrows-alt"></i> The width is proportional to the size</small></div></div>
+        ${validPartitions.length > 0 ? `
+        <div class="disk-map">
+            <div class="partition-visual" style="display: flex; flex-wrap: nowrap; width: 100%; overflow: hidden; border-radius: 6px;">${visualHtml || '<div class="text-muted text-center p-3">No partitions</div>'}</div>
+            <div class="free-space-info mt-2"><small class="text-muted"><i class="fas fa-mouse-pointer"></i> Hover over a section for detailed information | <i class="fas fa-arrows-alt"></i> The width is proportional to the size</small></div>
+        </div>
+        ` : ''}
         <div class="disk-toolbar">
             <button class="btn btn-sm btn-primary" onclick="showCreatePartitionModal('${disk.name}')"><i class="fas fa-plus"></i> Create a partition</button>
             <button class="btn btn-sm btn-outline-danger" onclick="showReinitModal('${disk.name}')"><i class="fas fa-table"></i> Recreate table</button>
@@ -2186,6 +2276,7 @@ function renderRaidArrayDetails(raid) {
     document.getElementById('diskDetailsPanel').innerHTML = html;
 }
 
+// ==================== ОПЕРАЦИИ С РАЗДЕЛАМИ ====================
 function showInitModal(diskName) {
     document.getElementById('initDiskName').value = diskName;
     document.getElementById('initDiskNameDisplay').innerText = diskName;
@@ -2266,9 +2357,9 @@ async function executeCreatePartition() {
         let sizeValue = parseFloat(sizeNum);
         
         if (unit === 'MB') {
-            sizeValue = sizeValue / 1024;
+            sizeValue = sizeValue / 1024; // MB -> GB
         } else if (unit === 'TB') {
-            sizeValue = sizeValue * 1024;
+            sizeValue = sizeValue * 1024; // TB -> GB
         }
         
         size = sizeValue.toString();
@@ -2280,8 +2371,9 @@ async function executeCreatePartition() {
     const label = document.getElementById('createLabel').value;
     
     const modal = bootstrap.Modal.getInstance(document.getElementById('createPartitionModal'));
-    modal.hide();
+    if (modal) modal.hide();
     
+    showLoader();
     showProgress(`Creating a partition on ${disk}...`, true);
     
     let fsTypeToSend = null;
@@ -2292,28 +2384,36 @@ async function executeCreatePartition() {
         updateProgressDetails(`Size: ${size === '0' ? 'all space' : size + ' GB'}, no formatting`);
     }
     
-    const res = await apiCall('partition_create', { 
-        disk: disk, 
-        size: size,
-        fs_type: fsTypeToSend, 
-        label: label, 
-        format: format, 
-        quick_format: quickFormat 
-    });
-    
-    hideProgress();
-    
-    if (res.success) {
-        let msg = `Partition created ${res.partition}`;
-        if (format && fs !== 'none') msg += ` and formatted in ${fs}`;
-        else msg += ` (no formatted)`;
-        if (res.format_warning) msg += `. ${res.format_warning}`;
-        showToast(msg, res.format_warning ? 'warning' : 'success');
-        await refreshAll(true);
-        if (res.format_warning) showLogs();
-    } else {
-        showToast(res.error || 'Error creating partition', 'danger');
-        showLogs();
+    try {
+        const res = await apiCall('partition_create', { 
+            disk: disk, 
+            size: size,
+            fs_type: fsTypeToSend, 
+            label: label, 
+            format: format, 
+            quick_format: quickFormat 
+        });
+        
+        hideProgress();
+        hideLoader();
+        
+        if (res.success) {
+            let msg = `Partition created ${res.partition}`;
+            if (format && fs !== 'none') msg += ` and formatted in ${fs}`;
+            else msg += ` (not formatted)`;
+            if (res.format_warning) msg += `. ${res.format_warning}`;
+            showToast(msg, res.format_warning ? 'warning' : 'success');
+            await refreshAll(true);
+            if (res.format_warning) showLogs();
+        } else {
+            showToast(res.error || 'Error creating partition', 'danger');
+            showLogs();
+        }
+    } catch (error) {
+        hideProgress();
+        hideLoader();
+        showToast('Error: ' + error.message, 'danger');
+        console.error('Create partition error:', error);
     }
 }
 
@@ -2420,6 +2520,7 @@ async function executeResize() {
     else { showToast(res.error || 'Resizing error', 'danger'); showLogs(); }
 }
 
+// ==================== МОНТИРОВАНИЕ ====================
 function showMountModal(partitionName) {
     document.getElementById('mountDevice').value = partitionName;
     document.getElementById('mountPoint').value = '/mnt/' + partitionName;
@@ -2516,6 +2617,7 @@ async function executeSmartUmount(removeFromFstab) {
     }
 }
 
+// ==================== LVM И RAID ОПЕРАЦИИ ====================
 function showCreateLvModal(vgName, freeBytes) {
     const freeGb = (freeBytes / 1024 / 1024 / 1024).toFixed(1);
     
@@ -3304,6 +3406,7 @@ async function executeCreateRaidPartition(raidName) {
     }
 }
 
+// ==================== БЕЗОПАСНОЕ ИЗВЛЕЧЕНИЕ ====================
 async function safeRemoveDisk(diskName) {
     if (!confirm(`Safely remove disk ${diskName}\n\nAll partitions will be unmounted, after which the disk can be physically disconnected.\n\nContinue?`)) return;
     showProgress(`Safely remove disk ${diskName}...`, true);
@@ -3314,6 +3417,7 @@ async function safeRemoveDisk(diskName) {
     else { const errors = res.errors ? res.errors.join(', ') : 'Error during extraction'; showToast(errors, 'danger'); }
 }
 
+// ==================== ИНФОРМАЦИЯ SMART И ДИСКОВ ====================
 async function showDiskInfo(diskName) {
     showLoader();
     const res = await apiCall('disk_info', { disk: diskName });
@@ -3350,6 +3454,7 @@ async function showSmartInfo(diskName) {
     } else showToast('Failed to retrieve SMART information', 'danger');
 }
 
+// ==================== ЛОГИ ====================
 async function showLogs() { const modal = new bootstrap.Modal(document.getElementById('logsModal')); modal.show(); await refreshLogs(); }
 async function refreshLogs() {
     const container = document.getElementById('logsContent');
@@ -3360,6 +3465,7 @@ async function refreshLogs() {
 }
 async function clearLogs() { if (!confirm('Clear all logs?')) return; const res = await apiCall('clear_logs'); if (res.success) { showToast('Logs cleared', 'success'); refreshLogs(); } }
 
+// ==================== FSTAB ====================
 async function viewFstab() {
     showLoader();
     const res = await apiCall('get_fstab');
@@ -3410,6 +3516,7 @@ async function mountAllFstab() {
 
 async function refreshFstab() { const modal = bootstrap.Modal.getInstance(document.getElementById('fstabModal')); if (modal) { modal.hide(); setTimeout(() => viewFstab(), 200); } else viewFstab(); }
 
+// ==================== PARTED CONSOLE ====================
 function openPartedConsole() { const modal = new bootstrap.Modal(document.getElementById('partedModal')); modal.show(); document.getElementById('partedConnectPanel').style.display = 'block'; document.getElementById('partedConsolePanel').style.display = 'none'; document.getElementById('partedConnectError').style.display = 'none'; }
 async function connectPartedConsole() {
     showLoader();
@@ -3469,6 +3576,7 @@ function appendToShell(text, type) {
     shellOutputElement.scrollTop = shellOutputElement.scrollHeight;
 }
 
+// ==================== КОНТЕКСТНОЕ МЕНЮ ====================
 function showPartitionContextMenu(event, diskName, partitionName, fsType, isMounted, hasFilesystem) {
     event.preventDefault(); event.stopPropagation();
     if (contextMenu) contextMenu.remove();
@@ -3490,6 +3598,7 @@ function showPartitionContextMenu(event, diskName, partitionName, fsType, isMoun
 }
 function closeContextMenu() { if (contextMenu) { contextMenu.remove(); contextMenu = null; } }
 
+// ==================== АВТООБНОВЛЕНИЕ ====================
 function startAutoRefresh() { if (refreshInterval) clearInterval(refreshInterval); refreshInterval = setInterval(() => refreshAll(false), 5000); }
 refreshAll(true);
 startAutoRefresh();
