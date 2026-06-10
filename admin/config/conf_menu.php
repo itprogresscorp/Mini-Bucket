@@ -25,10 +25,10 @@ return [
         'title' => 'Panel',
         'icon' => 'fas fa-home',
         'items' => [
-            ['title' => 'Dashboard', 'url' => 'index.php', 'icon' => 'fas fa-tachometer-alt'],
-            ['title' => 'File Manager', 'url' => 'files.php', 'icon' => 'fas fa-folder-open'],
-			['title' => 'Mount Manager', 'url' => 'mount_master.php', 'icon' => 'fas fa-eject'],
-			['title' => 'Hosts Manager', 'url' => 'hosts_manager.php', 'icon' => 'fas fa-cubes'],
+            ['title' => 'Dashboard', 'url' => '/index.php', 'icon' => 'fas fa-tachometer-alt'],
+            ['title' => 'File Manager', 'url' => '/files.php', 'icon' => 'fas fa-folder-open'],
+			['title' => 'Mount Manager', 'url' => '/mount_master.php', 'icon' => 'fas fa-eject'],
+			['title' => 'Hosts Manager', 'url' => '/hosts_manager.php', 'icon' => 'fas fa-cubes'],
         ]
     ],
     
@@ -36,9 +36,9 @@ return [
         'title' => 'Storage',
         'icon' => 'fas fa-database',
         'items' => [
-            ['title' => 'Disk Manager', 'url' => 'disk_manager.php', 'icon' => 'fas fa-hdd'],
-			['title' => 'RAID Manager', 'url' => 'raid_manager.php', 'icon' => 'fas fa-server'],
-            ['title' => 'LVM Manager', 'url' => 'lvm_manager.php', 'icon' => 'fas fa-layer-group'],
+            ['title' => 'Disk Manager', 'url' => '/disk_manager.php', 'icon' => 'fas fa-hdd'],
+			['title' => 'RAID Manager', 'url' => '/raid_manager.php', 'icon' => 'fas fa-server'],
+            ['title' => 'LVM Manager', 'url' => '/lvm_manager.php', 'icon' => 'fas fa-layer-group'],
         ]
     ],
     
@@ -46,10 +46,10 @@ return [
         'title' => 'Resources',
         'icon' => 'fas fa-network-wired',
         'items' => [
-            ['title' => 'SMB Shares', 'url' => 'shares_smb.php', 'icon' => 'fab fa-windows'],
-            ['title' => 'NFS Shares', 'url' => 'shares_nfs.php', 'icon' => 'fab fa-linux'],
-            ['title' => 'FTP Server', 'url' => 'ftp.php', 'icon' => 'fas fa-cloud-upload-alt'],
-            ['title' => 'Rsync', 'url' => 'rsync.php', 'icon' => 'fas fa-sync-alt'],
+            ['title' => 'SMB Shares', 'url' => '/shares_smb.php', 'icon' => 'fab fa-windows'],
+            ['title' => 'NFS Shares', 'url' => '/shares_nfs.php', 'icon' => 'fab fa-linux'],
+            ['title' => 'FTP Server', 'url' => '/ftp.php', 'icon' => 'fas fa-cloud-upload-alt'],
+            ['title' => 'Rsync', 'url' => '/rsync.php', 'icon' => 'fas fa-sync-alt'],
         ]
     ],
     
@@ -57,7 +57,7 @@ return [
         'title' => 'Users',
         'icon' => 'fas fa-users',
         'items' => [
-            ['title' => 'Users', 'url' => 'users.php', 'icon' => 'fas fa-user-friends'],
+            ['title' => 'Users', 'url' => '/users.php', 'icon' => 'fas fa-user-friends'],
             
         ]
     ],
@@ -66,8 +66,8 @@ return [
         'title' => 'Security',
         'icon' => 'fas fa-shield',
         'items' => [
-			['title' => 'SSL Manager', 'url' => 'ssl_manager.php', 'icon' => 'fa fa-certificate'],
-			['title' => 'FireWall', 'url' => 'firewall.php', 'icon' => 'fa fa-exchange'],
+			['title' => 'SSL Manager', 'url' => '/ssl_manager.php', 'icon' => 'fa fa-certificate'],
+			['title' => 'FireWall', 'url' => '/firewall.php', 'icon' => 'fa fa-exchange'],
         ]
     ],
 	
@@ -75,8 +75,8 @@ return [
         'title' => 'Tools',
         'icon' => 'fas fa-tools',
         'items' => [
-			['title' => 'Diagnose', 'url' => 'diagnose.php', 'icon' => 'fa fa-bar-chart'],
-			['title' => 'Health Monitor', 'url' => 'health_monitor.php', 'icon' => 'fa fa-heartbeat'],
+			['title' => 'Diagnose', 'url' => '/diagnose.php', 'icon' => 'fa fa-bar-chart'],
+			['title' => 'Health Monitor', 'url' => '/health_monitor.php', 'icon' => 'fa fa-heartbeat'],
         ]
     ],
 	
@@ -84,11 +84,12 @@ return [
         'title' => 'System',
         'icon' => 'fas fa-cog',
         'items' => [
-            ['title' => 'System Settings', 'url' => 'system.php', 'icon' => 'fas fa-sliders-h'],
-			['title' => 'Mini-B Settings', 'url' => 'minib_settings.php', 'icon' => 'fas fa-bucket'],
-			['title' => 'Update', 'url' => 'update_manager.php', 'icon' => 'fa fa-download'],
-			['title' => 'Cron Jobs', 'url' => 'cron.php', 'icon' => 'fas fa-clock'],
-			['title' => 'Console', 'url' => 'console.php', 'icon' => 'fas fa-terminal'],
+            ['title' => 'System Settings', 'url' => '/system.php', 'icon' => 'fas fa-sliders-h'],
+			['title' => 'Mini-B Settings', 'url' => '/minib_settings.php', 'icon' => 'fas fa-bucket'],
+			['title' => 'Plugins', 'url' => '/plugins.php', 'icon' => 'fas fa-puzzle-piece'],
+			['title' => 'Update', 'url' => '/update_manager.php', 'icon' => 'fa fa-download'],
+			['title' => 'Cron Jobs', 'url' => '/cron.php', 'icon' => 'fas fa-clock'],
+			['title' => 'Console', 'url' => '/console.php', 'icon' => 'fas fa-terminal'],
         ]
     ]
 ];

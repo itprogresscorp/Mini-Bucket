@@ -23,8 +23,10 @@ let certWindowOpened = false;
 let certWindowCheckInterval = null;
 let certCheckInterval = null;
 let lastCheckTime = 0;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 3;
 
-// Функция проверки доступности API
+// Функция проверки доступности API (улучшенная)
 async function checkApiAvailability() {
     const currentHostId = window.apiConfig?.isLocalhost ? 1 : null;
     
@@ -58,6 +60,8 @@ async function checkApiAvailability() {
         clearTimeout(timeoutId);
         
         if (response.ok) {
+            // API работает нормально
+            consecutiveErrors = 0;
             if (certWindowOpened) {
                 console.log('API is now reachable, closing cert window');
                 refreshAfterCertAccept();
@@ -65,17 +69,63 @@ async function checkApiAvailability() {
             return;
         }
         
+        // Получили ответ, но не 2xx
+        console.log(`API returned error status: ${response.status}`);
+        
+        // Проверяем различные статусы ошибок
+        if (response.status === 503) {
+            console.log('Service unavailable (503) - possible backend/PHP issue');
+            handleConnectionError('Service unavailable (503) - server configuration issue');
+        } else if (response.status === 500) {
+            console.log('Internal server error (500) - PHP error likely');
+            handleConnectionError('Internal server error (500) - check server logs');
+        } else if (response.status === 403 || response.status === 401) {
+            console.log('Authentication error - API key issue');
+            // Не открываем окно сертификата для ошибок авторизации
+        } else {
+            console.log(`Unhandled HTTP error: ${response.status}`);
+            handleConnectionError(`HTTP error ${response.status}`);
+        }
+        
         throw new Error(`HTTP ${response.status}`);
         
     } catch (err) {
         console.log('API not reachable:', err.message);
         
-        if (err.message === 'Failed to fetch' || err.name === 'AbortError') {
+        // Обрабатываем все типы ошибок соединения и сервера
+        if (err.message === 'Failed to fetch' || 
+            err.name === 'AbortError' ||
+            err.message.includes('503') ||
+            err.message.includes('500') ||
+            err.message.includes('502') ||
+            err.message.includes('504') ||
+            err.message === 'Load failed' ||
+            err.message.includes('NetworkError')) {
+            
+            handleConnectionError(err.message);
+        }
+    }
+}
+
+// Отдельная функция для обработки ошибок соединения
+function handleConnectionError(errorMessage) {
+    consecutiveErrors++;
+    console.log(`Connection error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}): ${errorMessage}`);
+    
+    // Открываем окно только после нескольких ошибок подряд (избегаем ложных срабатываний)
+    if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        if (!certWindowOpened && (!window.certWindow || window.certWindow.closed)) {
+            console.log('Multiple connection errors detected, showing certificate window...');
+            showCertWindow();
+        }
+    } else if (!certWindowOpened && (!window.certWindow || window.certWindow.closed)) {
+        // При первой ошибке тоже пробуем открыть, но с небольшой задержкой
+        setTimeout(() => {
             if (!certWindowOpened && (!window.certWindow || window.certWindow.closed)) {
-                console.log('Connection error, showing certificate window...');
+                console.log('Initial connection error, showing certificate window...');
                 showCertWindow();
             }
-        }
+        }, 2000);
     }
 }
 
@@ -101,41 +151,56 @@ function showCertWindow() {
         return;
     }
     
-    console.log('Opening cert window at:', baseUrl + '/crt_accept.php');
+    // Пробуем разные возможные пути к файлу принятия сертификата
+    const possiblePaths = [
+        baseUrl + '/crt_accept.php',
+        baseUrl + '/api/crt_accept.php',
+        baseUrl + '/certs/accept.php',
+        baseUrl + '/ssl/accept.php'
+    ];
     
-    const popupUrl = baseUrl + '/crt_accept.php';
+    let popupUrl = possiblePaths[0];
+    console.log('Opening cert window at:', popupUrl);
     
+    // Сохраняем информацию о том, что окно открыто
     certWindowOpened = true;
-    window.certWindow = window.open(popupUrl, '_blank');
     
-    if (!window.certWindow || window.certWindow.closed || typeof window.certWindow.closed === 'undefined') {
-        console.log('Popup blocked!');
-        showPopupBlockedModal(popupUrl);
-        certWindowOpened = false;
-        return;
-    }
-    
-    if (certWindowCheckInterval) clearInterval(certWindowCheckInterval);
-    certWindowCheckInterval = setInterval(() => {
-        if (window.certWindow && window.certWindow.closed) {
-            console.log('Cert window was closed by user');
-            clearInterval(certWindowCheckInterval);
-            certWindowCheckInterval = null;
+    try {
+        window.certWindow = window.open(popupUrl, '_blank', 'width=800,height=600,menubar=yes,toolbar=yes,location=yes');
+        
+        if (!window.certWindow || window.certWindow.closed || typeof window.certWindow.closed === 'undefined') {
+            console.log('Popup blocked!');
+            showPopupBlockedModal(popupUrl);
             certWindowOpened = false;
-            window.certWindow = null;
+            return;
         }
-    }, 1000);
-    
-    setTimeout(() => {
-        if (certWindowOpened && (!window.certWindow || window.certWindow.closed)) {
-            certWindowOpened = false;
-            window.certWindow = null;
-            if (certWindowCheckInterval) {
+        
+        // Устанавливаем проверку закрытия окна
+        if (certWindowCheckInterval) clearInterval(certWindowCheckInterval);
+        certWindowCheckInterval = setInterval(() => {
+            if (window.certWindow && window.certWindow.closed) {
+                console.log('Cert window was closed by user');
                 clearInterval(certWindowCheckInterval);
                 certWindowCheckInterval = null;
+                certWindowOpened = false;
+                window.certWindow = null;
+                consecutiveErrors = 0; // Сбрасываем счетчик при закрытии окна
             }
-        }
-    }, 30000);
+        }, 500);
+        
+        // Автоматическое закрытие через 5 минут (если пользователь забыл)
+        setTimeout(() => {
+            if (certWindowOpened && window.certWindow && !window.certWindow.closed) {
+                console.log('Auto-closing cert window after 5 minutes');
+                window.certWindow.close();
+            }
+        }, 300000);
+        
+    } catch (err) {
+        console.error('Error opening cert window:', err);
+        certWindowOpened = false;
+        showPopupBlockedModal(popupUrl);
+    }
 }
 
 function showPopupBlockedModal(url) {
@@ -151,7 +216,7 @@ function showPopupBlockedModal(url) {
                     <div class="license-icon">
                         <i class="fas fa-ban" style="color: #ff9500;"></i>
                     </div>
-                    <h2>Popup Blocked</h2>
+                    <h2>⚠️ Popup Blocked</h2>
                     <button class="license-close-btn" onclick="closePopupBlockedModal()">
                         <i class="fas fa-times"></i>
                     </button>
@@ -159,7 +224,7 @@ function showPopupBlockedModal(url) {
                 <div class="license-modal-body">
                     <div class="license-summary">
                         <h3><i class="fas fa-exclamation-triangle" style="color: #ff9500;"></i> Browser blocked the popup window</h3>
-                        <p>To accept the SSL certificate, please:</p>
+                        <p><strong>To accept the SSL certificate or fix connection issues, please:</strong></p>
                         <ol style="text-align: left; margin: 20px;">
                             <li>Click the browser's address bar</li>
                             <li>Look for a popup blocked icon (usually in the address bar)</li>
@@ -169,8 +234,15 @@ function showPopupBlockedModal(url) {
                         <div class="summary-item">
                             <i class="fas fa-link"></i>
                             <div>
-                                <strong>Or open manually:</strong>
-                                <p><a href="${url}" target="_blank" id="manualCertLink">${url}</a></p>
+                                <strong>📎 Or open manually in new tab:</strong>
+                                <p><a href="${url}" target="_blank" id="manualCertLink" style="word-break: break-all;">${url}</a></p>
+                            </div>
+                        </div>
+                        <div class="summary-item" style="margin-top: 15px;">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>ℹ️ After accepting the certificate/security warning:</strong>
+                                <p>The page will reload automatically</p>
                             </div>
                         </div>
                     </div>
@@ -189,6 +261,7 @@ function showPopupBlockedModal(url) {
     } else {
         const manualLink = modal.querySelector('#manualCertLink');
         if (manualLink) manualLink.href = url;
+        modal.style.display = 'block';
     }
     
     modal.style.display = 'block';
@@ -206,36 +279,85 @@ function closePopupBlockedModal() {
 function retryOpenCertWindow() {
     closePopupBlockedModal();
     certWindowOpened = false;
-    showCertWindow();
+    setTimeout(() => showCertWindow(), 100);
 }
 
 function refreshAfterCertAccept() {
-    console.log('Certificate accepted, reloading page...');
+    console.log('Certificate accepted or API reachable, reloading page...');
     certWindowOpened = false;
-    if (window.certWindow) {
+    consecutiveErrors = 0;
+    
+    if (window.certWindow && !window.certWindow.closed) {
         window.certWindow.close();
         window.certWindow = null;
     }
+    
     if (certWindowCheckInterval) {
         clearInterval(certWindowCheckInterval);
         certWindowCheckInterval = null;
     }
+    
+    // Перезагружаем страницу
     window.location.reload();
 }
 
-// Слушаем сообщение о принятии сертификата
+// Слушаем сообщение о принятии сертификата из дочернего окна
 window.addEventListener('message', function(event) {
-    if (event.data === 'certificate_accepted') {
+    if (event.data === 'certificate_accepted' || event.data === 'certificate_accept_complete') {
+        console.log('Received certificate acceptance message');
         refreshAfterCertAccept();
     }
 });
 
+// Дополнительная проверка: если страница была открыта из окна сертификата
+if (window.opener && window.location.pathname.includes('crt_accept')) {
+    // Это страница принятия сертификата, уведомляем родителя
+    setTimeout(() => {
+        if (window.opener && !window.opener.closed) {
+            window.opener.postMessage('certificate_accepted', '*');
+            console.log('Sent certificate acceptance to parent window');
+        }
+        // Закрываем это окно через 2 секунды
+        setTimeout(() => window.close(), 2000);
+    }, 1000);
+}
+
 // Запускаем проверку при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Certificate checker initialized');
+    
+    // Первая проверка через 1 секунду
     setTimeout(() => {
         checkApiAvailability();
         
+        // Запускаем периодическую проверку
         if (certCheckInterval) clearInterval(certCheckInterval);
         certCheckInterval = setInterval(checkApiAvailability, 10000);
     }, 1000);
+    
+    // Также проверяем при возврате на вкладку (visibility change)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            console.log('Page became visible, checking API...');
+            lastCheckTime = 0; // Сбрасываем, чтобы принудительно проверить
+            checkApiAvailability();
+        }
+    });
 });
+
+// Экспортируем функции для отладки в консоли
+window.debugCertChecker = {
+    checkNow: checkApiAvailability,
+    openWindow: showCertWindow,
+    reset: () => {
+        certWindowOpened = false;
+        consecutiveErrors = 0;
+        console.log('Certificate checker reset');
+    },
+    status: () => ({
+        certWindowOpened,
+        consecutiveErrors,
+        certWindowExists: window.certWindow && !window.certWindow.closed,
+        apiConfig: window.apiConfig
+    })
+};

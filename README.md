@@ -1,6 +1,9 @@
-# 🪣 Mini Bucket — NAS Control Panel
+# Mini Bucket — NAS Control Panel
 
-**Version 3.6.2**
+![Image alt](https://github.com/itprogresscorp/Mini-Bucket/blob/main/screenshots/wall.png)
+
+
+**Version 3.6.4**
 
 A resource-efficient web-based NAS control panel for any hardware.  
 `Debian 9` | `PHP 7.0` | `SQLite` | `Standard Linux Utilities`
@@ -95,6 +98,39 @@ It works only with built-in PHP 7.0, HTML, JavaScript, and standard Linux utilit
 ### 🔍 11. System Checker
 - **Check All / Fix All** buttons
 - Categories: packages, services, permissions, config, firewall, network
+
+---
+
+🔌 12. Plugin System (NEW in 3.6.4)
+Mini Bucket now supports plugins — extend the panel with your own functionality!
+
+What plugins can do:
+
+Run on local host (where Mini-B is installed)
+
+Run on remote hosts via API
+
+Auto-install from main server repository to remote hosts
+
+Have their own SQLite database
+
+Use system APIs and authentication
+
+First plugins available:
+
+📋 Log Manager — view, search, and manage system logs without SSH. Live mode, export, log clearing, file browser.
+
+🧩 Plugin Template — starter template for developers. Ready structure, auth, DB examples, API integration.
+
+Resources for developers:
+
+📚 Plugin Development Documentation - https://mini-bucket.ru/wiki/knowledge-base/dev-pugins/plugin-development/
+
+🗣 Forum for plugin discussions - https://mini-bucket.ru/community/community/plugins/
+
+📦 All available plugins - https://mini-bucket.ru/plugins/
+
+Install plugins via: System → Plugins → Repository → Install
 
 ---
 

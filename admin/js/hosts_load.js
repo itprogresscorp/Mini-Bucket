@@ -21,8 +21,9 @@
 
 async function loadHostsList() {
     try {
-        const response = await fetch('api/host_selector.php?action=get_hosts');
-        const data = await response.json();
+        //const response = await fetch('api/host_selector.php?action=get_hosts');
+        const response = await fetch(window.location.origin + '/api/host_selector.php?action=get_hosts');
+		const data = await response.json();
         
         if (data.success && data.hosts) {
             const selector = document.getElementById('hostSelector');
@@ -54,7 +55,7 @@ async function loadHostsList() {
                 formData.append('host_id', hostId);
                 
                 try {
-                    const response = await fetch('api/host_selector.php', {
+                    const response = await fetch(window.location.origin + '/api/host_selector.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: formData

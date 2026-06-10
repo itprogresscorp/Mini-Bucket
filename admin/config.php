@@ -91,7 +91,7 @@ class SafeSQLite3 extends SQLite3 {
 
 function isAuthenticated() {
     if (!isset($_SESSION['user_id'])) {
-        header('Location: login.php');
+        header('Location: /login.php');
         exit;
     }
 }
@@ -116,8 +116,8 @@ function getBaseDir() {
     return $baseDir;
 }
 
-$version = "3.6.2";
-$status_install = "0";
+$version = "3.6.4";
+$status_install = "1";
 $type_pro = "Master";
 
 /*function getMountedDrives() {
