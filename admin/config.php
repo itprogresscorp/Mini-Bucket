@@ -117,7 +117,7 @@ function getBaseDir() {
 }
 
 $version = "3.6.4";
-$status_install = "1";
+$status_install = "0";
 $type_pro = "Master";
 
 /*function getMountedDrives() {
