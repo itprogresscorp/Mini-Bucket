@@ -116,11 +116,7 @@ function getBaseDir() {
     return $baseDir;
 }
 
-<<<<<<< HEAD
-$version = "3.6.4";
-=======
 $version = "3.6.6";
->>>>>>> 6661852 (New version: 3.6.6)
 $status_install = "0";
 $type_pro = "Master";
 $set_lang = "En";
