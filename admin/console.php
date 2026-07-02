@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -83,9 +84,25 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	// Конфигурация API из PHP
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
 	
@@ -272,14 +289,14 @@ $menu = require_once 'menu.php';
             <text><i class="fas fa-terminal"></i> Console</text>
 			<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
 			<span id="connectionStatus" class="connection-status status-disconnected">
-                    <span class="status-dot disconnected"></span> Disconnected
+                    <span class="status-dot disconnected"></span> <?php echo $lang4372; ?>
                 </span>
 				<button class="btn btn-outline-secondary btn-sm ms-2" onclick="clearConsole()">
-                    <i class="fas fa-eraser"></i> Clear
+                    <i class="fas fa-eraser"></i> <?php echo $lang4373; ?>
                 </button>
 	</div>
 </div>
@@ -293,23 +310,23 @@ $menu = require_once 'menu.php';
                 <div class="console-line info">═══════════════════════════════════════════════════════════</div>
                 <div class="console-line success"><i class="fas fa-check-circle"></i> SSH Console v2.0 (stable version)</div>
                 <div class="console-line info">═══════════════════════════════════════════════════════════</div>
-                <div class="console-line info"><i class="fas fa-hand-pointer"></i> Click the "Connect" button to start</div>
-                <div class="console-line info"><i class="fas fa-terminal"></i> After connecting, you can enter any commands</div>
-                <div class="console-line info"><i class="fas fa-sign-out-alt"></i> To exit, type 'exit' or click the "Exit" button</div>
+                <div class="console-line info"><i class="fas fa-hand-pointer"></i> <?php echo $lang4374; ?></div>
+                <div class="console-line info"><i class="fas fa-terminal"></i> <?php echo $lang4375; ?></div>
+                <div class="console-line info"><i class="fas fa-sign-out-alt"></i> <?php echo $lang4376; ?></div>
                 <div class="console-line info">═══════════════════════════════════════════════════════════</div>
             </div>
             <div class="console-input-line">
                 <span class="console-prompt" id="consolePrompt">$</span>
-                <input type="text" class="console-input" id="consoleInput" placeholder="Enter command..." disabled>
+                <input type="text" class="console-input" id="consoleInput" placeholder="<?php echo $lang4377; ?>" disabled>
                 <button class="btn btn-sm btn-console" id="connectBtn" onclick="connectConsole()">
-                    <i class="fas fa-plug"></i> Connect
+                    <i class="fas fa-plug"></i> <?php echo $lang4378; ?>
                 </button>
                 <button class="btn btn-sm btn-console-exit" id="exitBtn" onclick="closeConsole()" style="display: none;">
-                    <i class="fas fa-power-off"></i> Exit
+                    <i class="fas fa-power-off"></i> <?php echo $lang4379; ?>
                 </button>
             </div>
             <div class="command-hint">
-                <i class="fas fa-info-circle"></i> Available commands: ls, cd, pwd, cat, grep, ps, df, du, free, top, htop, systemctl, journalctl, apt, wget, curl, and any others
+                <i class="fas fa-info-circle"></i> <?php echo $lang4380; ?> ls, cd, pwd, cat, grep, ps, df, du, free, top, htop, systemctl, journalctl, apt, wget, curl, and any others
             </div>
         </div>
     </main>
@@ -434,30 +451,30 @@ async function connectConsole() {
         document.getElementById('consoleInput').focus();
         
         document.getElementById('connectionStatus').className = 'connection-status status-connected';
-        document.getElementById('connectionStatus').innerHTML = '<span class="status-dot connected"></span> Connected';
+        document.getElementById('connectionStatus').innerHTML = '<span class="status-dot connected"></span> <?php echo $lang4381; ?>';
         
         appendToConsole('═══════════════════════════════════════════════════════════', 'info');
-        appendToConsole('<i class="fas fa-check-circle"></i> Connection established', 'success');
-        appendToConsole(`<i class="fas fa-id-card"></i> Session ID: ${currentSession.substring(0, 20)}...`, 'info');
+        appendToConsole('<i class="fas fa-check-circle"></i> <?php echo $lang4382; ?>', 'success');
+        appendToConsole(`<i class="fas fa-id-card"></i> <?php echo $lang4383; ?> ${currentSession.substring(0, 20)}...`, 'info');
         
         if (res.output) {
             appendToConsole(res.output, 'output');
         }
         
         appendToConsole('═══════════════════════════════════════════════════════════', 'info');
-        appendToConsole('<i class="fas fa-rocket"></i> Ready to work. Enter commands:', 'success');
+        appendToConsole('<i class="fas fa-rocket"></i> <?php echo $lang4384; ?>', 'success');
         
         document.getElementById('consolePrompt').innerHTML = '<span style="color:#4ec9b0">root@localhost</span>:<span style="color:#9cdcfe">~</span>#';
         
     } else {
-        appendToConsole(`<i class="fas fa-times-circle"></i> Error: ${res.error}`, 'error');
+        appendToConsole(`<i class="fas fa-times-circle"></i> <?php echo $lang4385; ?> ${res.error}`, 'error');
         showToast(res.error, 'danger');
     }
 }
 
 async function sendCommand() {
     if (!currentSession) {
-        appendToConsole('<i class="fas fa-times-circle"></i> No active session. Click "Connect"', 'error');
+        appendToConsole('<i class="fas fa-times-circle"></i> <?php echo $lang4386; ?>', 'error');
         return;
     }
     
@@ -473,7 +490,7 @@ async function sendCommand() {
     
     // Check for exit
     if (command.toLowerCase() === 'exit' || command.toLowerCase() === 'logout') {
-        appendToConsole('Ending session...', 'warning');
+        appendToConsole('<?php echo $lang4387; ?>', 'warning');
         await closeConsole();
         return;
     }
@@ -493,11 +510,11 @@ async function sendCommand() {
         }
         
         if (res.is_exited) {
-            appendToConsole('Session ended. Closing console...', 'warning');
+            appendToConsole('<?php echo $lang4388; ?>', 'warning');
             await closeConsole();
         }
     } else {
-        appendToConsole(`<i class="fas fa-times-circle"></i> Error: ${res.error}`, 'error');
+        appendToConsole(`<i class="fas fa-times-circle"></i> <?php echo $lang4389; ?> ${res.error}`, 'error');
     }
     
     consoleInput.focus();
@@ -517,12 +534,12 @@ async function closeConsole() {
     document.getElementById('consoleInput').value = '';
     
     document.getElementById('connectionStatus').className = 'connection-status status-disconnected';
-    document.getElementById('connectionStatus').innerHTML = '<span class="status-dot disconnected"></span> Disconnected';
+    document.getElementById('connectionStatus').innerHTML = '<span class="status-dot disconnected"></span> <?php echo $lang4390; ?>';
     document.getElementById('consolePrompt').innerHTML = '$';
     
     appendToConsole('═══════════════════════════════════════════════════════════', 'info');
-    appendToConsole('<i class="fas fa-plug"></i> Session closed', 'warning');
-    appendToConsole('<i class="fas fa-hand-pointer"></i> Click "Connect" for a new session', 'info');
+    appendToConsole('<i class="fas fa-plug"></i> <?php echo $lang4391; ?>', 'warning');
+    appendToConsole('<i class="fas fa-hand-pointer"></i> <?php echo $lang4392; ?>', 'info');
     appendToConsole('═══════════════════════════════════════════════════════════', 'info');
 }
 
@@ -530,11 +547,11 @@ function clearConsole() {
     if (confirm('Clear console output?')) {
         consoleOutput.innerHTML = '';
         appendToConsole('═══════════════════════════════════════════════════════════', 'info');
-        appendToConsole('<i class="fas fa-broom"></i> Output cleared', 'success');
+        appendToConsole('<i class="fas fa-broom"></i> <?php echo $lang4393; ?>', 'success');
         if (currentSession) {
-            appendToConsole('<i class="fas fa-check-circle"></i> Session active. Continue working.', 'info');
+            appendToConsole('<i class="fas fa-check-circle"></i> <?php echo $lang4394; ?>', 'info');
         } else {
-            appendToConsole('<i class="fas fa-hand-pointer"></i> Click "Connect" to start working', 'info');
+            appendToConsole('<i class="fas fa-hand-pointer"></i> <?php echo $lang4395; ?>', 'info');
         }
         appendToConsole('═══════════════════════════════════════════════════════════', 'info');
     }
@@ -557,7 +574,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (commandHistory.length > 0 && historyIndex > 0) {
                 historyIndex--;
                 consoleInput.value = commandHistory[historyIndex];
-                // Курсор в конец
                 setTimeout(() => {
                     consoleInput.selectionStart = consoleInput.selectionEnd = consoleInput.value.length;
                 }, 0);

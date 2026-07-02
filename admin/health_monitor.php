@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $menu = require_once 'menu.php';
 
@@ -222,6 +223,7 @@ $js_config = [
     'apiKey' => $api_key,
     'isLocalhost' => ($current_host_id == 1)
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -237,8 +239,24 @@ $js_config = [
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         :root {
@@ -513,11 +531,11 @@ $js_config = [
 	<i class="fas fa-heartbeat"></i> Health Monitor
         <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <button class="btn btn-primary btn-sm" onclick="runAllChecks()">
-            <i class="fas fa-play"></i> Run All
+            <i class="fas fa-play"></i> <?php echo $lang3493; ?>
         </button>
         <div class="btn-group">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
@@ -525,17 +543,17 @@ $js_config = [
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#notificationsModal">
-                    <i class="fas fa-bell"></i> Notification Rules</a>
+                    <i class="fas fa-bell me-2"></i><?php echo $lang3494; ?></a>
                 </li>
                 <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#emailModal">
-                    <i class="fas fa-envelope"></i> Email / SMTP</a>
+                    <i class="fas fa-envelope me-2"></i><?php echo $lang3495; ?></a>
                 </li>
                 <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#webhookModal">
-                    <i class="fas fa-globe"></i> Webhook</a>
+                    <i class="fas fa-globe me-2"></i><?php echo $lang3496; ?></a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                    <i class="fas fa-calendar-alt"></i> Schedules & History</a>
+                    <i class="fas fa-calendar-alt me-2"></i><?php echo $lang3497; ?></a>
                 </li>
             </ul>
         </div>
@@ -550,25 +568,25 @@ $js_config = [
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
                     <div class="stat-value" id="statTotalChecks">0</div>
-                    <div class="stat-label">Total Checks</div>
+                    <div class="stat-label"><?php echo $lang3498; ?></div>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
                     <div class="stat-value text-danger" id="statProblems">0</div>
-                    <div class="stat-label">Problems Found</div>
+                    <div class="stat-label"><?php echo $lang3499; ?></div>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
                     <div class="stat-value" id="statWarnings">0</div>
-                    <div class="stat-label">Warnings</div>
+                    <div class="stat-label"><?php echo $lang3500; ?></div>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
                     <div class="stat-value" id="statOk">0</div>
-                    <div class="stat-label">Healthy</div>
+                    <div class="stat-label"><?php echo $lang3501; ?></div>
                 </div>
             </div>
         </div>
@@ -576,16 +594,16 @@ $js_config = [
         <!-- Notifications -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
+                <h3><i class="fas fa-bell"></i> <?php echo $lang3502; ?></h3>
                 <i class="fas fa-chevron-down toggle-icon"></i>
             </div>
             <div class="check-body">
                 <div id="notificationsList" style="max-height: 300px; overflow-y: auto;">
-                    <div class="text-center text-muted py-4">Loading...</div>
+                    <div class="text-center text-muted py-4"><?php echo $lang3503; ?></div>
                 </div>
                 <div class="mt-3 text-end">
-                    <button class="btn btn-sm btn-link" onclick="markAllRead()">Mark all as read</button>
-                    <button class="btn btn-sm btn-link text-danger" onclick="clearAllNotifications()">Clear all</button>
+                    <button class="btn btn-sm btn-link" onclick="markAllRead()"><?php echo $lang3504; ?></button>
+                    <button class="btn btn-sm btn-link text-danger" onclick="clearAllNotifications()"><?php echo $lang3505; ?></button>
                 </div>
             </div>
         </div>
@@ -593,10 +611,10 @@ $js_config = [
         <!-- Disks & SMART -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-hdd"></i> Disks & SMART</h3>
+                <h3><i class="fas fa-hdd"></i> <?php echo $lang3506; ?></h3>
                 <div class="header-buttons">
                     <button class="btn btn-sm btn-primary" onclick="runCheck('disks')" style="margin-right: 12px;">
-                        <i class="fas fa-sync-alt"></i> Check Now
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3507; ?>
                     </button>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
@@ -609,10 +627,10 @@ $js_config = [
         <!-- RAID Arrays -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-shield-alt"></i> RAID Arrays</h3>
+                <h3><i class="fas fa-shield-alt"></i> <?php echo $lang3508; ?></h3>
                 <div class="header-buttons">
                     <button class="btn btn-sm btn-primary" onclick="runCheck('raid')" style="margin-right: 12px;">
-                        <i class="fas fa-sync-alt"></i> Check Now
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3509; ?>
                     </button>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
@@ -625,10 +643,10 @@ $js_config = [
         <!-- LVM -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-cubes"></i> LVM Volumes</h3>
+                <h3><i class="fas fa-cubes"></i> <?php echo $lang3510; ?></h3>
                 <div class="header-buttons">
                     <button class="btn btn-sm btn-primary" onclick="runCheck('lvm')" style="margin-right: 12px;">
-                        <i class="fas fa-sync-alt"></i> Check Now
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3511; ?>
                     </button>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
@@ -641,10 +659,10 @@ $js_config = [
         <!-- Temperatures -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-thermometer-half"></i> Temperatures</h3>
+                <h3><i class="fas fa-thermometer-half"></i> <?php echo $lang3512; ?></h3>
                 <div class="header-buttons">
                     <button class="btn btn-sm btn-primary" onclick="runCheck('temperature')" style="margin-right: 12px;">
-                        <i class="fas fa-sync-alt"></i> Check Now
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3513; ?>
                     </button>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
@@ -657,10 +675,10 @@ $js_config = [
         <!-- Network Shares -->
         <div class="check-card">
             <div class="check-header" onclick="toggleSection(this)">
-                <h3><i class="fas fa-share-alt"></i> Network Shares</h3>
+                <h3><i class="fas fa-share-alt"></i> <?php echo $lang3514; ?></h3>
                 <div class="header-buttons">
                     <button class="btn btn-sm btn-primary" onclick="runCheck('shares')" style="margin-right: 12px;">
-                        <i class="fas fa-sync-alt"></i> Check Now
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3515; ?>
                     </button>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
@@ -677,23 +695,23 @@ $js_config = [
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-bell"></i> Notification Rules</h5>
+                <h5 class="modal-title"><i class="fas fa-bell"></i> <?php echo $lang3516; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- General Settings -->
                 <div class="settings-group">
-                    <h4><i class="fas fa-sliders-h"></i> General Settings</h4>
+                    <h4><i class="fas fa-sliders-h"></i> <?php echo $lang3517; ?></h4>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Notification cooldown (minutes)</label>
+                            <label class="form-label"><?php echo $lang3518; ?></label>
                             <input type="number" class="form-control" id="setting_notification_cooldown_minutes" value="60" min="5" max="1440">
-                            <small class="text-muted">Minimum time between same-type notifications</small>
+                            <small class="text-muted"><?php echo $lang3519; ?></small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <div class="form-check mt-4">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_only_on_error">
-                                <label class="form-check-label">Notify only on errors (not on recovery)</label>
+                                <label class="form-check-label"><?php echo $lang3520; ?></label>
                             </div>
                         </div>
                     </div>
@@ -701,14 +719,14 @@ $js_config = [
                 
                 <!-- Temperature Thresholds -->
                 <div class="settings-group">
-                    <h4><i class="fas fa-thermometer-half"></i> Temperature Thresholds</h4>
+                    <h4><i class="fas fa-thermometer-half"></i> <?php echo $lang3521; ?></h4>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">CPU Temperature Warning (°C)</label>
+                            <label class="form-label"><?php echo $lang3522; ?> (°C)</label>
                             <input type="number" class="form-control" id="setting_cpu_temp_threshold" value="85">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Disk Temperature Warning (°C)</label>
+                            <label class="form-label"><?php echo $lang3523; ?> (°C)</label>
                             <input type="number" class="form-control" id="setting_disk_temp_threshold" value="55">
                         </div>
                     </div>
@@ -716,50 +734,50 @@ $js_config = [
                 
                 <!-- Events to Notify -->
                 <div class="settings-group">
-                    <h4><i class="fas fa-exclamation-triangle"></i> Events to Notify</h4>
+                    <h4><i class="fas fa-exclamation-triangle"></i> <?php echo $lang3524; ?></h4>
                     <div class="row">
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_disk_missing">
-                                <label class="form-check-label">Disk Missing</label>
+                                <label class="form-check-label"><?php echo $lang3525; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_raid_degraded">
-                                <label class="form-check-label">RAID Degraded</label>
+                                <label class="form-check-label"><?php echo $lang3526; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_lvm_error">
-                                <label class="form-check-label">LVM Error</label>
+                                <label class="form-check-label"><?php echo $lang3527; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_share_down">
-                                <label class="form-check-label">Share Down</label>
+                                <label class="form-check-label"><?php echo $lang3528; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_temp_critical">
-                                <label class="form-check-label">Temperature Critical</label>
+                                <label class="form-check-label"><?php echo $lang3529; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="setting_notify_smart_failed">
-                                <label class="form-check-label">SMART Failed</label>
+                                <label class="form-check-label"><?php echo $lang3530; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveNotificationRules()">Save Settings</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3531; ?></button>
+                <button type="button" class="btn btn-primary" onclick="saveNotificationRules()"><?php echo $lang3532; ?></button>
             </div>
         </div>
     </div>
@@ -770,81 +788,81 @@ $js_config = [
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-envelope"></i> Email &amp; SMTP Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-envelope"></i> <?php echo $lang3533; ?> &amp; <?php echo $lang3534; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Enable Email -->
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="setting_email_enabled">
-                    <label class="form-check-label">Enable Email Notifications</label>
+                    <label class="form-check-label"><?php echo $lang3535; ?></label>
                 </div>
                 
                 <!-- Recipient -->
                 <div class="mb-3">
-                    <label class="form-label">Recipient Email</label>
+                    <label class="form-label"><?php echo $lang3536; ?></label>
                     <input type="email" class="form-control" id="setting_email_recipient" placeholder="admin@example.com">
                 </div>
                 
                 <hr>
-                <h5><i class="fas fa-server"></i> SMTP Settings</h5>
+                <h5><i class="fas fa-server"></i> <?php echo $lang3537; ?></h5>
                 
                 <div class="mb-3">
-                    <label class="form-label">SMTP Host</label>
+                    <label class="form-label"><?php echo $lang3538; ?></label>
                     <input type="text" class="form-control" id="setting_smtp_host" placeholder="smtp.gmail.com">
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">SMTP Port</label>
+                        <label class="form-label"><?php echo $lang3539; ?></label>
                         <input type="number" class="form-control" id="setting_smtp_port" value="587">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Encryption</label>
+                        <label class="form-label"><?php echo $lang3540; ?></label>
                         <select class="form-select" id="setting_smtp_encryption">
                             <option value="tls">TLS</option>
                             <option value="ssl">SSL</option>
-                            <option value="">None</option>
+                            <option value=""><?php echo $lang3541; ?></option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">SMTP Username</label>
+                    <label class="form-label"><?php echo $lang3542; ?></label>
                     <input type="text" class="form-control" id="setting_smtp_username" placeholder="user@example.com">
                 </div>
                 
 				<div class="mb-3">
-					<label class="form-label">SMTP Domain (optional)</label>
+					<label class="form-label"><?php echo $lang3543; ?></label>
 					<input type="text" class="form-control" id="setting_smtp_domain" placeholder="example.com">
-					<small class="text-muted">If your SMTP username is just a login (e.g., "bot"), this domain will be added to make a full email: bot@example.com</small>
+					<small class="text-muted"><?php echo $lang3544; ?></small>
 				</div>
 				
                 <div class="mb-3">
-                    <label class="form-label">SMTP Password</label>
+                    <label class="form-label"><?php echo $lang3545; ?></label>
                     <input type="password" class="form-control" id="setting_smtp_password">
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">From Email (optional)</label>
+                    <label class="form-label"><?php echo $lang3546; ?></label>
                     <input type="email" class="form-control" id="setting_smtp_from_email" placeholder="noreply@example.com">
-                    <small class="text-muted">Leave empty to use SMTP username</small>
+                    <small class="text-muted"><?php echo $lang3547; ?></small>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">From Name</label>
+                    <label class="form-label"><?php echo $lang3548; ?></label>
                     <input type="text" class="form-control" id="setting_smtp_from_name" value="Mini-B Health Monitor">
                 </div>
                 
                 <div class="mb-3">
                     <button class="btn btn-outline-secondary btn-sm" onclick="testSmtp()">
-                        <i class="fas fa-vial"></i> Test SMTP Connection
+                        <i class="fas fa-vial"></i> <?php echo $lang3549; ?>
                     </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveEmailSettings()">Save Settings</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3550; ?></button>
+                <button type="button" class="btn btn-primary" onclick="saveEmailSettings()"><?php echo $lang3551; ?></button>
             </div>
         </div>
     </div>
@@ -855,24 +873,24 @@ $js_config = [
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-globe"></i> Webhook Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-globe"></i> <?php echo $lang3552; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="setting_webhook_enabled">
-                    <label class="form-check-label">Enable Webhook Notifications</label>
+                    <label class="form-check-label"><?php echo $lang3553; ?></label>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">Webhook URL</label>
+                    <label class="form-label"><?php echo $lang3554; ?></label>
                     <input type="url" class="form-control" id="setting_webhook_url" placeholder="https://your-server.com/webhook">
-                    <small class="text-muted">POST request will be sent with JSON payload</small>
+                    <small class="text-muted"><?php echo $lang3555; ?></small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveWebhookSettings()">Save Settings</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3556; ?></button>
+                <button type="button" class="btn btn-primary" onclick="saveWebhookSettings()"><?php echo $lang3557; ?></button>
             </div>
         </div>
     </div>
@@ -883,28 +901,28 @@ $js_config = [
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-calendar-alt"></i> Schedules &amp; History</h5>
+                <h5 class="modal-title"><i class="fas fa-calendar-alt"></i> <?php echo $lang3558; ?> &amp; <?php echo $lang3559; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Schedules -->
                 <div class="settings-group">
-                    <h4><i class="fas fa-clock"></i> Check Schedules</h4>
+                    <h4><i class="fas fa-clock"></i> <?php echo $lang3560; ?></h4>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Check Type</th>
-                                    <th>Enabled</th>
-                                    <th>Interval</th>
-                                    <th>Last Run</th>
-                                    <th>Next Run</th>
-                                    <th>Last Status</th>
-                                    <th>Actions</th>
+                                    <th><?php echo $lang3561; ?></th>
+                                    <th><?php echo $lang3562; ?></th>
+                                    <th><?php echo $lang3563; ?></th>
+                                    <th><?php echo $lang3564; ?></th>
+                                    <th><?php echo $lang3565; ?></th>
+                                    <th><?php echo $lang3566; ?></th>
+                                    <th><?php echo $lang3567; ?></th>
                                 </tr>
                             </thead>
                             <tbody id="schedulesTableBody">
-                                <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                                <tr><td colspan="7" class="text-center"><?php echo $lang3568; ?></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -912,30 +930,30 @@ $js_config = [
                 
                 <!-- History -->
                 <div class="settings-group">
-                    <h4><i class="fas fa-history"></i> Check History (Last 30)</h4>
+                    <h4><i class="fas fa-history"></i> <?php echo $lang3569; ?></h4>
                     <div class="table-responsive" style="max-height: 400px;">
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Time</th>
-                                    <th>Check Type</th>
-                                    <th>Status</th>
-                                    <th>Message</th>
-                                    <th>Duration</th>
+                                    <th><?php echo $lang3570; ?></th>
+                                    <th><?php echo $lang3571; ?></th>
+                                    <th><?php echo $lang3572; ?></th>
+                                    <th><?php echo $lang3573; ?></th>
+                                    <th><?php echo $lang3574; ?></th>
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody">
-                                <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                                <tr><td colspan="5" class="text-center"><?php echo $lang3575; ?></td></tr>
                             </tbody>
                         </table>
                     </div>
                     <button class="btn btn-sm btn-link mt-2" onclick="loadHistory()">
-                        <i class="fas fa-sync-alt"></i> Refresh History
+                        <i class="fas fa-sync-alt"></i> <?php echo $lang3576; ?>
                     </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3577; ?></button>
             </div>
         </div>
     </div>
@@ -944,15 +962,17 @@ $js_config = [
 <!-- Progress indicator -->
 <div id="checkProgress" class="progress-check">
     <div class="spinner-small"></div>
-    <span id="progressText">Running checks...</span>
+    <span id="progressText"><?php echo $lang3578; ?></span>
 </div>
 
+<script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script>
 window.apiConfig = <?php echo json_encode($js_config); ?>;
 
 let currentChecks = {};
 
 // ========== UI Helpers ==========
+
 function toggleSection(header) {
     const body = header.nextElementSibling;
     const icon = header.querySelector('.toggle-icon');
@@ -960,7 +980,7 @@ function toggleSection(header) {
     icon.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-function showProgress(show, text = 'Running checks...') {
+function showProgress(show, text = '<?php echo $lang3579; ?>') {
     const el = document.getElementById('checkProgress');
     if (show) {
         el.style.display = 'flex';
@@ -1085,10 +1105,10 @@ async function saveNotificationRules() {
             body: JSON.stringify(settings)
         });
         bootstrap.Modal.getInstance(document.getElementById('notificationsModal')).hide();
-        showToast('Notification rules saved', 'success');
+        showToast('<?php echo $lang3580; ?>', 'success');
     } catch (e) {
         console.error('Save error:', e);
-        showToast('Failed to save settings', 'danger');
+        showToast('<?php echo $lang3581; ?>', 'danger');
     }
 }
 
@@ -1096,12 +1116,12 @@ async function saveEmailSettings() {
     const smtpSettings = {
         smtp_host: document.getElementById('setting_smtp_host').value,
         smtp_port: document.getElementById('setting_smtp_port').value,
-        smtp_username: document.getElementById('setting_smtp_username').value,  // bot
+        smtp_username: document.getElementById('setting_smtp_username').value,
         smtp_password: document.getElementById('setting_smtp_password').value,
         smtp_encryption: document.getElementById('setting_smtp_encryption').value,
         smtp_from_email: document.getElementById('setting_smtp_from_email').value,
         smtp_from_name: document.getElementById('setting_smtp_from_name').value,
-        smtp_domain: document.getElementById('setting_smtp_domain').value,  // itp-corp.ru
+        smtp_domain: document.getElementById('setting_smtp_domain').value,
         email_enabled: document.getElementById('setting_email_enabled').checked ? 1 : 0,
         email_recipient: document.getElementById('setting_email_recipient').value
     };
@@ -1119,10 +1139,10 @@ async function saveEmailSettings() {
             })
         });
         bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
-        showToast('Email settings saved', 'success');
+        showToast('<?php echo $lang3582; ?>', 'success');
     } catch (e) {
         console.error('Save error:', e);
-        showToast('Failed to save settings', 'danger');
+        showToast('<?php echo $lang3583; ?>', 'danger');
     }
 }
 
@@ -1138,17 +1158,17 @@ async function saveWebhookSettings() {
             body: JSON.stringify(settings)
         });
         bootstrap.Modal.getInstance(document.getElementById('webhookModal')).hide();
-        showToast('Webhook settings saved', 'success');
+        showToast('<?php echo $lang3584; ?>', 'success');
     } catch (e) {
         console.error('Save error:', e);
-        showToast('Failed to save settings', 'danger');
+        showToast('<?php echo $lang3585; ?>', 'danger');
     }
 }
 
 async function testSmtp() {
     const testEmail = document.getElementById('setting_email_recipient').value;
     if (!testEmail) {
-        showToast('Please enter a recipient email first', 'warning');
+        showToast('<?php echo $lang3586; ?>', 'warning');
         return;
     }
     
@@ -1160,10 +1180,10 @@ async function testSmtp() {
         encryption: document.getElementById('setting_smtp_encryption').value,
         test_email: testEmail,
         from_email: document.getElementById('setting_smtp_from_email').value,
-        domain: document.getElementById('setting_smtp_domain').value  // ДОБАВИТЬ
+        domain: document.getElementById('setting_smtp_domain').value
     };
     
-    showProgress(true, 'Testing SMTP connection...');
+    showProgress(true, '<?php echo $lang3587; ?>');
     try {
         const data = await apiCall('test_smtp', {
             method: 'POST',
@@ -1171,12 +1191,12 @@ async function testSmtp() {
         });
         
         if (data.success) {
-            showToast('SMTP test successful! Check your inbox.', 'success');
+            showToast('<?php echo $lang3588; ?>', 'success');
         } else {
-            showToast('SMTP test failed: ' + (data.error || 'Unknown error'), 'danger');
+            showToast('<?php echo $lang3589; ?> ' + (data.error || 'Unknown error'), 'danger');
         }
     } catch (e) {
-        showToast('SMTP test failed', 'danger');
+        showToast('<?php echo $lang3590; ?>', 'danger');
     } finally {
         showProgress(false);
     }
@@ -1189,7 +1209,7 @@ async function loadNotifications() {
         if (data.success) {
             const container = document.getElementById('notificationsList');
             if (data.notifications.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted py-4">No notifications</div>';
+                container.innerHTML = '<div class="text-center text-muted py-4"><?php echo $lang3591; ?></div>';
                 return;
             }
             
@@ -1213,7 +1233,7 @@ async function loadNotifications() {
             `).join('');
             
             const unreadCount = data.notifications.filter(n => !n.is_read).length;
-            document.title = unreadCount > 0 ? `(${unreadCount}) Health Monitor` : 'Health Monitor';
+            document.title = unreadCount > 0 ? `(${unreadCount}) <?php echo $lang3592; ?>` : '<?php echo $lang3593; ?>';
         }
     } catch (e) {
         console.error('Load notifications error:', e);
@@ -1242,7 +1262,7 @@ async function markAllRead() {
 }
 
 async function clearAllNotifications() {
-    if (!confirm('Clear all notifications?')) return;
+    if (!confirm('<?php echo $lang3594; ?>')) return;
     try {
         await apiCall('clear_notifications', { method: 'POST' });
         loadNotifications();
@@ -1265,34 +1285,34 @@ async function deleteNotification(id) {
 
 // ========== Checks ==========
 async function runCheck(checkType) {
-    showProgress(true, `Checking ${checkType}...`);
+    showProgress(true, `<?php echo $lang3595; ?> ${checkType}...`);
     try {
         const data = await apiCall(`check_${checkType}`, { method: 'POST' });
         if (data.success) {
             loadAllStatuses();
             loadNotifications();
-            showToast(`${checkType} check completed`, 'success');
+            showToast(`${checkType} <?php echo $lang3596; ?>`, 'success');
         }
     } catch (e) {
         console.error(`Check ${checkType} error:`, e);
-        showToast(`Check ${checkType} failed`, 'danger');
+        showToast(`<?php echo $lang3597; ?> ${checkType} <?php echo $lang3598; ?>`, 'danger');
     } finally {
         showProgress(false);
     }
 }
 
 async function runAllChecks() {
-    showProgress(true, 'Running all checks...');
+    showProgress(true, '<?php echo $lang3599; ?>');
     try {
         const data = await apiCall('check_all', { method: 'POST' });
         if (data.success) {
             loadAllStatuses();
             loadNotifications();
-            showToast('All checks completed', 'success');
+            showToast('<?php echo $lang3600; ?>', 'success');
         }
     } catch (e) {
         console.error('All checks error:', e);
-        showToast('Checks failed', 'danger');
+        showToast('<?php echo $lang3601; ?>', 'danger');
     } finally {
         showProgress(false);
     }
@@ -1337,7 +1357,7 @@ function renderDisksStatus(data) {
     dbDisks.forEach(d => { dbDiskMap[d.disk_name] = d; });
     
     if (disks.length === 0 && dbDisks.length === 0) {
-        return '<div class="text-center text-muted py-4">No disks found</div>';
+        return '<div class="text-center text-muted py-4"><?php echo $lang3602; ?></div>';
     }
     
     let html = '';
@@ -1354,14 +1374,14 @@ function renderDisksStatus(data) {
                     <span><i class="fas fa-hdd"></i> <strong>${escapeHtml(disk.name)}</strong></span>
                     <span class="badge ${disk.smart_status === 'PASSED' ? 'bg-success' : 'bg-danger'}">${disk.smart_status || 'UNKNOWN'}</span>
                 </div>
-                <div class="small text-muted mb-2">Model: ${escapeHtml(disk.model)} | Size: ${disk.size}</div>
+                <div class="small text-muted mb-2"><?php echo $lang3603; ?> ${escapeHtml(disk.model)} | <?php echo $lang3604; ?> ${disk.size}</div>
                 <div class="small mb-2">
-                    ${disk.smart_temp ? `<span>🌡️ Temp: ${disk.smart_temp}</span>` : ''}
-                    ${disk.smart_bad_sectors > 0 ? `<span class="text-danger">⚠️ Bad sectors: ${disk.smart_bad_sectors}</span>` : ''}
+                    ${disk.smart_temp ? `<span>🌡️ <?php echo $lang3605; ?> ${disk.smart_temp}</span>` : ''}
+                    ${disk.smart_bad_sectors > 0 ? `<span class="text-danger">⚠️ <?php echo $lang3606; ?> ${disk.smart_bad_sectors}</span>` : ''}
                 </div>
-                ${isNew ? `<div class="badge bg-info mb-2"><i class="fas fa-star"></i> New Disk Detected</div>
+                ${isNew ? `<div class="badge bg-info mb-2"><i class="fas fa-star"></i> <?php echo $lang3607; ?></div>
                     <button class="btn btn-sm btn-success w-100 mt-2" onclick="acknowledgeDisk('${disk.name}')">
-                        <i class="fas fa-check"></i> Acknowledge
+                        <i class="fas fa-check"></i> <?php echo $lang3608; ?>
                     </button>` : ''}
             </div>
         `;
@@ -1373,12 +1393,12 @@ function renderDisksStatus(data) {
                 <div class="item-card problem">
                     <div class="item-title">
                         <span><i class="fas fa-hdd text-danger"></i> <strong>${escapeHtml(dbDisk.disk_name)}</strong></span>
-                        <span class="badge bg-danger">MISSING</span>
+                        <span class="badge bg-danger"><?php echo $lang3609; ?></span>
                     </div>
-                    <div class="small text-muted mb-2">Model: ${escapeHtml(dbDisk.disk_model || 'Unknown')} | First seen: ${dbDisk.first_seen}</div>
-                    <div class="small text-danger mb-2">⚠️ This disk is no longer present in the system</div>
+                    <div class="small text-muted mb-2"><?php echo $lang3610; ?> ${escapeHtml(dbDisk.disk_model || 'Unknown')} | <?php echo $lang3611; ?> ${dbDisk.first_seen}</div>
+                    <div class="small text-danger mb-2">⚠️ <?php echo $lang3612; ?></div>
                     <button class="btn btn-sm btn-danger w-100" onclick="removeMissingDisk('${dbDisk.disk_name}')">
-                        <i class="fas fa-trash"></i> Remove from Database
+                        <i class="fas fa-trash"></i> <?php echo $lang3613; ?>
                     </button>
                 </div>
             `;
@@ -1391,7 +1411,7 @@ function renderDisksStatus(data) {
 function renderRaidStatus(data) {
     const raids = data.raid || [];
     if (raids.length === 0) {
-        return '<div class="text-center text-muted py-4">No RAID arrays found</div>';
+        return '<div class="text-center text-muted py-4"><?php echo $lang3614; ?></div>';
     }
     
     let html = '';
@@ -1405,9 +1425,9 @@ function renderRaidStatus(data) {
                     <span><i class="fas fa-shield-alt"></i> <strong>${escapeHtml(raid.name)}</strong></span>
                     <span class="badge ${isDegraded ? 'bg-warning' : 'bg-success'}">${raid.level || 'RAID'}</span>
                 </div>
-                <div class="small mb-2">Size: ${raid.size || 'Unknown'} | Status: ${raid.status || 'unknown'}</div>
-                ${raid.degraded ? `<div class="small text-warning">⚠️ Degraded array</div>` : ''}
-                ${raid.failed_disks > 0 ? `<div class="small text-danger">❌ Failed disks: ${raid.failed_disks}</div>` : ''}
+                <div class="small mb-2"><?php echo $lang3615; ?> ${raid.size || 'Unknown'} | <?php echo $lang3616; ?> ${raid.status || 'unknown'}</div>
+                ${raid.degraded ? `<div class="small text-warning">⚠️ <?php echo $lang3617; ?></div>` : ''}
+                ${raid.failed_disks > 0 ? `<div class="small text-danger">❌ <?php echo $lang3618; ?> ${raid.failed_disks}</div>` : ''}
                 ${raid.sync_percent ? `<div class="progress mt-2" style="height: 4px;"><div class="progress-bar" style="width: ${raid.sync_percent}%"></div></div>` : ''}
             </div>
         `;
@@ -1420,13 +1440,13 @@ function renderLvmStatus(data) {
     const lvs = data.lvs || [];
     
     if (vgs.length === 0 && lvs.length === 0) {
-        return '<div class="text-center text-muted py-4">No LVM volumes found</div>';
+        return '<div class="text-center text-muted py-4"><?php echo $lang3619; ?></div>';
     }
     
     let html = '';
     
     if (vgs.length > 0) {
-        html += '<h6 class="mt-2 mb-2"><i class="fas fa-database"></i> Volume Groups</h6>';
+        html += '<h6 class="mt-2 mb-2"><i class="fas fa-database"></i> <?php echo $lang3620; ?></h6>';
         for (const vg of vgs) {
             html += `
                 <div class="item-card mb-2">
@@ -1434,14 +1454,14 @@ function renderLvmStatus(data) {
                         <span><strong>${escapeHtml(vg.name)}</strong></span>
                         <span>${vg.size_formatted || vg.size}</span>
                     </div>
-                    <div class="small">PV: ${vg.pv_count} | LV: ${vg.lv_count} | Free: ${vg.free_formatted || vg.free}</div>
+                    <div class="small"><?php echo $lang3621; ?> ${vg.pv_count} | <?php echo $lang3622; ?> ${vg.lv_count} | <?php echo $lang3623; ?> ${vg.free_formatted || vg.free}</div>
                 </div>
             `;
         }
     }
     
     if (lvs.length > 0) {
-        html += '<h6 class="mt-3 mb-2"><i class="fas fa-chart-simple"></i> Logical Volumes</h6>';
+        html += '<h6 class="mt-3 mb-2"><i class="fas fa-chart-simple"></i> <?php echo $lang3624; ?></h6>';
         for (const lv of lvs) {
             const hasProblem = !lv.active;
             const problemClass = hasProblem ? 'problem' : '';
@@ -1452,9 +1472,9 @@ function renderLvmStatus(data) {
                         <span><strong>${escapeHtml(lv.name)}</strong> <span class="small text-muted">(${escapeHtml(lv.vg_name)})</span></span>
                         <span>${lv.size_formatted || lv.size}</span>
                     </div>
-                    <div class="small">Status: ${lv.active ? 'Active' : 'Inactive'} | Path: ${lv.path || 'N/A'}</div>
-                    ${lv.mount_point ? `<div class="small">Mount: ${lv.mount_point}</div>` : ''}
-                    ${!lv.active ? `<div class="small text-danger">⚠️ LV is not active</div>` : ''}
+                    <div class="small"><?php echo $lang3625; ?> ${lv.active ? 'Active' : 'Inactive'} | <?php echo $lang3626; ?> ${lv.path || 'N/A'}</div>
+                    ${lv.mount_point ? `<div class="small"><?php echo $lang3627; ?> ${lv.mount_point}</div>` : ''}
+                    ${!lv.active ? `<div class="small text-danger">⚠️ <?php echo $lang3628; ?></div>` : ''}
                 </div>
             `;
         }
@@ -1476,11 +1496,11 @@ function renderTemperatureStatus(data) {
         html += `
             <div class="item-card ${isWarning ? 'problem' : ''}">
                 <div class="item-title">
-                    <span><i class="fas fa-microchip"></i> <strong>CPU Temperature</strong></span>
+                    <span><i class="fas fa-microchip"></i> <strong><?php echo $lang3629; ?></strong></span>
                     <span class="badge ${isWarning ? 'bg-danger' : 'bg-success'}">${cpuTemp}</span>
                 </div>
-                <div class="small">Threshold: ${thresholds.cpu}°C</div>
-                ${isWarning ? `<div class="small text-danger mt-2">⚠️ CPU temperature exceeds threshold!</div>` : ''}
+                <div class="small"><?php echo $lang3630; ?> ${thresholds.cpu}°C</div>
+                ${isWarning ? `<div class="small text-danger mt-2">⚠️ <?php echo $lang3631; ?></div>` : ''}
             </div>
         `;
     }
@@ -1494,14 +1514,14 @@ function renderTemperatureStatus(data) {
                     <span><i class="fas fa-hdd"></i> <strong>${escapeHtml(disk.name)}</strong></span>
                     <span class="badge ${isWarning ? 'bg-danger' : 'bg-success'}">${disk.temp}</span>
                 </div>
-                <div class="small">Threshold: ${thresholds.disk}°C</div>
-                ${isWarning ? `<div class="small text-danger mt-2">⚠️ Disk temperature exceeds threshold!</div>` : ''}
+                <div class="small"><?php echo $lang3632; ?> ${thresholds.disk}°C</div>
+                ${isWarning ? `<div class="small text-danger mt-2">⚠️ <?php echo $lang3633; ?></div>` : ''}
             </div>
         `;
     }
     
     if (diskTemps.length === 0 && !cpuTemp) {
-        html = '<div class="text-center text-muted py-4">No temperature data available</div>';
+        html = '<div class="text-center text-muted py-4"><?php echo $lang3634; ?></div>';
     }
     
     return html;
@@ -1511,7 +1531,7 @@ function renderSharesStatus(data) {
     const shares = data.shares || [];
     
     if (shares.length === 0) {
-        return '<div class="text-center text-muted py-4">No network shares configured</div>';
+        return '<div class="text-center text-muted py-4"><?php echo $lang3635; ?></div>';
     }
     
     let html = '';
@@ -1526,8 +1546,8 @@ function renderSharesStatus(data) {
                     <strong>${escapeHtml(share.name)}</strong> <span class="badge bg-secondary">${share.type.toUpperCase()}</span></span>
                     <span class="badge ${isAvailable ? 'bg-success' : 'bg-danger'}">${isAvailable ? 'Available' : 'Down'}</span>
                 </div>
-                <div class="small">Path: ${escapeHtml(share.path || 'N/A')}</div>
-                ${!isAvailable ? `<div class="small text-danger mt-2">⚠️ Share is not accessible! ${share.error || ''}</div>` : ''}
+                <div class="small"><?php echo $lang3636; ?> ${escapeHtml(share.path || 'N/A')}</div>
+                ${!isAvailable ? `<div class="small text-danger mt-2">⚠️ <?php echo $lang3637; ?> ${share.error || ''}</div>` : ''}
             </div>
         `;
     }
@@ -1542,21 +1562,21 @@ async function acknowledgeDisk(diskName) {
             body: JSON.stringify({ disk_name: diskName })
         });
         loadAllStatuses();
-        showToast(`Disk ${diskName} acknowledged`, 'success');
+        showToast(`<?php echo $lang3638; ?> ${diskName} <?php echo $lang3639; ?>`, 'success');
     } catch (e) {
         console.error('Acknowledge disk error:', e);
     }
 }
 
 async function removeMissingDisk(diskName) {
-    if (!confirm(`Remove ${diskName} from database?`)) return;
+    if (!confirm(`<?php echo $lang3640; ?> ${diskName} <?php echo $lang3641; ?>`)) return;
     try {
         await apiCall('remove_missing_disk', {
             method: 'POST',
             body: JSON.stringify({ disk_name: diskName })
         });
         loadAllStatuses();
-        showToast(`Disk ${diskName} removed from database`, 'success');
+        showToast(`<?php echo $lang3642; ?> ${diskName} <?php echo $lang3643; ?>`, 'success');
     } catch (e) {
         console.error('Remove disk error:', e);
     }
@@ -1585,8 +1605,8 @@ async function loadSchedules() {
                             ${generateIntervalOptions(s.interval_seconds)}
                         </select>
                     </td>
-                    <td>${s.last_run || 'Never'}</td>
-                    <td>${s.next_run || 'Not scheduled'}</td>
+                    <td>${s.last_run || '<?php echo $lang3644; ?>'}</td>
+                    <td>${s.next_run || '<?php echo $lang3645; ?>'}</td>
                     <td>
                         <span class="badge ${s.last_status === 'success' ? 'bg-success' : (s.last_status === 'failed' ? 'bg-danger' : 'bg-secondary')}">
                             ${s.last_status || 'pending'}
@@ -1594,7 +1614,7 @@ async function loadSchedules() {
                     </td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="runCheckNow('${s.check_type}')">
-                            <i class="fas fa-play"></i> Run Now
+                            <i class="fas fa-play"></i> <?php echo $lang3646; ?>
                         </button>
                     </td>
                 </tr>
@@ -1607,20 +1627,20 @@ async function loadSchedules() {
 
 function generateIntervalOptions(currentInterval) {
     const intervals = [
-        { seconds: 60, label: 'Every minute' },
-        { seconds: 120, label: 'Every 2 minutes' },
-        { seconds: 300, label: 'Every 5 minutes' },
-        { seconds: 600, label: 'Every 10 minutes' },
-        { seconds: 900, label: 'Every 15 minutes' },
-        { seconds: 1800, label: 'Every 30 minutes' },
-        { seconds: 3600, label: 'Every hour' },
-        { seconds: 7200, label: 'Every 2 hours' },
-        { seconds: 14400, label: 'Every 4 hours' },
-        { seconds: 21600, label: 'Every 6 hours' },
-        { seconds: 43200, label: 'Every 12 hours' },
-        { seconds: 86400, label: 'Every day' },
-        { seconds: 172800, label: 'Every 2 days' },
-        { seconds: 604800, label: 'Every week' }
+        { seconds: 60, label: '<?php echo $lang3647; ?>' },
+        { seconds: 120, label: '<?php echo $lang3648; ?>' },
+        { seconds: 300, label: '<?php echo $lang3649; ?>' },
+        { seconds: 600, label: '<?php echo $lang3650; ?>' },
+        { seconds: 900, label: '<?php echo $lang3651; ?>' },
+        { seconds: 1800, label: '<?php echo $lang3652; ?>' },
+        { seconds: 3600, label: '<?php echo $lang3653; ?>' },
+        { seconds: 7200, label: '<?php echo $lang3654; ?>' },
+        { seconds: 14400, label: '<?php echo $lang3655; ?>' },
+        { seconds: 21600, label: '<?php echo $lang3656; ?>' },
+        { seconds: 43200, label: '<?php echo $lang3657; ?>' },
+        { seconds: 86400, label: '<?php echo $lang3658; ?>' },
+        { seconds: 172800, label: '<?php echo $lang3659; ?>' },
+        { seconds: 604800, label: '<?php echo $lang3660; ?>' }
     ];
     
     return intervals.map(i => 
@@ -1637,7 +1657,7 @@ async function toggleSchedule(checkType, enabled) {
                 enabled: enabled ? 1 : 0
             })
         });
-        showToast(`${checkType} schedule ${enabled ? 'enabled' : 'disabled'}`, 'success');
+        showToast(`${checkType} <?php echo $lang3661; ?> ${enabled ? '<?php echo $lang3662; ?>' : '<?php echo $lang3663; ?>'}`, 'success');
         loadSchedules();
     } catch (e) {
         console.error('Toggle schedule error:', e);
@@ -1654,7 +1674,7 @@ async function updateScheduleInterval(checkType, interval) {
                 interval_seconds: parseInt(interval)
             })
         });
-        showToast(`${checkType} interval updated`, 'success');
+        showToast(`${checkType} <?php echo $lang3664; ?>`, 'success');
         loadSchedules();
     } catch (e) {
         console.error('Update interval error:', e);
@@ -1662,20 +1682,20 @@ async function updateScheduleInterval(checkType, interval) {
 }
 
 async function runCheckNow(checkType) {
-    showProgress(true, `Running ${checkType} check...`);
+    showProgress(true, `<?php echo $lang3665; ?> ${checkType} <?php echo $lang3666; ?>`);
     try {
         const data = await apiCall('run_check_now', {
             method: 'POST',
             body: JSON.stringify({ check_type: checkType })
         });
         if (data.success) {
-            showToast(`${checkType} check completed`, 'success');
+            showToast(`${checkType} <?php echo $lang3667; ?>`, 'success');
             loadSchedules();
             loadHistory();
         }
     } catch (e) {
         console.error('Run check error:', e);
-        showToast(`Failed to run ${checkType} check`, 'danger');
+        showToast(`<?php echo $lang3668; ?> ${checkType} <?php echo $lang3669; ?>`, 'danger');
     } finally {
         showProgress(false);
     }
@@ -1688,7 +1708,7 @@ async function loadHistory() {
         if (data.success) {
             const tbody = document.getElementById('historyTableBody');
             if (data.history.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No history yet</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center"><?php echo $lang3670; ?></td></tr>';
                 return;
             }
             

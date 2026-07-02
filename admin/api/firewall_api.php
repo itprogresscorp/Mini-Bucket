@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 class FirewallAPI {
     
     private function jsonResponse($data, $success = true) {
@@ -205,6 +207,7 @@ class FirewallAPI {
     }
     
     public function addRule($data) {
+		global $lang3333, $lang3334, $lang3335, $lang3336;
         $direction = $data['direction'] ?? 'in';
         $action = $data['action'] ?? 'allow';
         $port = $data['port'] ?? '';
@@ -214,7 +217,7 @@ class FirewallAPI {
         $ipVersion = $data['ip_version'] ?? 'both';
         
         if (empty($port)) {
-            $this->jsonError('Port is required');
+            $this->jsonError($lang3333);
         }
         
         if (empty($from) || $from === 'any' || $from === 'anywhere') {
@@ -239,18 +242,18 @@ class FirewallAPI {
         }
         
         if (empty($commands)) {
-            $this->jsonError('Failed to build command');
+            $this->jsonError($lang3334);
         }
         
         foreach ($commands as $cmd) {
             $result = $this->executeCommand("ufw $cmd");
             if (strpos($result['output'], 'ERROR') !== false || strpos($result['output'], 'Problem running') !== false) {
-                $this->jsonError('Error: ' . $result['output']);
+                $this->jsonError($lang3335 . $result['output']);
             }
         }
         
         $this->executeCommand('ufw reload');
-        $this->jsonResponse(['message' => 'Rule added for ' . $ipVersion]);
+        $this->jsonResponse(['message' => $lang3336 . $ipVersion]);
     }
     
     private function buildCommand($direction, $action, $port, $protocol, $from, $comment) {
@@ -278,13 +281,14 @@ class FirewallAPI {
     }
     
     public function deleteRule($ruleId) {
+		global $lang3337, $lang3338;
         $result = $this->executeCommand("ufw --force delete {$ruleId}");
         
         if (strpos($result['output'], 'Rule deleted') !== false || strpos($result['output'], 'Rules have been deleted') !== false) {
             $this->executeCommand('ufw reload');
-            $this->jsonResponse(['message' => 'Rule deleted']);
+            $this->jsonResponse(['message' => $lang3337]);
         } else {
-            $this->jsonError('Error deleting rule: ' . $result['output']);
+            $this->jsonError($lang3338 . $result['output']);
         }
     }
     
@@ -363,8 +367,9 @@ class FirewallAPI {
     }
     
     public function killConnection($ip, $port, $protocol = 'tcp') {
+		global $lang3339, $lang3340;
         shell_exec("sudo ss -K dst {$ip} dport = {$port} 2>&1");
-        $this->jsonResponse(['message' => "Connection {$ip}:{$port} terminated"]);
+        $this->jsonResponse(['message' => $lang3339 . $ip . ":" . $port . $lang3340]);
     }
     
     public function getLogs($lines = 100, $filter = '') {
@@ -393,7 +398,8 @@ class FirewallAPI {
         }
         
         if (empty($logContent)) {
-            $this->jsonResponse(['error' => 'UFW logs not found. Make sure logging is enabled.', 'logging_off' => true]);
+			global $lang3341;
+            $this->jsonResponse(['error' => $lang3341, 'logging_off' => true]);
             return;
         }
         
@@ -450,25 +456,28 @@ class FirewallAPI {
     }
     
     public function setDefaultPolicy($incoming, $outgoing, $routed) {
+		global $lang3342;
         $this->executeCommand($incoming === 'allow' ? "ufw default allow incoming" : "ufw default deny incoming");
         $this->executeCommand($outgoing === 'deny' ? "ufw default deny outgoing" : "ufw default allow outgoing");
         $this->executeCommand($routed === 'allow' ? "ufw default allow routed" : "ufw default deny routed");
         $this->executeCommand('ufw reload');
-        $this->jsonResponse(['message' => 'Default policies updated']);
+        $this->jsonResponse(['message' => $lang3342]);
     }
     
     public function setLogging($level) {
+		global $lang3343, $lang3344;
         $validLevels = ['off', 'low', 'medium', 'high'];
         if (!in_array($level, $validLevels)) {
-            $this->jsonError('Invalid logging level');
+            $this->jsonError($lang3343);
         }
         $this->executeCommand("ufw logging {$level}");
-        $this->jsonResponse(['message' => "Logging set to {$level}"]);
+        $this->jsonResponse(['message' => $lang3344 . $level]);
     }
     
     public function resetRules() {
+		global $lang3345;
         $this->executeCommand("ufw --force reset");
-        $this->jsonResponse(['message' => 'All rules reset']);
+        $this->jsonResponse(['message' => $lang3345]);
     }
     
     public function getAppProfiles() {
@@ -491,19 +500,20 @@ class FirewallAPI {
     }
     
     public function addRuleByApp($appName, $action = 'allow', $ipVersion = 'both') {
+		global $lang3346, $lang3347, $lang3348, $lang3349;
         if (empty($appName)) {
-            $this->jsonError('Application name is required');
+            $this->jsonError($lang3346);
         }
         
         $cmd = "ufw {$action} '{$appName}'";
         $result = $this->executeCommand($cmd);
         
         if (strpos($result['output'], 'ERROR') !== false) {
-            $this->jsonError('Error: ' . $result['output']);
+            $this->jsonError($lang3347 . $result['output']);
         }
         
         $this->executeCommand('ufw reload');
-        $this->jsonResponse(['message' => "Rule for {$appName} added ({$ipVersion})"]);
+        $this->jsonResponse(['message' => $lang3348 . $appName . $lang3349 . $ipVersion]);
     }
 }
 

@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // Кеш-директория
 define('ROOT_PATH_BACK', '/var/www/minib/');
 $cacheDir = ROOT_PATH_BACK . '/tmp/';

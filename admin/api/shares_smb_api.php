@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('SMB_CONF_DIR', '/etc/samba/conf.d/');
 define('SMB_SHARES_FILE', SMB_CONF_DIR . 'shares.conf');
@@ -502,6 +504,7 @@ function updateSmbUserPassword($username, $password) {
 }
 
 function deleteSmbUser($username) {
+	global $lang2288, $lang2289, $lang2290;
     $shares = getSmbShares();
     $userInShares = false;
     foreach ($shares as $share) {
@@ -513,16 +516,16 @@ function deleteSmbUser($username) {
     }
     
     if ($userInShares) {
-        return ['success' => false, 'message' => 'Пользователь используется в шарах. Сначала удалите его из шары.'];
+        return ['success' => false, 'message' => $lang2288];
     }
     
     $output = shell_exec("sudo smbpasswd -x $username 2>&1");
     
     if (strpos($output, 'deleted') !== false || empty($output)) {
-        return ['success' => true, 'message' => 'Пользователь удален'];
+        return ['success' => true, 'message' => $lang2289];
     }
     
-    return ['success' => false, 'message' => 'Ошибка при удалении'];
+    return ['success' => false, 'message' => $lang2290];
 }
 
 // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ШАРАМИ ==========
@@ -850,7 +853,7 @@ function getSmbSessions() {
     
     foreach ($detailed as $session) {
         $sessions[] = [
-            'service' => $session['username'] . "'s session", // Имитация service
+            'service' => $session['username'] . "'s session",
             'pid' => $session['pid'],
             'ip' => $session['machine'],
             'user' => $session['username'],
@@ -937,20 +940,22 @@ function closeSmbFile($pid, $filePath) {
 }
 
 function killSmbSession($pid) {
+	global $lang2291, $lang2292;
     $output = shell_exec("sudo kill -9 $pid 2>&1");
     sleep(1);
     
     $check = shell_exec("ps -p $pid 2>/dev/null | grep -v PID");
     if (empty(trim($check))) {
         error_log("Session with PID $pid terminated");
-        return ['success' => true, 'message' => "Сессия разорвана"];
+        return ['success' => true, 'message' => $lang2291];
     } else {
         error_log("Failed to terminate session with PID $pid");
-        return ['success' => false, 'message' => "Не удалось завершить сессию"];
+        return ['success' => false, 'message' => $lang2292];
     }
 }
 
 function killUserSessions($username) {
+	global $lang2293, $lang2294, $lang2295;
     $sessions = getSmbSessionsDetailed();
     $killed = [];
     
@@ -964,26 +969,28 @@ function killUserSessions($username) {
     }
     
     if (count($killed) > 0) {
-        return ['success' => true, 'message' => "Завершено сессий: " . count($killed), 'pids' => $killed];
+        return ['success' => true, 'message' => $lang2293 . count($killed), 'pids' => $killed];
     }
     
-    return ['success' => false, 'message' => "Активных сессий для пользователя $username не найдено"];
+    return ['success' => false, 'message' => $lang2294 . $username . $lang2295];
 }
 
 function closeSmbFileByPath($pid, $fullPath) {
+	global $lang2296, $lang2297;
     $cmd = "sudo smbcontrol $pid close-share '$fullPath' 2>&1";
     $output = shell_exec($cmd);
     
     if (empty($output)) {
         error_log("File closed: $fullPath for PID $pid");
-        return ['success' => true, 'message' => "Файл закрыт"];
+        return ['success' => true, 'message' => $lang2296];
     }
     
     error_log("Failed to close file: $output");
-    return ['success' => false, 'message' => "Ошибка закрытия файла: $output"];
+    return ['success' => false, 'message' => $lang2297 . $output];
 }
 
 function closeAllUserFiles($username) {
+	global $lang2298, $lang2299;
     $files = getUserOpenFiles($username);
     $closed = 0;
     
@@ -995,10 +1002,10 @@ function closeAllUserFiles($username) {
     }
     
     if ($closed > 0) {
-        return ['success' => true, 'message' => "Закрыто файлов: $closed"];
+        return ['success' => true, 'message' => $lang2298 . $closed];
     }
     
-    return ['success' => false, 'message' => "Нет открытых файлов у пользователя $username"];
+    return ['success' => false, 'message' => $lang2299 . $username];
 }
 
 function getSmbOpenFiles() {
@@ -1210,6 +1217,7 @@ switch ($action) {
         break;
         
     case 'save_config':
+		global $lang2300, $lang2301;
         $config = [
             'workgroup' => $_POST['workgroup'] ?? 'WORKGROUP',
             'server_string' => $_POST['server_string'] ?? 'NAS',
@@ -1225,7 +1233,7 @@ switch ($action) {
         if ($result) {
             restartSmbService();
         }
-        echo json_encode(['success' => $result, 'message' => $result ? 'Конфигурация сохранена' : 'Ошибка сохранения']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2300 : $lang2301]);
         break;
         
     case 'get_users':
@@ -1233,36 +1241,38 @@ switch ($action) {
         break;
         
     case 'create_user':
+		global $lang2302, $lang2303, $lang2304, $lang2305, $lang2306, $lang2307;
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         $password2 = $_POST['password2'] ?? '';
         
         if (empty($username)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя пользователя']);
+            echo json_encode(['success' => false, 'error' => $lang2302]);
         } elseif (!preg_match('/^[a-z_][a-z0-9_-]*$/', $username)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы в имени']);
+            echo json_encode(['success' => false, 'error' => $lang2303]);
         } elseif (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Пароль должен быть не менее 4 символов']);
+            echo json_encode(['success' => false, 'error' => $lang2304]);
         } elseif ($password !== $password2) {
-            echo json_encode(['success' => false, 'error' => 'Пароли не совпадают']);
+            echo json_encode(['success' => false, 'error' => $lang2305]);
         } else {
             $result = createSmbUser($username, $password);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Пользователь создан' : 'Ошибка создания']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang2306 : $lang2307]);
         }
         break;
         
     case 'change_password':
+		global $lang2308, $lang2309, $lang2310, $lang2311;
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $password2 = $_POST['password2'] ?? '';
         
         if (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Пароль слишком короткий']);
+            echo json_encode(['success' => false, 'error' => $lang2308]);
         } elseif ($password !== $password2) {
-            echo json_encode(['success' => false, 'error' => 'Пароли не совпадают']);
+            echo json_encode(['success' => false, 'error' => $lang2309]);
         } else {
             $result = updateSmbUserPassword($username, $password);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Пароль изменен' : 'Ошибка изменения']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang2310 : $lang2311]);
         }
         break;
         
@@ -1277,6 +1287,7 @@ switch ($action) {
         break;
         
     case 'create_share':
+		global $lang2312, $lang2313, $lang2314, $lang2315, $lang2316;
         $name = trim($_POST['share_name'] ?? '');
         $path = trim($_POST['path'] ?? '');
         $comment = trim($_POST['comment'] ?? '');
@@ -1286,15 +1297,15 @@ switch ($action) {
         $write_list = $_POST['write_list'] ?? [];
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите название шары']);
+            echo json_encode(['success' => false, 'error' => $lang2312]);
         } elseif (empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Укажите существующий путь']);
+            echo json_encode(['success' => false, 'error' => $lang2313]);
         } else {
             $shares = getSmbShares();
             
             foreach ($shares as $share) {
                 if ($share['name'] === $name) {
-                    echo json_encode(['success' => false, 'error' => 'Шара с таким именем уже существует']);
+                    echo json_encode(['success' => false, 'error' => $lang2314]);
                     exit;
                 }
             }
@@ -1316,14 +1327,15 @@ switch ($action) {
             if (saveSmbShares($shares)) {
                 setFolderPermissions($path, $public, $all_users);
                 restartSmbService();
-                echo json_encode(['success' => true, 'message' => 'Шара создана', 'data' => $newShare]);
+                echo json_encode(['success' => true, 'message' => $lang2315, 'data' => $newShare]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка сохранения']);
+                echo json_encode(['success' => false, 'error' => $lang2316]);
             }
         }
         break;
         
     case 'update_share':
+		global $lang2317, $lang2318, $lang2319;
         $old_name = $_POST['old_name'] ?? '';
         $name = trim($_POST['share_name'] ?? '');
         $path = trim($_POST['path'] ?? '');
@@ -1334,7 +1346,7 @@ switch ($action) {
         $write_list = $_POST['write_list'] ?? [];
         
         if (empty($name) || empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Заполните все поля']);
+            echo json_encode(['success' => false, 'error' => $lang2317]);
         } else {
             $shares = getSmbShares();
             $updated = false;
@@ -1358,14 +1370,15 @@ switch ($action) {
             if ($updated && saveSmbShares($shares)) {
                 setFolderPermissions($path, $public, $all_users);
                 restartSmbService();
-                echo json_encode(['success' => true, 'message' => 'Шара обновлена']);
+                echo json_encode(['success' => true, 'message' => $lang2318]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка обновления']);
+                echo json_encode(['success' => false, 'error' => $lang2319]);
             }
         }
         break;
         
     case 'delete_share':
+		global $lang2320, $lang2321;
         $name = $_GET['name'] ?? '';
         $shares = getSmbShares();
         $newShares = [];
@@ -1378,9 +1391,9 @@ switch ($action) {
         
         if (saveSmbShares($newShares)) {
             restartSmbService();
-            echo json_encode(['success' => true, 'message' => 'Шара удалена']);
+            echo json_encode(['success' => true, 'message' => $lang2320]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Ошибка удаления']);
+            echo json_encode(['success' => false, 'error' => $lang2321]);
         }
         break;
         
@@ -1399,19 +1412,20 @@ switch ($action) {
         break;
         
     case 'create_folder':
+		global $lang2322, $lang2323, $lang2324, $lang2325;
         $path = $_POST['path'] ?? '';
         $name = trim($_POST['name'] ?? '');
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя папки']);
+            echo json_encode(['success' => false, 'error' => $lang2322]);
         } elseif (!preg_match('/^[a-zA-Z0-9_\-\.\s]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы']);
+            echo json_encode(['success' => false, 'error' => $lang2323]);
         } else {
             $fullPath = rtrim($path, '/') . '/' . $name;
             if (createDirectory($fullPath)) {
-                echo json_encode(['success' => true, 'message' => 'Папка создана', 'path' => $fullPath]);
+                echo json_encode(['success' => true, 'message' => $lang2324, 'path' => $fullPath]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Не удалось создать папку']);
+                echo json_encode(['success' => false, 'error' => $lang2325]);
             }
         }
         break;
@@ -1449,9 +1463,10 @@ switch ($action) {
 		break; 
 	  
 	 case 'get_user_details':
+		global $lang2326;
 		$username = $_GET['username'] ?? '';
 		if (empty($username)) {
-			echo json_encode(['success' => false, 'error' => 'Username required']);
+			echo json_encode(['success' => false, 'error' => $lang2326]);
 			break;
 		}
 		echo json_encode(['success' => true, 'data' => getUserDetails($username)]);
@@ -1459,37 +1474,41 @@ switch ($action) {
 	  
 	  
 	 case 'kill_session':
+			global $lang2327;
 			$pid = $_POST['pid'] ?? '';
 			if (empty($pid)) {
-				echo json_encode(['success' => false, 'error' => 'PID required']);
+				echo json_encode(['success' => false, 'error' => $lang2327]);
 				break;
 			}
 			echo json_encode(killSmbSession($pid));
 			break;
 
 		case 'kill_user_sessions':
+			global $lang2328;
 			$username = $_POST['username'] ?? '';
 			if (empty($username)) {
-				echo json_encode(['success' => false, 'error' => 'Username required']);
+				echo json_encode(['success' => false, 'error' => $lang2328]);
 				break;
 			}
 			echo json_encode(killUserSessions($username));
 			break;
 
 		case 'close_file':
+			global $lang2329;
 			$pid = $_POST['pid'] ?? '';
 			$filePath = $_POST['file_path'] ?? '';
 			if (empty($pid) || empty($filePath)) {
-				echo json_encode(['success' => false, 'error' => 'PID and file path required']);
+				echo json_encode(['success' => false, 'error' => $lang2329]);
 				break;
 			}
 			echo json_encode(closeSmbFileByPath($pid, $filePath));
 			break;
 
 		case 'close_user_files':
+			global $lang2330;
 			$username = $_POST['username'] ?? '';
 			if (empty($username)) {
-				echo json_encode(['success' => false, 'error' => 'Username required']);
+				echo json_encode(['success' => false, 'error' => $lang2330]);
 				break;
 			}
 			echo json_encode(closeAllUserFiles($username));

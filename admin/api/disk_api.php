@@ -86,6 +86,8 @@ error_reporting(E_ERROR);
 ini_set('display_errors', 0);
 set_time_limit(0);
 
+require_once '../lang/loader.php';
+
 // ==================== ЛОГИРОВАНИЕ ====================
 define('LOG_FILE', '/var/www/minib/logs/disk_manager.log');
 define('ERROR_LOG_FILE', '/var/www/minib/logs/disk_manager_error.log');
@@ -155,8 +157,14 @@ function clearLogs() {
     return $result;
 }
 
-function execCmd($cmd, $sudo = true, $timeout = 60) {
-    $fullCmd = $sudo ? "sudo " . $cmd : $cmd;
+function execCmd($cmd, $sudo = true, $timeout = 60, $useNsenter = false) {
+    $fullCmd = $cmd;
+    if ($useNsenter) {
+        $fullCmd = "nsenter -t 1 -m " . $cmd;
+    }
+    if ($sudo) {
+        $fullCmd = "sudo " . $fullCmd;
+    }
     $fullCmd .= " 2>&1";
     
     $descriptorspec = [
@@ -209,24 +217,25 @@ function execCmd($cmd, $sudo = true, $timeout = 60) {
 
 function isMounted($device) {
     $device = preg_replace('/^\/dev\//', '', $device);
-    $mountCheck = execCmd("mount | grep -E \"^/dev/${device} \"", true, 5);
+    $mountCheck = execCmd("cat /proc/mounts | grep -E \"^/dev/${device} \"", true, 5, true);
     return !empty($mountCheck);
 }
 
 function getMountPoint($device) {
     $device = preg_replace('/^\/dev\//', '', $device);
-    $mountPoint = execCmd("mount | grep -E \"^/dev/${device} \" | awk '{print $3}'", true, 5);
+    $mountPoint = execCmd("cat /proc/mounts | grep -E \"^/dev/${device} \" | awk '{print $2}'", true, 5, true);
     return trim($mountPoint);
 }
 
 function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false, $fstabOptions = 'defaults') {
+	global $lang4771, $lang4772, $lang4773, $lang4774, $lang4775;
     writeLog("Mounting device: {$device}, mount point: {$mountPoint}, fsType: {$fsType}");
     
     $device = preg_replace('/^\/dev\//', '', $device);
     $devicePath = "/dev/{$device}";
     
     if (!file_exists($devicePath)) {
-        $error = "Device {$devicePath} does not exist";
+        $error = $lang4771 . $devicePath . $lang4772;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -238,17 +247,17 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
             $detectedFs = trim(execCmd("lsblk -n -o FSTYPE {$devicePath} 2>/dev/null", true, 5));
         }
         if (empty($detectedFs)) {
-            $error = "Unable to determine file system on {$device}. The partition may not be formatted.";
+            $error = $lang4773 . $device . $lang4774;
             writeError($error, ['device' => $device]);
             return ['success' => false, 'error' => $error];
         }
         writeLog("Detected filesystem: {$detectedFs}");
     }
     
-    $globalMount = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 5);
+    $globalMount = execCmd("cat /proc/mounts | grep '{$devicePath} '", true, 5, true);
     if (!empty($globalMount)) {
         $existingMount = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} ' | awk '{print $3}'", true, 5);
-        $error = "The device is already mounted in {$existingMount}";
+        $error = $lang4775 . $existingMount;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -265,9 +274,10 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
             execCmd("mkdir -p \"{$parentDir}\"", true, 5);
         }
         
+		global $lang1171;
         $result = execCmd("mkdir -p \"{$mountPoint}\"", true, 5);
         if (!empty($result) && strpos($result, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Failed to create mount point: {$result}"];
+            return ['success' => false, 'error' => $lang1171 . $result];
         }
         
         execCmd("chown {$uid}:{$gid} \"{$mountPoint}\"", true, 3);
@@ -281,9 +291,10 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
     switch ($detectedFs) {
         case 'ntfs':
         case 'ntfs-3g':
-            $fsHelper = execCmd("which ntfs-3g 2>/dev/null", true, 3);
+            global $lang1172;
+			$fsHelper = execCmd("which ntfs-3g 2>/dev/null", true, 3);
             if (empty($fsHelper)) {
-                $error = "NTFS-3G not installed. Install it: sudo apt install ntfs-3g";
+                $error = $lang1172;
                 writeError($error);
                 if ($mountPointCreated) {
                     execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
@@ -293,9 +304,10 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
             $detectedFs = 'ntfs-3g';
             break;
         case 'exfat':
-            $fsHelper = execCmd("which mount.exfat 2>/dev/null", true, 3);
+            global $lang1173;
+			$fsHelper = execCmd("which mount.exfat 2>/dev/null", true, 3);
             if (empty($fsHelper)) {
-                $error = "exFAT not supported. Install it: sudo apt install exfat-fuse exfatprogs";
+                $error = $lang1173;
                 writeError($error);
                 if ($mountPointCreated) {
                     execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
@@ -356,7 +368,7 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
         writeLog("Trying mount command: {$cmd}");
         $output = execCmd($cmd, true, 15);
         
-        $checkMount = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 3);
+        $checkMount = execCmd("cat /proc/mounts | grep '{$devicePath} '", true, 3, true);
         if (!empty($checkMount)) {
             $mountSuccess = true;
             writeLog("Mount successful with command: {$cmd}");
@@ -368,24 +380,25 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
     }
     
     if (!$mountSuccess) {
-        if ($mountPointCreated && is_dir($mountPoint)) {
+        global $lang1174, $lang1175, $lang1176, $lang1177, $lang1178, $lang1179, $lang1180, $lang1181, $lang1182, $lang1183, $lang1184;
+		if ($mountPointCreated && is_dir($mountPoint)) {
             execCmd("rm -f \"{$mountPoint}/.mount_created_by_disk_manager\"", true, 3);
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
         }
         
         $errorMsg = "Mount error: ";
         if (strpos($lastError, 'unknown filesystem type') !== false) {
-            $errorMsg .= "Unknown file system type '{$detectedFs}'. Install the required packages.";
+            $errorMsg .= $lang1174 . $detectedFs . $lang1175;
         } elseif (strpos($lastError, 'bad option') !== false) {
-            $errorMsg .= "Incorrect mount options for FS '{$detectedFs}'.";
+            $errorMsg .= $lang1176 . $detectedFs;
         } elseif (strpos($lastError, 'bad superblock') !== false) {
-            $errorMsg .= "Corrupted file system on {$device}. Run the scan: fsck {$devicePath}";
+            $errorMsg .= $lang1177 . $device . $lang1178 . $devicePath;
         } elseif (strpos($lastError, 'helper program') !== false) {
-            $errorMsg .= "There is no driver for FS '{$detectedFs}'. Install: ";
-            if ($detectedFs === 'ntfs-3g') $errorMsg .= "sudo apt install ntfs-3g";
-            elseif ($detectedFs === 'exfat') $errorMsg .= "sudo apt install exfat-fuse exfatprogs";
-            elseif ($detectedFs === 'vfat') $errorMsg .= "sudo apt install dosfstools";
-            else $errorMsg .= "corresponding package for {$detectedFs}";
+            $errorMsg .= $lang1179 . $detectedFs . $lang1180;
+            if ($detectedFs === 'ntfs-3g') $errorMsg .= $lang1181;
+            elseif ($detectedFs === 'exfat') $errorMsg .= $lang1182;
+            elseif ($detectedFs === 'vfat') $errorMsg .= $lang1183;
+            else $errorMsg .= $lang1184 . $detectedFs;
         } else {
             $errorMsg .= $lastError;
         }
@@ -427,22 +440,119 @@ function mountDevice($device, $mountPoint, $fsType = 'auto', $addToFstab = false
 }
 
 function umountDevice($device, $force = false, $removeFromFstab = false) {
-    writeLog("Unmounting device: {$device}, force: " . ($force ? 'true' : 'false') . ", removeFromFstab: " . ($removeFromFstab ? 'true' : 'false'));
+    writeLog("=== UNMOUNT DEVICE START ===");
+    writeLog("Input: {$device}, force: " . ($force ? 'true' : 'false') . ", removeFromFstab: " . ($removeFromFstab ? 'true' : 'false'));
+    global $lang1185, $lang1186, $lang1187, $lang1188;
+
+    $cleanDevice = preg_replace('#^/dev/#', '', $device);
+    $devicePath = "/dev/{$cleanDevice}";
+    $mountPoint = '';
+    $realDevicePath = $devicePath;
     
-    $device = preg_replace('/^\/dev\//', '', $device);
-    $devicePath = "/dev/{$device}";
-    
-    $globalMount = execCmd("nsenter -t 1 -m mount | grep '/dev/{$device} '", true, 5);
-    
-    if (empty($globalMount)) {
-        writeError("Device not mounted: {$device}");
-        return ['success' => false, 'error' => 'Устройство не смонтировано в системе'];
+    if (strpos($device, '/') === 0 && strpos($device, '/dev/') !== 0) {
+        $mountPoint = $device;
+        writeLog("Input is mount point: {$mountPoint}");
+    }
+
+    if (empty($mountPoint)) {
+        writeLog("Searching mount point for: {$devicePath}");
+        
+        $pathsToCheck = [$devicePath];
+        
+        if (strpos($cleanDevice, '-') !== false) {
+            $mapperName = str_replace('-', '--', $cleanDevice);
+            $pathsToCheck[] = "/dev/mapper/{$mapperName}";
+            $pathsToCheck[] = "/dev/mapper/" . str_replace('--', '-', $mapperName);
+            
+            $vgLvPath = str_replace('-', '/', $cleanDevice);
+            if (strpos($vgLvPath, '/') !== false) {
+                $pathsToCheck[] = "/dev/{$vgLvPath}";
+            }
+            
+            $lvmCheck = execCmd("lsblk -o NAME,MOUNTPOINT | grep -E '{$cleanDevice}|vg_data' | head -5", true, 5);
+            writeLog("LVM lsblk check: " . ($lvmCheck ?: '(empty)'));
+        }
+        
+        if (preg_match('#^md\d+p\d+$#', $cleanDevice)) {
+            $pathsToCheck[] = "/dev/" . preg_replace('#p\d+$#', '', $cleanDevice);
+        }
+        
+        $pathsToCheck = array_unique($pathsToCheck);
+        
+        foreach ($pathsToCheck as $checkPath) {
+            $output = execCmd("mount | grep '{$checkPath} ' | awk '{print $3}'", true, 5);
+            if (!empty($output)) {
+                $mountPoint = trim($output);
+                $realDevicePath = $checkPath;
+                writeLog("Found mount via mount: {$checkPath} -> {$mountPoint}");
+                break;
+            }
+            
+            $output = execCmd("lsblk -n -o MOUNTPOINT {$checkPath} 2>/dev/null", true, 5);
+            if (!empty($output)) {
+                $mountPoint = trim($output);
+                $realDevicePath = $checkPath;
+                writeLog("Found mount via lsblk: {$checkPath} -> {$mountPoint}");
+                break;
+            }
+            
+            $output = execCmd("grep '{$checkPath}' /proc/mounts | awk '{print $2}'", true, 5);
+            if (!empty($output)) {
+                $mountPoint = trim($output);
+                $realDevicePath = $checkPath;
+                writeLog("Found mount via /proc/mounts: {$checkPath} -> {$mountPoint}");
+                break;
+            }
+        }
+        
+        if (empty($mountPoint) && strpos($cleanDevice, '-') !== false) {
+            $parts = explode('-', $cleanDevice);
+            if (count($parts) >= 2) {
+                $vgName = $parts[0];
+                $lvName = implode('-', array_slice($parts, 1));
+                
+                $altPath = "/dev/{$vgName}/{$lvName}";
+                writeLog("Trying LVM alternative path: {$altPath}");
+                
+                if (file_exists($altPath)) {
+                    $output = execCmd("mount | grep '{$altPath} ' | awk '{print $3}'", true, 5);
+                    if (!empty($output)) {
+                        $mountPoint = trim($output);
+                        $realDevicePath = $altPath;
+                        writeLog("Found mount via LVM path: {$altPath} -> {$mountPoint}");
+                    }
+                }
+                
+                if (empty($mountPoint)) {
+                    $output = execCmd("findmnt -n -o TARGET --source /dev/{$vgName}/{$lvName} 2>/dev/null", true, 5);
+                    if (!empty($output)) {
+                        $mountPoint = trim($output);
+                        $realDevicePath = "/dev/{$vgName}/{$lvName}";
+                        writeLog("Found mount via findmnt: {$realDevicePath} -> {$mountPoint}");
+                    }
+                }
+                
+                if (empty($mountPoint)) {
+                    $mapperPath = "/dev/mapper/{$vgName}-{$lvName}";
+                    if (file_exists($mapperPath)) {
+                        $output = execCmd("mount | grep '{$mapperPath} ' | awk '{print $3}'", true, 5);
+                        if (!empty($output)) {
+                            $mountPoint = trim($output);
+                            $realDevicePath = $mapperPath;
+                            writeLog("Found mount via mapper: {$mapperPath} -> {$mountPoint}");
+                        }
+                    }
+                }
+            }
+        }
     }
     
-    $mountPoint = execCmd("nsenter -t 1 -m mount | grep '/dev/{$device} ' | awk '{print $3}'", true, 5);
-    $mountPoint = trim($mountPoint);
+    if (empty($mountPoint)) {
+        writeLog("Device not mounted: {$device}");
+        return ['success' => false, 'error' => $lang1185, 'mounted' => false];
+    }
     
-    writeLog("Mount point: {$mountPoint}");
+    writeLog("Mount point found: {$mountPoint}, device: {$realDevicePath}");
     
     $wasCreatedByMount = false;
     if ($mountPoint && is_dir($mountPoint)) {
@@ -451,72 +561,78 @@ function umountDevice($device, $force = false, $removeFromFstab = false) {
         writeLog("Mount point was " . ($wasCreatedByMount ? "created by disk manager" : "not created by disk manager"));
     }
     
-    $uuid = '';
-    if ($removeFromFstab) {
-        $uuid = execCmd("blkid -s UUID -o value {$devicePath} 2>/dev/null", true, 5);
-        $uuid = trim($uuid);
-        writeLog("Device UUID: " . ($uuid ?: 'not found'));
-    }
-    
     if ($removeFromFstab) {
         writeLog("Removing from fstab...");
         
+        $uuid = execCmd("blkid -s UUID -o value {$realDevicePath} 2>/dev/null", true, 5);
+        $uuid = trim($uuid);
+        
         if (!empty($uuid)) {
-            $result = removeFromFstabByUuid($uuid);
-            writeLog("Remove by UUID: " . ($result ? "success" : "failed"));
+            removeFromFstabByUuid($uuid);
         }
-        
-        $result2 = removeFromFstab($device);
-        writeLog("Remove by device path: " . ($result2 ? "success" : "failed"));
-        
+        removeFromFstab(basename($realDevicePath));
         if (!empty($mountPoint)) {
-            $result3 = removeFromFstabByMountPoint($mountPoint);
-            writeLog("Remove by mount point: " . ($result3 ? "success" : "failed"));
+            removeFromFstabByMountPoint($mountPoint);
         }
     }
     
     $unmountSuccess = false;
     $lastError = '';
     
-    if ($force) {
-        writeLog("Force unmounting...");
-        $output = execCmd("nsenter -t 1 -m umount -l {$devicePath}", true, 10);
-    } else {
-        writeLog("Normal unmounting...");
-        $output = execCmd("nsenter -t 1 -m umount {$devicePath}", true, 10);
+    if (!$force) {
+        $lsofOutput = execCmd("lsof +D {$mountPoint} 2>/dev/null | head -3", true, 5);
+        if (!empty($lsofOutput) && strpos($lsofOutput, 'lsof') === false) {
+            writeLog("Device is in use, will force unmount");
+            $force = true;
+        }
     }
     
-    sleep(1);
-    $stillMounted = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 5);
+    $umountCommands = [];
     
-    if (empty($stillMounted)) {
-        $unmountSuccess = true;
-        writeLog("Successfully unmounted {$devicePath}");
+    if ($force) {
+        $umountCommands[] = "umount -l \"{$mountPoint}\" 2>&1";
+        $umountCommands[] = "nsenter -t 1 -m umount -l \"{$mountPoint}\" 2>&1";
     } else {
-        if (!$force) {
-            writeLog("Normal unmount failed, trying force unmount...");
-            $output = execCmd("nsenter -t 1 -m umount -l {$devicePath}", true, 10);
-            sleep(1);
-            $stillMounted = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 5);
-            
+        $umountCommands[] = "umount \"{$mountPoint}\" 2>&1";
+        $umountCommands[] = "nsenter -t 1 -m umount \"{$mountPoint}\" 2>&1";
+    }
+    
+    foreach ($umountCommands as $cmd) {
+        writeLog("Trying: {$cmd}");
+        $output = execCmd($cmd, true, 10);
+        writeLog("Output: " . ($output ?: '(empty)'));
+        
+        sleep(1);
+        $stillMounted = execCmd("mount | grep ' {$mountPoint} '", true, 3);
+        if (empty($stillMounted)) {
+            $stillMounted = execCmd("lsblk -n -o MOUNTPOINT {$realDevicePath} 2>/dev/null", true, 3);
             if (empty($stillMounted)) {
                 $unmountSuccess = true;
-                writeLog("Force unmount successful");
-            } else {
-                $lastError = "Failed to unmount: " . ($output ?: 'Unknown error');
+                writeLog("Unmount successful with command: {$cmd}");
+                break;
             }
-        } else {
-            $lastError = "Force unmount failed: " . ($output ?: 'Unknown error');
+        }
+        
+        $lastError = $output;
+    }
+    
+    if (!$unmountSuccess) {
+        $stillMounted = execCmd("mount | grep ' {$mountPoint} '", true, 3);
+        if (empty($stillMounted)) {
+            $unmountSuccess = true;
+            writeLog("Device appears to be unmounted (final check)");
         }
     }
     
     if (!$unmountSuccess) {
-        writeError($lastError, ['device' => $device]);
-        return ['success' => false, 'error' => $lastError];
+        $errorMsg = $force ? $lang1187 : $lang1186;
+        $errorMsg .= ($lastError ?: 'Unknown error');
+        writeError($errorMsg, ['device' => $device, 'mount_point' => $mountPoint]);
+        return ['success' => false, 'error' => $errorMsg, 'mounted' => true];
     }
     
     if ($wasCreatedByMount && $mountPoint && is_dir($mountPoint)) {
-        writeLog("Removing mount point {$mountPoint} (was created by disk manager)");
+        writeLog("Removing mount point {$mountPoint}");
         
         execCmd("rm -f \"{$mountPoint}/.mount_created_by_disk_manager\"", true, 3);
         
@@ -526,27 +642,21 @@ function umountDevice($device, $force = false, $removeFromFstab = false) {
             $content = array_diff($dirContent, ['.', '..']);
             if (!empty($content)) {
                 $isEmpty = false;
-                writeLog("Directory not empty, keeping it. Contents: " . implode(', ', $content));
+                writeLog("Directory not empty: " . implode(', ', $content));
             }
         }
         
         if ($isEmpty) {
-            $rmdirResult = execCmd("rmdir \"{$mountPoint}\" 2>&1", true, 3);
-            if (empty($rmdirResult) || strpos($rmdirResult, 'success') !== false) {
-                writeLog("Removed directory: {$mountPoint}");
-            } else {
-                writeLog("Could not remove directory: {$rmdirResult}");
-            }
+            execCmd("rmdir \"{$mountPoint}\" 2>&1", true, 3);
+            writeLog("Removed directory: {$mountPoint}");
         }
-    } else {
-        writeLog("Keeping mount point {$mountPoint} (was not created by disk manager)");
     }
     
     execCmd("partprobe 2>/dev/null", true, 3);
     execCmd("udevadm settle 2>/dev/null", true, 3);
     
-    writeLog("Device {$device} unmounted successfully");
-    return ['success' => true, 'message' => 'Устройство размонтировано', 'mount_point' => $mountPoint];
+    writeLog("=== UNMOUNT DEVICE END: success ===");
+    return ['success' => true, 'message' => $lang1188, 'mount_point' => $mountPoint, 'mounted' => false];
 }
 
 function removeFromFstabByMountPoint($mountPoint) {
@@ -574,7 +684,8 @@ function removeFromFstabByMountPoint($mountPoint) {
         
         $parts = preg_split('/\s+/', $lineTrimmed);
         if (count($parts) >= 2) {
-            if ($parts[1] === $mountPoint) {
+            $mountPointEscaped = str_replace(' ', '\\040', $mountPoint);
+            if ($parts[1] === $mountPoint || $parts[1] === $mountPointEscaped) {
                 $found = true;
                 writeLog("Removing fstab entry by mount point: {$line}");
                 continue;
@@ -600,28 +711,67 @@ function getMountStatus($device) {
     $device = preg_replace('/^\/dev\//', '', $device);
     $devicePath = "/dev/{$device}";
     
-    $mountInfo = execCmd("mount | grep '{$devicePath} '", true, 5);
-    if (empty($mountInfo)) {
-        $mountInfo = execCmd("nsenter -t 1 -m mount | grep '{$devicePath} '", true, 5);
+    writeLog("getMountStatus: checking {$devicePath}");
+    
+    $pathsToCheck = [$devicePath];
+    
+    if (strpos($device, '-') !== false) {
+        $parts = explode('-', $device);
+        if (count($parts) >= 2) {
+            $vgName = $parts[0];
+            $lvName = implode('-', array_slice($parts, 1));
+            $pathsToCheck[] = "/dev/{$vgName}/{$lvName}";
+            $pathsToCheck[] = "/dev/mapper/{$vgName}-{$lvName}";
+        }
     }
     
-    if (empty($mountInfo)) {
-        return ['mounted' => false];
+    if (strpos($device, '/') !== false && strpos($device, '/dev/') === false) {
+        $pathsToCheck[] = "/dev/{$device}";
     }
     
-    $mountPoint = '';
-    if (preg_match('/on\s+(\S+)\s+type/', $mountInfo, $matches)) {
-        $mountPoint = $matches[1];
-    } else {
-        $mountPoint = execCmd("echo '{$mountInfo}' | awk '{print $3}'", false, 3);
-        $mountPoint = trim($mountPoint);
+    $pathsToCheck = array_unique($pathsToCheck);
+    
+    foreach ($pathsToCheck as $checkPath) {
+        if (!file_exists($checkPath)) {
+            writeLog("Path does not exist: {$checkPath}");
+            continue;
+        }
+        
+        writeLog("Checking path: {$checkPath}");
+        
+        $mountInfo = execCmd("mount | grep '{$checkPath} '", true, 5);
+        if (empty($mountInfo)) {
+            $mountInfo = execCmd("nsenter -t 1 -m mount | grep '{$checkPath} '", true, 5);
+        }
+        
+        if (!empty($mountInfo)) {
+            $mountPoint = '';
+            if (preg_match('/on\s+(\S+)\s+type/', $mountInfo, $matches)) {
+                $mountPoint = $matches[1];
+            } else {
+                $mountPoint = execCmd("echo '{$mountInfo}' | awk '{print $3}'", false, 3);
+                $mountPoint = trim($mountPoint);
+            }
+            
+            if (empty($mountPoint)) {
+                $mountPoint = execCmd("lsblk -n -o MOUNTPOINT {$checkPath} 2>/dev/null", true, 3);
+                $mountPoint = trim($mountPoint);
+            }
+            
+            if (!empty($mountPoint)) {
+                writeLog("Found mount: {$checkPath} -> {$mountPoint}");
+                return [
+                    'mounted' => true,
+                    'mount_point' => $mountPoint,
+                    'mount_info' => $mountInfo,
+                    'device_path' => $checkPath
+                ];
+            }
+        }
     }
     
-    return [
-        'mounted' => true,
-        'mount_point' => $mountPoint,
-        'mount_info' => $mountInfo
-    ];
+    writeLog("Device not mounted: {$device}");
+    return ['mounted' => false];
 }
 
 function cleanupOrphanedMountPoints() {
@@ -809,7 +959,8 @@ function removeFromFstabByUuid($uuid) {
 
 function addToFstab($device, $mountPoint, $fsType, $options = 'defaults') {
     writeLog("Adding to fstab: {$device} -> {$mountPoint}");
-    
+    global $lang1189, $lang1190, $lang1191, $lang1192;
+	
     $device = preg_replace('/^\/dev\//', '', $device);
     $devicePath = "/dev/{$device}";
     
@@ -843,17 +994,17 @@ function addToFstab($device, $mountPoint, $fsType, $options = 'defaults') {
     $currentFstab = file_get_contents('/etc/fstab');
     if ($currentFstab === false) {
         writeError("Cannot read /etc/fstab");
-        return ['success' => false, 'error' => 'Cannot read /etc/fstab'];
+        return ['success' => false, 'error' => $lang1189 ];
     }
     
     if (strpos($currentFstab, $uuid) !== false) {
         writeLog("UUID {$uuid} already in fstab, skipping");
-        return ['success' => true, 'message' => 'Entry already exists'];
+        return ['success' => true, 'message' => $lang1190 ];
     }
     
     if (strpos($currentFstab, $mountPoint) !== false) {
         writeLog("Mount point {$mountPoint} already in fstab, skipping");
-        return ['success' => true, 'message' => 'Mount point already in fstab'];
+        return ['success' => true, 'message' => $lang1191 ];
     }
     
     $result = file_put_contents('/etc/fstab', $fstabLine, FILE_APPEND);
@@ -862,7 +1013,7 @@ function addToFstab($device, $mountPoint, $fsType, $options = 'defaults') {
         return ['success' => true];
     } else {
         writeError("Failed to write to /etc/fstab");
-        return ['success' => false, 'error' => 'Failed to write to /etc/fstab'];
+        return ['success' => false, 'error' => $lang1192 ];
     }
 }
 
@@ -929,15 +1080,49 @@ function getLvmLvsAsPartitions($vgName) {
             $sizeBytes = parseSizeToBytes($parts[1]);
             $attr = $parts[2];
             $lvPath = $parts[3];
-            //$sizeFormatted = formatSize($sizeBytes);
             
             $mountPoint = null;
-            $mountsOutput = execCmd("mount | grep '{$lvPath} ' | awk '{print $3}'", true, 5);
-            if (!empty($mountsOutput)) {
-                $mountPoint = trim($mountsOutput);
+            
+            $pathsToCheck = [
+                $lvPath,
+                "/dev/mapper/{$vgName}-{$lvName}",
+                "/dev/mapper/{$vgName}--{$lvName}"
+            ];
+            
+            foreach ($pathsToCheck as $checkPath) {
+                $mountsOutput = execCmd("mount | grep '{$checkPath} ' | awk '{print $3}'", true, 5);
+                if (!empty($mountsOutput)) {
+                    $mountPoint = trim($mountsOutput);
+                    break;
+                }
+            }
+            
+            if (empty($mountPoint)) {
+                $mountsOutput = execCmd("grep '{$lvPath}' /proc/mounts | awk '{print $2}'", true, 5);
+                if (!empty($mountsOutput)) {
+                    $mountPoint = trim($mountsOutput);
+                }
+            }
+            
+            if (empty($mountPoint)) {
+                $mountsOutput = execCmd("findmnt -n -o TARGET --source {$lvPath} 2>/dev/null", true, 5);
+                if (!empty($mountsOutput)) {
+                    $mountPoint = trim($mountsOutput);
+                }
+            }
+            
+            if (empty($mountPoint)) {
+                $mountsOutput = execCmd("lsblk -n -o MOUNTPOINT {$lvPath} 2>/dev/null", true, 5);
+                if (!empty($mountsOutput)) {
+                    $mountPoint = trim($mountsOutput);
+                }
             }
             
             $fsType = trim(execCmd("blkid -s TYPE -o value {$lvPath} 2>/dev/null", true, 5));
+            if (empty($fsType)) {
+                $fsType = trim(execCmd("lsblk -n -o FSTYPE {$lvPath} 2>/dev/null", true, 5));
+            }
+            
             $hasFilesystem = !empty($fsType);
             
             $fstabEntry = null;
@@ -957,7 +1142,7 @@ function getLvmLvsAsPartitions($vgName) {
                 'full_name' => "{$vgName}/{$lvName}",
                 'path' => $lvPath,
                 'size_bytes' => $sizeBytes,
-                'size_formatted' => $sizeFormatted,
+                'size_formatted' => formatSize($sizeBytes),
                 'fstype' => $fsType ?: null,
                 'mount_point' => $mountPoint,
                 'uuid' => $uuid ?: null,
@@ -975,6 +1160,12 @@ function getLvmLvsAsPartitions($vgName) {
     return $partitions;
 }
 
+function formatSize($bytes) {
+    if ($bytes === 0) return '0 B';
+    $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    $i = floor(log($bytes, 1024));
+    return round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
+}
 
 function getRaidArraysAsVirtualDisks() {
     $virtualDisks = [];
@@ -1162,7 +1353,7 @@ function getAllDisksWithVirtual() {
 
 
 function getMountedDevices() {
-    $output = execCmd("mount | grep '^/dev/' | grep -v 'loop'", true, 5);
+    $output = execCmd("cat /proc/mounts | grep '^/dev/' | grep -v 'loop'", true, 5, true);
     $devices = [];
     
     if (!empty($output)) {
@@ -1554,11 +1745,12 @@ function getRaidMaxNewPartitionSize($raidName) {
 function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = true) {
     writeLog("=== CREATE PARTITION ON RAID START ===");
     writeLog("RAID: {$raidName}, size: " . ($size === '' ? 'ALL FREE SPACE' : $size) . ", fsType: {$fsType}, format: " . ($format ? 'true' : 'false'));
-    
+    global $lang1193, $lang1194, $lang1195, $lang1196, $lang1197, $lang1198, $lang1199, $lang1200, $lang1201;
+	
     $raidPath = "/dev/{$raidName}";
     
     if (!file_exists($raidPath)) {
-        $error = "RAID device {$raidPath} not found";
+        $error = $lang1193 . $raidPath . $lang1194;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -1576,7 +1768,7 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
         writeLog("No partition table found, creating GPT");
         $initResult = execCmd("parted -s {$raidPath} mklabel gpt 2>&1", true, 20);
         if (strpos($initResult, 'Error') !== false) {
-            return ['success' => false, 'error' => "Failed to create partition table: {$initResult}"];
+            return ['success' => false, 'error' => $lang1195 . $initResult];
         }
         $tableType = 'gpt';
         writeLog("Created GPT partition table");
@@ -1681,7 +1873,7 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
     }
     
     if ($endByte <= $startByte) {
-        $error = "Invalid partition size: end ({$endByte}) <= start ({$startByte})";
+        $error = ($lang1196 . $endByte . $lang1197 . $startByte);
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -1712,7 +1904,7 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
             
             if (strpos($output, 'Error') !== false || strpos($output, 'error') !== false) {
                 writeError("Partition creation failed: {$output}");
-                return ['success' => false, 'error' => "Не удалось создать раздел. Ошибка: " . $output];
+                return ['success' => false, 'error' => $lang1198 . $output];
             }
         }
     }
@@ -1744,7 +1936,7 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
     if (!file_exists("/dev/{$partitionName}")) {
         return [
             'success' => false,
-            'error' => "Раздел создан, но устройство /dev/{$partitionName} не найдено. Попробуйте: partprobe {$raidPath}",
+            'error' => $lang1199 . $partitionName . $lang1200 . $raidPath,
             'partition' => $partitionName
         ];
     }
@@ -1755,7 +1947,7 @@ function createPartitionOnRaid($raidName, $size, $fsType = 'ext4', $format = tru
         if (!$formatResult['success']) {
             return [
                 'success' => false,
-                'error' => "Раздел создан, но форматирование не удалось: " . $formatResult['error'],
+                'error' => $lang1201 . $formatResult['error'],
                 'partition' => $partitionName
             ];
         }
@@ -1831,16 +2023,16 @@ function getRaidFreeSpaceInfo($raidName) {
 function resizeRaidPartition($partition, $newSizeGb) {
     writeLog("=== RESIZE RAID PARTITION START ===");
     writeLog("Partition: {$partition}, new size: {$newSizeGb} GB");
-    
+    global $lang1202, $lang1203, $lang1204, $lang1205, $lang1206, $lang1207, $lang1208, $lang1209, $lang1210, $lang1211, $lang1212, $lang1213;
     if ($newSizeGb <= 0) {
-        return ['success' => false, 'error' => 'Invalid size'];
+        return ['success' => false, 'error' => $lang1207 ];
     }
     
     $cleanPartition = preg_replace('#^/dev/#', '', $partition);
     $partitionPath = "/dev/{$cleanPartition}";
     
     if (!file_exists($partitionPath)) {
-        return ['success' => false, 'error' => "Partition {$partitionPath} not found"];
+        return ['success' => false, 'error' => $lang1202 . $partitionPath . $lang1203 ];
     }
     
     $raidName = null;
@@ -1867,7 +2059,7 @@ function resizeRaidPartition($partition, $newSizeGb) {
         writeLog("Parsed format mdXnum: raid={$raidName}, num={$partNum}");
     }
     else {
-        $error = "Cannot parse RAID partition name: {$cleanPartition}";
+        $error = $lang1204 . $cleanPartition;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -1876,7 +2068,7 @@ function resizeRaidPartition($partition, $newSizeGb) {
     writeLog("RAID path: {$raidPath}, partition number: {$partNum}");
     
     if (!file_exists($raidPath)) {
-        return ['success' => false, 'error' => "RAID device {$raidPath} not found"];
+        return ['success' => false, 'error' => $lang1205 . $raidPath . $lang1206 ];
     }
     
     $currentSizeBytes = (int)trim(execCmd("blockdev --getsize64 {$partitionPath} 2>/dev/null", true, 5));
@@ -1888,15 +2080,15 @@ function resizeRaidPartition($partition, $newSizeGb) {
     writeLog("RAID total size: {$totalSizeGb} GB");
     
     if ($newSizeGb > $totalSizeGb) {
-        return ['success' => false, 'error' => "New size {$newSizeGb}GB exceeds RAID total size {$totalSizeGb}GB"];
+        return ['success' => false, 'error' => $lang1208 . $newSizeGb . $lang1209 . $totalSizeGb . $lang1210 ];
     }
     
     if ($newSizeGb < $currentSizeGb - 0.1) {
-        return ['success' => false, 'error' => "Уменьшение размера раздела не поддерживается. Новый размер должен быть больше текущего ({$currentSizeGb}GB)"];
+        return ['success' => false, 'error' => $lang1211 . $currentSizeGb . $lang1210];
     }
     
     if (abs($newSizeGb - $currentSizeGb) < 0.1) {
-        return ['success' => false, 'error' => "Новый размер совпадает с текущим"];
+        return ['success' => false, 'error' => $lang1212 ];
     }
     
     $mountCheck = execCmd("mount | grep '{$partitionPath} '", true, 3);
@@ -1939,7 +2131,7 @@ function resizeRaidPartition($partition, $newSizeGb) {
                     execCmd("mount {$partitionPath} \"{$mountPoint}\" 2>/dev/null", true, 10);
                 }
                 writeError("Resize failed: {$output}");
-                return ['success' => false, 'error' => "Failed to resize partition: " . $output];
+                return ['success' => false, 'error' => $lang1213 . $output];
             }
         }
     }
@@ -2026,7 +2218,7 @@ function getFullSmartData($disk) {
     $smart = [
         'available' => false,
         'health' => 'Unknown',
-        'health_text' => 'Неизвестно',
+        'health_text' => 'Unknown',
         'reallocated_sectors' => null,
         'power_on_hours' => null,
         'power_on_days' => null,
@@ -2061,10 +2253,10 @@ function getFullSmartData($disk) {
         $health = $matches[1];
         if (strtoupper($health) === 'PASSED') {
             $smart['health'] = 'PASSED';
-            $smart['health_text'] = 'Хорошее';
+            $smart['health_text'] = 'God';
         } else {
             $smart['health'] = 'FAILED';
-            $smart['health_text'] = 'КРИТИЧЕСКОЕ!';
+            $smart['health_text'] = 'Critical!';
         }
     }
     
@@ -2433,10 +2625,10 @@ function getRaidNextFreePosition($raidName) {
 
 function deleteRaidPartition($partition) {
     writeLog("Deleting RAID partition: {$partition}");
-    
+    global $lang1214, $lang1215, $lang1216;
     $parsed = parseRaidPartitionName($partition);
     if (!$parsed['is_raid'] || $parsed['is_array']) {
-        $error = "Cannot parse RAID partition name: {$partition}";
+        $error = $lang1214 . $partition;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -2446,7 +2638,7 @@ function deleteRaidPartition($partition) {
     $raidPath = "/dev/{$raidName}";
     
     if (!file_exists($raidPath)) {
-        $error = "RAID device {$raidPath} not found";
+        $error = $lang1215 . $raidPath . $lang1216;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -2515,10 +2707,10 @@ function initDisk($disk, $tableType = 'gpt') {
 
 function createLvmLogicalVolume($vgName, $lvName, $size, $fsType = 'ext4', $format = true) {
     writeLog("Creating LV: {$vgName}/{$lvName}, size: {$size}, fs: {$fsType}");
-    
+    global $lang1217, $lang1218, $lang1219, $lang1220, $lang1221, $lang1222;
     $vgCheck = execCmd("vgs " . escapeshellarg($vgName) . " 2>/dev/null", true, 5);
     if (empty($vgCheck)) {
-        return ['success' => false, 'error' => "Volume Group {$vgName} not found"];
+        return ['success' => false, 'error' => $lang1217 . $vgName . $lang1218 ];
     }
     
     $freeSpace = execCmd("vgs --noheadings -o vg_free --units g " . escapeshellarg($vgName) . " 2>/dev/null | tr -d ' '", true, 5);
@@ -2533,7 +2725,7 @@ function createLvmLogicalVolume($vgName, $lvName, $size, $fsType = 'ext4', $form
     if ($sizeUnit === 'T') $sizeInG = $sizeNum * 1024;
     
     if ($sizeInG > $freeSpace) {
-        return ['success' => false, 'error' => "Not enough free space in VG. Available: {$freeSpace}G, Requested: {$sizeInG}G"];
+        return ['success' => false, 'error' => $lang1219 . $freeSpace . $lang1220 . $sizeInG . $lang1221 ];
     }
     
     $sizeArg = is_numeric($size) ? $size . 'G' : $size;
@@ -2547,7 +2739,7 @@ function createLvmLogicalVolume($vgName, $lvName, $size, $fsType = 'ext4', $form
         if ($format && $fsType !== 'none') {
             $formatResult = formatPartition(basename($lvPath), $fsType, '', true);
             if (!$formatResult['success']) {
-                return ['success' => false, 'error' => "LV created but format failed: " . $formatResult['error']];
+                return ['success' => false, 'error' => $lang1222 . $formatResult['error']];
             }
         }
         
@@ -2653,11 +2845,11 @@ function getFreeSpaceStart($disk) {
 function createPartition($disk, $size, $fsType = null, $label = '', $format = false, $quickFormat = true, $partitionType = 'primary') {
     writeLog("=== CREATE PARTITION START ===");
     writeLog("Parameters: disk={$disk}, size={" . ($size === '' || $size === null ? 'EMPTY' : $size) . "}, fsType={$fsType}, format=" . ($format ? 'true' : 'false'));
-    
+    global $lang1223, $lang1224, $lang1225, $lang1226, $lang1227, $lang1228, $lang1229, $lang1230, $lang1231, $lang1232, $lang1233, $lang1234;
     // ==================== ПРОВЕРКА СУЩЕСТВОВАНИЯ ДИСКА ====================
     $diskPath = "/dev/{$disk}";
     if (!file_exists($diskPath)) {
-        $error = "Disk {$diskPath} does not exist";
+        $error = $lang1223 . $diskPath . $lang1224;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -2672,7 +2864,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         if (strpos($initResult, 'Error') !== false) {
             $initResult = execCmd("parted -s {$diskPath} mklabel msdos 2>&1", true, 20);
             if (strpos($initResult, 'Error') !== false) {
-                return ['success' => false, 'error' => "Failed to create partition table: {$initResult}"];
+                return ['success' => false, 'error' => $lang1225 . $initResult];
             }
             $tableType = 'msdos';
             writeLog("Created MBR (msdos) partition table");
@@ -2715,7 +2907,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
     writeLog("Calculated free space: {$freeGb} GB ({$freeBytes} bytes)");
     
     if ($freeBytes <= 0) {
-        return ['success' => false, 'error' => 'Нет свободного места на диске для создания нового раздела'];
+        return ['success' => false, 'error' => $lang1226 ];
     }
     
     // ==================== ОПРЕДЕЛЕНИЕ НАЧАЛЬНОЙ ПОЗИЦИИ ====================
@@ -2803,7 +2995,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         $sizeBytes = (int)($sizeGb * 1024 * 1024 * 1024);
         
         if ($sizeBytes > $freeBytes) {
-            return ['success' => false, 'error' => "Запрошенный размер {$sizeGb} GB превышает доступное свободное место {$freeGb} GB"];
+            return ['success' => false, 'error' => $lang1227 . $sizeGb . $lang1228 . $freeGb . $lang1229 ];
         }
         
         $endByte = $startByte + $sizeBytes;
@@ -2813,7 +3005,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         $sizeBytes = parseSizeToBytes($size);
         if ($sizeBytes > 0) {
             if ($sizeBytes > $freeBytes) {
-                return ['success' => false, 'error' => "Запрошенный размер превышает доступное свободное место"];
+                return ['success' => false, 'error' => $lang1230 ];
             }
             $endByte = $startByte + $sizeBytes;
             $partitionSizeGb = round($sizeBytes / 1024 / 1024 / 1024, 2);
@@ -2931,7 +3123,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         return [
             'success' => true,
             'partition' => $expectedName,
-            'warning' => "Раздел создан, но устройство не обнаружено. Выполните: partprobe {$diskPath}",
+            'warning' => $lang1231 . $diskPath,
             'size_gb' => $partitionSizeGb
         ];
     }
@@ -2946,7 +3138,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
     if (!file_exists("/dev/{$newPartitionName}")) {
         return [
             'success' => false,
-            'error' => "Раздел создан, но устройство /dev/{$newPartitionName} не найдено"
+            'error' => $lang1232 . $newPartitionName . $lang1233 
         ];
     }
     
@@ -2960,7 +3152,7 @@ function createPartition($disk, $size, $fsType = null, $label = '', $format = fa
         if (!$formatResult['success']) {
             return [
                 'success' => false,
-                'error' => 'Раздел создан, но форматирование не удалось: ' . $formatResult['error'],
+                'error' => $lang1234 . $formatResult['error'],
                 'partition' => $newPartitionName
             ];
         }
@@ -3097,7 +3289,8 @@ function getPartitionNumbers($disk) {
 
 function formatPartition($partition, $fsType, $label = '', $quickFormat = true) {
     writeLog("Formatting partition: {$partition}, fsType: {$fsType}, label: {$label}, quickFormat: " . ($quickFormat ? 'true' : 'false'));
-    
+    global $lang1235, $lang1236;
+	
     $partCheck = execCmd("lsblk /dev/{$partition} 2>/dev/null", true, 3);
     if (empty($partCheck)) {
         $error = "Partition {$partition} does not exist";
@@ -3190,7 +3383,7 @@ function formatPartition($partition, $fsType, $label = '', $quickFormat = true) 
         $check = execCmd("ntfsinfo /dev/{$partition} 2>&1 | head -1", true, 10);
         if (strpos($check, 'ERROR') !== false) {
             $success = false;
-            $errorMsg = "NTFS creation verification failed: {$check}";
+            $errorMsg = $lang1235 . $check;
             writeError($errorMsg);
         }
     }
@@ -3199,7 +3392,7 @@ function formatPartition($partition, $fsType, $label = '', $quickFormat = true) 
         $check = execCmd("dumpe2fs /dev/{$partition} 2>&1 | head -1", true, 10);
         if (strpos($check, 'Bad magic number') !== false) {
             $success = false;
-            $errorMsg = "EXT filesystem creation verification failed";
+            $errorMsg = $lang1236;
             writeError($errorMsg);
         }
     }
@@ -3226,7 +3419,7 @@ function formatPartition($partition, $fsType, $label = '', $quickFormat = true) 
 
 function deletePartition($partition) {
     writeLog("Deleting partition: {$partition}");
-    
+    global $lang1237;
     if (preg_match('/(nvme\d+n\d+)p(\d+)/', $partition, $matches)) {
         $disk = $matches[1];
         $num = $matches[2];
@@ -3234,7 +3427,7 @@ function deletePartition($partition) {
         $disk = $matches[1];
         $num = $matches[2];
     } else {
-        $error = "Cannot parse partition name: {$partition}";
+        $error = $lang1237 . $partition;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -3264,7 +3457,7 @@ function deletePartition($partition) {
 
 function safeRemoveDisk($disk) {
     writeLog("Safe removing disk: {$disk}");
-    
+    global $lang1238;
     $errors = [];
     $success = true;
     
@@ -3276,7 +3469,7 @@ function safeRemoveDisk($disk) {
             if (!$result['success']) {
                 $result = umountDevice($part['name'], true, false);
                 if (!$result['success']) {
-                    $errors[] = "Не удалось размонтировать {$part['name']}";
+                    $errors[] = $lang1238 . $part['name'];
                     $success = false;
                 }
             }
@@ -3295,7 +3488,8 @@ function safeRemoveDisk($disk) {
 }
 
 function mountFstabEntry($mountPoint) {
-    $entries = getFstabEntries();
+    global $lang1239, $lang1240, $lang1241, $lang1242;
+	$entries = getFstabEntries();
     $entry = null;
     foreach ($entries as $e) {
         if ($e['mount_point'] === $mountPoint) {
@@ -3305,12 +3499,12 @@ function mountFstabEntry($mountPoint) {
     }
     
     if (!$entry) {
-        return ['success' => false, 'error' => "Entry not found for {$mountPoint}"];
+        return ['success' => false, 'error' => $lang1239 . $mountPoint];
     }
     
     $mountCheck = execCmd("mount | grep '{$mountPoint} '", true, 3);
     if (!empty($mountCheck)) {
-        return ['success' => false, 'error' => "Already mounted at {$mountPoint}"];
+        return ['success' => false, 'error' => $lang1240 . $mountPoint];
     }
     
     $cmd = "mount {$mountPoint} 2>&1";
@@ -3318,10 +3512,10 @@ function mountFstabEntry($mountPoint) {
     
     $mountCheck = execCmd("mount | grep '{$mountPoint} '", true, 3);
     if (empty($mountCheck)) {
-        return ['success' => false, 'error' => "Mount failed: " . ($output ?: 'Unknown error')];
+        return ['success' => false, 'error' => $lang1241 . ($output ?: 'Unknown error')];
     }
     
-    return ['success' => true, 'message' => "Mounted {$mountPoint}"];
+    return ['success' => true, 'message' => $lang1242 . $mountPoint];
 }
 
 function mountAllFstab() {
@@ -3441,18 +3635,40 @@ function checkPartitionInFstab($partition) {
 
 function smartUmount($device, $autoRemoveFromFstab = true) {
     writeLog("Smart unmounting device: {$device}, autoRemoveFromFstab: " . ($autoRemoveFromFstab ? 'true' : 'false'));
+    global $lang1243, $lang1244, $lang1245, $lang1246, $lang1247;
     
     $device = preg_replace('/^\/dev\//', '', $device);
+    
     $devicePath = "/dev/{$device}";
     
-    $mountStatus = getMountStatus($device);
+    if (strpos($device, '-') !== false) {
+        $parts = explode('-', $device);
+        if (count($parts) >= 2) {
+            $vgName = $parts[0];
+            $lvName = implode('-', array_slice($parts, 1));
+            
+            $altPath = "/dev/{$vgName}/{$lvName}";
+            if (file_exists($altPath)) {
+                $devicePath = $altPath;
+                writeLog("Using LVM device path: {$devicePath}");
+            } else {
+                $mapperPath = "/dev/mapper/{$vgName}-{$lvName}";
+                if (file_exists($mapperPath)) {
+                    $devicePath = $mapperPath;
+                    writeLog("Using LVM mapper path: {$devicePath}");
+                }
+            }
+        }
+    }
+    
+    $mountStatus = getMountStatus(basename($devicePath));
     if (!$mountStatus['mounted']) {
-        return ['success' => false, 'error' => 'Устройство не смонтировано'];
+        return ['success' => false, 'error' => $lang1243];
     }
     
     $mountPoint = $mountStatus['mount_point'];
     
-    $fstabCheck = checkPartitionInFstab($device);
+    $fstabCheck = checkPartitionInFstab(basename($devicePath));
     $wasInFstab = $fstabCheck['in_fstab'];
     
     if ($wasInFstab && $autoRemoveFromFstab) {
@@ -3465,14 +3681,14 @@ function smartUmount($device, $autoRemoveFromFstab = true) {
         removeFromFstabByMountPoint($mountPoint);
     }
     
-    $result = umountDevice($device, false, false);
+    $result = umountDevice($devicePath, false, false);
     
     if ($result['success']) {
-        $message = "Устройство {$device} размонтировано";
+        $message = $lang1244 . $device . $lang1245;
         if ($wasInFstab && $autoRemoveFromFstab) {
-            $message .= " и удалено из /etc/fstab";
+            $message .= $lang1246;
         } elseif ($wasInFstab && !$autoRemoveFromFstab) {
-            $message .= " (оставлено в fstab)";
+            $message .= $lang1247;
         }
         $result['message'] = $message;
         $result['was_in_fstab'] = $wasInFstab;
@@ -3483,7 +3699,7 @@ function smartUmount($device, $autoRemoveFromFstab = true) {
 }
 
 function getPartitionMaxSize($partition) {
-    
+    global $lang1248, $lang1249, $lang1250;
     $disk = '';
     $num = '';
     
@@ -3502,7 +3718,7 @@ function getPartitionMaxSize($partition) {
     }
     else {
         writeError("getPartitionMaxSize: Cannot parse partition name: {$partition}");
-        return ['success' => false, 'error' => 'Cannot parse partition name: ' . $partition];
+        return ['success' => false, 'error' => $lang1248 . $partition];
     }
     
     $diskInfo = getAllDisksWithVirtual();
@@ -3515,7 +3731,7 @@ function getPartitionMaxSize($partition) {
     }
     
     if (!$diskData) {
-        return ['success' => false, 'error' => 'Disk/RAID not found: ' . $disk];
+        return ['success' => false, 'error' => $lang1249 . $disk];
     }
     
     $currentPartition = null;
@@ -3529,7 +3745,7 @@ function getPartitionMaxSize($partition) {
     }
     
     if (!$currentPartition) {
-        return ['success' => false, 'error' => 'Partition not found: ' . $partition];
+        return ['success' => false, 'error' => $lang1250 . $partition];
     }
     
     $maxSizeBytes = $diskData['size_bytes'] - $usedByOthers;
@@ -3585,9 +3801,10 @@ function parseRaidPartitionName($partition) {
 
 function resizePartition($partition, $newSizeGb) {
     writeLog("Resizing partition: {$partition} to {$newSizeGb}GB");
-    
+    global $lang1251, $lang1252;
+	
     if ($newSizeGb <= 0) {
-        return ['success' => false, 'error' => 'Invalid size'];
+        return ['success' => false, 'error' => $lang1251 ];
     }
     
     if (preg_match('/(nvme\d+n\d+)p(\d+)/', $partition, $matches)) {
@@ -3597,7 +3814,7 @@ function resizePartition($partition, $newSizeGb) {
         $disk = $matches[1];
         $num = $matches[2];
     } else {
-        return ['success' => false, 'error' => 'Cannot parse partition name'];
+        return ['success' => false, 'error' => $lang1252 ];
     }
     
     $currentSize = execCmd("lsblk -b -o SIZE /dev/{$partition} 2>/dev/null | tail -1", true, 5);
@@ -3677,7 +3894,8 @@ function getDiskInfo($disk) {
 
 function executeLocalCommand($command, $timeout = 60) {
     $command = trim($command);
-    
+    global $lang1253, $lang1254;
+	
     $allowedCommands = [
         'lsblk', 'fdisk', 'parted', 'blkid', 'df', 'mount', 
         'umount', 'ls', 'cat', 'echo', 'smartctl', 'hdparm'
@@ -3693,7 +3911,7 @@ function executeLocalCommand($command, $timeout = 60) {
     }
     
     if (!$isAllowed && strpos($command, 'sudo') !== 0) {
-        return ['success' => false, 'error' => 'Command not allowed: ' . $cmdBase];
+        return ['success' => false, 'error' => $lang1253 . $cmdBase];
     }
     
     if (strpos($command, 'sudo') !== 0) {
@@ -3711,7 +3929,7 @@ function executeLocalCommand($command, $timeout = 60) {
     $process = @proc_open($command, $descriptorspec, $pipes);
     
     if (!is_resource($process)) {
-        return ['success' => false, 'error' => 'Failed to execute command'];
+        return ['success' => false, 'error' => $lang1254 ];
     }
     
     $output = '';
@@ -3787,7 +4005,8 @@ try {
             break;
             
         case 'get_operation_status':
-            $response = ['success' => true, 'status' => ['progress' => 100, 'message' => 'Готово']];
+		global $lang1255;
+            $response = ['success' => true, 'status' => ['progress' => 100, 'message' => $lang1255]];
             break;
             
         case 'clear_operation_status':
@@ -3795,19 +4014,21 @@ try {
             break;
             
         case 'init_disk':
+			global $lang1256;
             $disk = $input['disk'] ?? '';
             $tableType = $input['table_type'] ?? 'gpt';
             if (empty($disk)) {
-                $response = ['success' => false, 'error' => 'Disk name required'];
+                $response = ['success' => false, 'error' => $lang1256 ];
                 break;
             }
             $response = initDisk($disk, $tableType);
             break;
             
         case 'mount':
+			global $lang1257;
             $device = $input['device'] ?? '';
             if (empty($device)) {
-                $response = ['success' => false, 'error' => 'Device name required'];
+                $response = ['success' => false, 'error' => $lang1257];
                 break;
             }
             $response = mountDevice(
@@ -3820,9 +4041,10 @@ try {
             break;
             
         case 'umount':
+			global $lang1257;
             $device = $input['device'] ?? '';
             if (empty($device)) {
-                $response = ['success' => false, 'error' => 'Device name required'];
+                $response = ['success' => false, 'error' => $lang1257];
                 break;
             }
             $response = umountDevice(
@@ -3833,9 +4055,10 @@ try {
             break;
             
         case 'partition_create':
+			global $lang1258;
 			$disk = $input['disk'] ?? '';
 			if (empty($disk)) {
-				$response = ['success' => false, 'error' => 'Disk name required'];
+				$response = ['success' => false, 'error' => $lang1258];
 				break;
 			}
 			$response = createPartition(
@@ -3850,9 +4073,10 @@ try {
 			break;
             
         case 'partition_delete':
+			global $lang1259;
 			$partition = $input['partition'] ?? '';
 			if (empty($partition)) {
-				$response = ['success' => false, 'error' => 'Partition name required'];
+				$response = ['success' => false, 'error' => $lang1259];
 				break;
 			}
 			if (preg_match('/^md\d+(?:p\d+|\d+)$/', $partition)) {
@@ -3863,9 +4087,10 @@ try {
 			break;
             
         case 'partition_format':
+			global $lang1259;
             $partition = $input['partition'] ?? '';
             if (empty($partition)) {
-                $response = ['success' => false, 'error' => 'Partition name required'];
+                $response = ['success' => false, 'error' => $lang1259];
                 break;
             }
             $response = formatPartition(
@@ -3877,66 +4102,73 @@ try {
             break;
             
         case 'add_to_fstab':
+			global $lang1260;
             $device = $input['device'] ?? '';
             $mountPoint = $input['mount_point'] ?? '';
             $fsType = $input['fs_type'] ?? 'ext4';
             $options = $input['options'] ?? 'defaults';
             if (empty($device) || empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Device and mount point required'];
+                $response = ['success' => false, 'error' => $lang1260];
                 break;
             }
             $response = addToFstab($device, $mountPoint, $fsType, $options);
             break;
             
         case 'remove_from_fstab':
+			global $lang1261;
             $uuid = $input['uuid'] ?? '';
             if (empty($uuid)) {
-                $response = ['success' => false, 'error' => 'UUID required'];
+                $response = ['success' => false, 'error' => $lang1261];
                 break;
             }
             $response = ['success' => removeFromFstabByUuid($uuid)];
             break;
             
         case 'safe_remove':
+			global $lang1258;
             $disk = $input['disk'] ?? '';
             if (empty($disk)) {
-                $response = ['success' => false, 'error' => 'Disk name required'];
+                $response = ['success' => false, 'error' => $lang1258];
                 break;
             }
             $response = safeRemoveDisk($disk);
             break;
             
         case 'disk_info':
+			global $lang1258;
             $disk = $input['disk'] ?? '';
             if (empty($disk)) {
-                $response = ['success' => false, 'error' => 'Disk name required'];
+                $response = ['success' => false, 'error' => $lang1258];
                 break;
             }
             $response = ['success' => true, 'info' => getDiskInfo($disk)];
             break;
             
         case 'get_smart':
+			global $lang1258;
             $disk = $input['disk'] ?? '';
             if (empty($disk)) {
-                $response = ['success' => false, 'error' => 'Disk name required'];
+                $response = ['success' => false, 'error' => $lang1258];
                 break;
             }
             $response = ['success' => true, 'smart' => getFullSmartData($disk)];
             break;
 			
 		case 'get_raw_smart':
+			global $lang1258;
 			$disk = $input['disk'] ?? '';
 			if (empty($disk)) {
-				$response = ['success' => false, 'error' => 'Disk name required'];
+				$response = ['success' => false, 'error' => $lang1258];
 				break;
 			}
 			$response = ['success' => true, 'output' => getRawSmartOutput($disk)];
 			break;
 			
 		case 'mount_status':
+			global $lang1262;
 			$device = $input['device'] ?? '';
 			if (empty($device)) {
-				$response = ['success' => false, 'error' => 'Device required'];
+				$response = ['success' => false, 'error' => $lang1262];
 				break;
 			}
 			$response = ['success' => true, 'status' => getMountStatus($device)];
@@ -3947,11 +4179,12 @@ try {
 			break;
 			
 		case 'remove_fstab_entry':
+			global $lang1263, $lang1264;
 			$uuid = $input['uuid'] ?? '';
 			$mountPoint = $input['mount_point'] ?? '';
 			
 			if (empty($uuid) && empty($mountPoint)) {
-				$response = ['success' => false, 'error' => 'UUID or mount point required'];
+				$response = ['success' => false, 'error' => $lang1263];
 				break;
 			}
 			
@@ -3969,43 +4202,47 @@ try {
 				if ($foundUuid) {
 					$response = ['success' => removeFromFstabByUuid($foundUuid)];
 				} else {
-					$response = ['success' => false, 'error' => 'Entry not found'];
+					$response = ['success' => false, 'error' => $lang1264];
 				}
 			}
 			break;
 		
 		case 'mount_fstab_entry':
+			global $lang1265;
 			$mountPoint = $input['mount_point'] ?? '';
 			if (empty($mountPoint)) {
-				$response = ['success' => false, 'error' => 'Mount point required'];
+				$response = ['success' => false, 'error' => $lang1265];
 				break;
 			}
 			$response = mountFstabEntry($mountPoint);
 			break;
 
 		case 'get_partition_max_size':
+			global $lang1259;
 			$partition = $input['partition'] ?? '';
 			if (empty($partition)) {
-				$response = ['success' => false, 'error' => 'Partition name required'];
+				$response = ['success' => false, 'error' => $lang1259];
 				break;
 			}
 			$response = getPartitionMaxSize($partition);
 			break;
 			
 		case 'check_fstab':
+			global $lang1259;
 			$partition = $input['partition'] ?? '';
 			if (empty($partition)) {
-				$response = ['success' => false, 'error' => 'Partition name required'];
+				$response = ['success' => false, 'error' => $lang1259];
 				break;
 			}
 			$response = checkPartitionInFstab($partition);
 			break;
 			
 		case 'smart_umount':
+			global $lang1257;
 			$device = $input['device'] ?? '';
 			$autoRemove = $input['auto_remove_from_fstab'] ?? true;
 			if (empty($device)) {
-				$response = ['success' => false, 'error' => 'Device name required'];
+				$response = ['success' => false, 'error' => $lang1257];
 				break;
 			}
 			$response = smartUmount($device, $autoRemove);
@@ -4016,9 +4253,10 @@ try {
 			break;
 		
 		case 'exec_command':
+			global $lang1266;
 			$command = $input['command'] ?? '';
 			if (empty($command)) {
-				$response = ['success' => false, 'error' => 'Command required'];
+				$response = ['success' => false, 'error' => $lang1266];
 				break;
 			}
 			$response = executeLocalCommand($command);
@@ -4040,24 +4278,27 @@ try {
 			break;
 		
 		case 'get_lvm_vg_info':
+			global $lang1267;
 			$vgName = $input['vg_name'] ?? '';
 			if (empty($vgName)) {
-				$response = ['success' => false, 'error' => 'VG name required'];
+				$response = ['success' => false, 'error' => $lang1267];
 			} else {
 				$response = ['success' => true, 'info' => getLvmVgInfo($vgName)];
 			}
 			break;
 
 		case 'get_raid_array_info':
+			global $lang1268;
 			$raidName = $input['raid_name'] ?? '';
 			if (empty($raidName)) {
-				$response = ['success' => false, 'error' => 'RAID name required'];
+				$response = ['success' => false, 'error' => $lang1268];
 			} else {
 				$response = ['success' => true, 'info' => getRaidArrayInfo($raidName)];
 			}
 			break;
 
 		case 'create_partition_on_vg':
+			global $lang1269;
 			$vgName = $input['vg_name'] ?? '';
 			$lvName = $input['lv_name'] ?? '';
 			$size = $input['size'] ?? '';
@@ -4065,31 +4306,33 @@ try {
 			$format = $input['format'] ?? false;
 			
 			if (empty($vgName) || empty($lvName) || empty($size)) {
-				$response = ['success' => false, 'error' => 'VG name, LV name and size required'];
+				$response = ['success' => false, 'error' => $lang1269];
 			} else {
 				$response = createLvmLogicalVolume($vgName, $lvName, $size, $fsType, $format);
 			}
 			break;
 
 		case 'create_partition_on_raid':
+			global $lang1270;
 			$raidName = $input['raid_name'] ?? '';
 			$size = $input['size'] ?? '';
 			$fsType = $input['fs_type'] ?? 'ext4';
 			$format = $input['format'] ?? false;
 			
 			if (empty($raidName)) {
-				$response = ['success' => false, 'error' => 'RAID name required'];
+				$response = ['success' => false, 'error' => $lang1270];
 				break;
 			}
 			$response = createPartitionOnRaid($raidName, $size, $fsType, $format);
 			break;
 		
 		case 'resize_partition':
+			global $lang1271;
 			$partition = $input['partition'] ?? '';
 			$newSize = (float)($input['new_size_gb'] ?? 0);
 			
 			if (empty($partition) || $newSize <= 0) {
-				$response = ['success' => false, 'error' => 'Partition name and valid size required'];
+				$response = ['success' => false, 'error' => $lang1271];
 				break;
 			}
 			
@@ -4107,9 +4350,10 @@ try {
 			break;
 		
 		case 'get_raid_free_space':
+			global $lang1272;
 			$raidName = $input['raid_name'] ?? '';
 			if (empty($raidName)) {
-				$response = ['success' => false, 'error' => 'RAID name required'];
+				$response = ['success' => false, 'error' => $lang1272];
 				break;
 			}
 			$freeInfo = getRaidFreeSpaceInfo($raidName);
@@ -4129,7 +4373,8 @@ try {
 			break;
 		
         default:
-            $response = ['success' => false, 'error' => 'Unknown action: ' . $action];
+		global $lang1273;
+            $response = ['success' => false, 'error' => $lang1273 . $action];
     }
 } catch (Exception $e) {
     writeError("Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);

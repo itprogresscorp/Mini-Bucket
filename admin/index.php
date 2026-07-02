@@ -21,6 +21,7 @@
  */
 
 require_once 'config.php';
+require_once 'lang/loader.php';
 isAuthenticated();
 
 if ($status_install == "0") {
@@ -117,6 +118,23 @@ $js_config = [
 	<meta name="application-name" content="Mini-Bucket NAS">
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
+	
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
 	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
 	//console.log('API Config loaded:', window.apiConfig);
@@ -619,7 +637,7 @@ $js_config = [
         <div class="timestamp" id="timestamp">--:--:--</div>
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div class="btn-group">
@@ -627,13 +645,13 @@ $js_config = [
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="diagnose.php"><i class="fas fa-heartbeat me-2"></i>Diag Utils</a></li>
-                <li><a class="dropdown-item" href="system_check.php" target="_blank"><i class="fas fa-bar-chart me-2"></i>System Checker</a></li>
-				<li><a class="dropdown-item" href="#" onclick="showLicenseModal()"><i class="fas fa-balance-scale me-2"></i>License</a></li>
-				<li><a class="dropdown-item" href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer"><i class="fas fa-dollar me-2"></i>Donation</a></li>
-                <li><a class="dropdown-item" href="https://mini-bucket.ru/wiki/knowledge-base/dashboard" target="_blank"><i class="fas fa-question-circle me-2"></i>WiKi</a></li>
+                <li><a class="dropdown-item" href="diagnose.php"><i class="fas fa-heartbeat me-2"></i><?php echo $lang25; ?></a></li>
+                <li><a class="dropdown-item" href="system_check.php" target="_blank"><i class="fas fa-bar-chart me-2"></i><?php echo $lang26; ?></a></li>
+				<li><a class="dropdown-item" href="#" onclick="showLicenseModal()"><i class="fas fa-balance-scale me-2"></i><?php echo $lang27; ?></a></li>
+				<li><a class="dropdown-item" href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer"><i class="fas fa-dollar me-2"></i><?php echo $lang28; ?></a></li>
+                <li><a class="dropdown-item" href="https://mini-bucket.ru/wiki/knowledge-base/dashboard" target="_blank"><i class="fas fa-question-circle me-2"></i><?php echo $lang29; ?></a></li>
 				<li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i>Refresh</a></li>
+                <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i><?php echo $lang30; ?></a></li>
             </ul>
         </div>
     </div>
@@ -642,18 +660,20 @@ $js_config = [
 <div class="app-container">
     <?php echo $menu; ?>
     <main class="main-content">
+	<div id="alertContainer"></div>
+        <div id="globalAlert"></div>
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-icon"><i class="fas fa-microchip"></i></div>
                 <div class="metric-info">
-                    <div class="metric-label">CPU Usage</div>
+                    <div class="metric-label"><?php echo $lang1; ?></div>
                     <div class="metric-value" id="cpuValue"><span class="spinner-small"></span></div>
 				</div>
             </div>
             <div class="metric-card">
                 <div class="metric-icon"><i class="fas fa-memory"></i></div>
                 <div class="metric-info">
-                    <div class="metric-label">Memory</div>
+                    <div class="metric-label"><?php echo $lang2; ?></div>
                     <div class="metric-value" id="memValue"><span class="spinner-small"></span></div>
                     <div class="progress-bar-custom"><div class="progress-fill" id="memProgress" style="width:0%"></div></div>
                 </div>
@@ -661,14 +681,14 @@ $js_config = [
             <div class="metric-card">
                 <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
                 <div class="metric-info">
-                    <div class="metric-label">Load Average</div>
+                    <div class="metric-label"><?php echo $lang3; ?></div>
                     <div class="metric-value" id="loadValue"><span class="spinner-small"></span></div>
                 </div>
             </div>
             <div class="metric-card">
                 <div class="metric-icon"><i class="fas fa-thermometer-half"></i></div>
                 <div class="metric-info">
-                    <div class="metric-label">CPU Temp</div>
+                    <div class="metric-label"><?php echo $lang4; ?></div>
                     <div class="metric-value" id="tempValue"><span class="spinner-small"></span></div>
                 </div>
             </div>
@@ -676,20 +696,20 @@ $js_config = [
 
         <div class="charts-row">
             <div class="chart-card">
-                <div class="chart-header"><h3><i class="fas fa-microchip"></i> CPU Cores Usage</h3></div>
+                <div class="chart-header"><h3><i class="fas fa-microchip"></i> <?php echo $lang5; ?></h3></div>
                 <canvas id="cpuCoresChart" height="150"></canvas>
                 <div id="cpuCoresLoading" class="disk-card-loading" style="display:none;"><div class="spinner-small"></div><span style="margin-left:10px;">Loading cores...</span></div>
             </div>
             <div class="chart-card">
-                <div class="chart-header"><h3><i class="fas fa-chart-line"></i> CPU History (20 samples)</h3></div>
+                <div class="chart-header"><h3><i class="fas fa-chart-line"></i> <?php echo $lang6; ?></h3></div>
                 <canvas id="cpuHistoryChart" height="150"></canvas>
             </div>
             <div class="chart-card">
-                <div class="chart-header"><h3><i class="fas fa-chart-pie"></i> Memory Usage</h3></div>
+                <div class="chart-header"><h3><i class="fas fa-chart-pie"></i> <?php echo $lang7; ?></h3></div>
                 <canvas id="memoryChart" height="150"></canvas>
             </div>
             <div class="chart-card">
-                <div class="chart-header"><h3><i class="fas fa-network-wired"></i> Network Traffic (MB/s)</h3></div>
+                <div class="chart-header"><h3><i class="fas fa-network-wired"></i> <?php echo $lang8; ?></h3></div>
                 <canvas id="networkChart" height="150"></canvas>
             </div>
         </div>
@@ -697,7 +717,7 @@ $js_config = [
         <!-- Аккордеоны -->
         <div class="accordion-section" data-accordion="diskio">
             <div class="accordion-header">
-                <h3><i class="fas fa-tachometer-alt"></i> Disk I/O Performance <span id="diskioHealthIcon" class="health-badge"></span></h3>
+                <h3><i class="fas fa-tachometer-alt"></i> <?php echo $lang9; ?> <span id="diskioHealthIcon" class="health-badge"></span></h3>
                 <i class="fas fa-chevron-down toggle-icon"></i>
             </div>
             <div class="accordion-body">
@@ -707,23 +727,23 @@ $js_config = [
 
         <div class="accordion-section" data-accordion="physical">
             <div class="accordion-header">
-                <h3><i class="fas fa-hdd"></i> Physical Disks & Partitions <span id="smartHealthIcon" class="health-badge"></span></h3>
+                <h3><i class="fas fa-hdd"></i> <?php echo $lang10; ?> <span id="smartHealthIcon" class="health-badge"></span></h3>
                 <div class="header-buttons">
-                    <a href="disk_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> Disk Manager</a>
+                    <a href="disk_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> <?php echo $lang11; ?></a>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
             </div>
             <div class="accordion-body">
-                <div id="disksList" class="disks-grid"><div class="disk-card-loading"><div class="spinner-small"></div><span>Loading disk information...</span></div></div>
+                <div id="disksList" class="disks-grid"><div class="disk-card-loading"><div class="spinner-small"></div><span><?php echo $lang13; ?></span></div></div>
             </div>
         </div>
 
         <!-- RAID секция -->
         <div id="raidSectionWrapper" class="accordion-section" data-accordion="raid" data-has-data="pending" style="display:none;">
             <div class="accordion-header">
-                <h3><i class="fas fa-shield-alt"></i> RAID Arrays <span id="raidHealthIcon" class="health-badge"></span></h3>
+                <h3><i class="fas fa-shield-alt"></i> <?php echo $lang14; ?> <span id="raidHealthIcon" class="health-badge"></span></h3>
                 <div class="header-buttons">
-                    <a href="raid_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> RAID Manager</a>
+                    <a href="raid_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> <?php echo $lang15; ?></a>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
             </div>
@@ -735,9 +755,9 @@ $js_config = [
         <!-- LVM секция -->
         <div id="lvmSectionWrapper" class="accordion-section" data-accordion="lvm" data-has-data="pending" style="display:none;">
             <div class="accordion-header">
-                <h3><i class="fas fa-cubes"></i> LVM Volumes <span id="lvmHealthIcon" class="health-badge"></span></h3>
+                <h3><i class="fas fa-cubes"></i> <?php echo $lang16; ?> <span id="lvmHealthIcon" class="health-badge"></span></h3>
                 <div class="header-buttons">
-                    <a href="lvm_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> LVM Manager</a>
+                    <a href="lvm_manager.php" class="manager-btn" onclick="event.stopPropagation();"><i class="fas fa-cog"></i> <?php echo $lang17; ?></a>
                     <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
             </div>
@@ -748,20 +768,20 @@ $js_config = [
 
         <div class="accordion-section" data-accordion="network">
             <div class="accordion-header">
-                <h3><i class="fas fa-network-wired"></i> Network Interfaces</h3>
+                <h3><i class="fas fa-network-wired"></i> <?php echo $lang18; ?></h3>
                 <i class="fas fa-chevron-down toggle-icon"></i>
             </div>
             <div class="accordion-body">
-                <div id="networkInterfaces" class="disks-grid"><div class="disk-card-loading"><div class="spinner-small"></div><span>Loading network interfaces...</span></div></div>
+                <div id="networkInterfaces" class="disks-grid"><div class="disk-card-loading"><div class="spinner-small"></div><span><?php echo $lang19; ?></span></div></div>
             </div>
         </div>
 
         <div class="system-info">
-            <div class="info-card"><i class="fas fa-clock"></i> Uptime: <strong id="uptime"><span class="spinner-small"></span></strong></div>
-            <div class="info-card"><i class="fas fa-server"></i> Hostname: <strong id="hostname"><span class="spinner-small"></span></strong></div>
-            <div class="info-card"><i class="fab fa-linux"></i> Kernel: <strong id="kernel"><span class="spinner-small"></span></strong></div>
-            <div class="info-card"><i class="fas fa-tasks"></i> Processes: <strong id="processes"><span class="spinner-small"></span></strong></div>
-			<div class="info-card"><i class="fa fa-cube"></i> Version: <strong id="current_version"><span class="spinner-small"></span></strong></div>
+            <div class="info-card"><i class="fas fa-clock"></i> <?php echo $lang20; ?>: <strong id="uptime"><span class="spinner-small"></span></strong></div>
+            <div class="info-card"><i class="fas fa-server"></i> <?php echo $lang21; ?>: <strong id="hostname"><span class="spinner-small"></span></strong></div>
+            <div class="info-card"><i class="fab fa-linux"></i> <?php echo $lang22; ?>: <strong id="kernel"><span class="spinner-small"></span></strong></div>
+            <div class="info-card"><i class="fas fa-tasks"></i> <?php echo $lang23; ?>: <strong id="processes"><span class="spinner-small"></span></strong></div>
+			<div class="info-card"><i class="fa fa-cube"></i> <?php echo $lang24; ?>: <strong id="current_version"><span class="spinner-small"></span></strong></div>
         </div>
     </main>
 </div>
@@ -797,29 +817,29 @@ $js_config = [
                     <div class="summary-item">
                         <i class="fas fa-check-circle green"></i>
                         <div>
-                            <strong>You can</strong>
-                            <p>Use, modify, and distribute this software</p>
+                            <strong><?php echo $lang31; ?></strong>
+                            <p><?php echo $lang32; ?></p>
                         </div>
                     </div>
                     <div class="summary-item">
                         <i class="fas fa-exclamation-triangle orange"></i>
                         <div>
-                            <strong>You must</strong>
-                            <p>Disclose source code when distributing</p>
+                            <strong><?php echo $lang33; ?></strong>
+                            <p><?php echo $lang34; ?></p>
                         </div>
                     </div>
                     <div class="summary-item">
                         <i class="fas fa-share-alt blue"></i>
                         <div>
-                            <strong>Same license</strong>
-                            <p>Distribute under the same AGPL-3.0 license</p>
+                            <strong><?php echo $lang35; ?></strong>
+                            <p><?php echo $lang36; ?></p>
                         </div>
                     </div>
                     <div class="summary-item">
                         <i class="fas fa-server purple"></i>
                         <div>
-                            <strong>Network use</strong>
-                            <p>Using over a network requires source disclosure</p>
+                            <strong><?php echo $lang37; ?></strong>
+                            <p><?php echo $lang38; ?></p>
                         </div>
                     </div>
                 </div>
@@ -841,14 +861,14 @@ $js_config = [
                 <i class="fas fa-external-link-alt"></i> Read online at gnu.org
             </a>
             <button class="btn-license-close" onclick="closeLicenseModal()">
-                <i class="fas fa-check"></i> I understand
+                <i class="fas fa-check"></i> <?php echo $lang39; ?>
             </button>
         </div>
     </div>
 </div>
 
 
-
+<script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script>
  const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
  
@@ -871,6 +891,15 @@ $js_config = [
     let raidLoadPromise = null;
     let lvmLoadPromise = null;
     
+	function showAlert(message, type = 'success') {
+		const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+			<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>`;
+		$('#alertContainer').append(alertHtml);
+		setTimeout(() => $('.alert').fadeOut(500, function() { $(this).remove(); }), 5000);
+	}
+	
     function initCharts() {
         const cpuCtx = document.getElementById('cpuHistoryChart').getContext('2d');
         cpuHistoryChart = new Chart(cpuCtx, {
@@ -890,7 +919,7 @@ $js_config = [
 			memoryChart = new Chart(memCtx, {
 				type: 'doughnut',
 				data: { 
-					labels: ['Used RAM', 'Free RAM', 'Swap Used'], 
+					labels: [__('40'), __('41'), __('42')], 
 					datasets: [{ 
 						data: [0,0,0], 
 						backgroundColor: ['#007aff','#34c759','#ff9500'], 
@@ -927,7 +956,7 @@ $js_config = [
         const coresCtx = document.getElementById('cpuCoresChart').getContext('2d');
         cpuCoresChart = new Chart(coresCtx, {
             type: 'bar',
-            data: { labels: [], datasets: [{ label: 'Usage %', data: [], backgroundColor: '#007aff', borderRadius: 4 }] },
+            data: { labels: [], datasets: [{ label: __('43'), data: [], backgroundColor: '#007aff', borderRadius: 4 }] },
             options: { responsive: true, scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
         });
     }
@@ -952,9 +981,9 @@ $js_config = [
             data: {
                 labels: Array(20).fill(''),
                 datasets: [
-                    { label: 'Read MB/s', data: diskReadHistory[diskName], borderColor: '#34c759', backgroundColor: 'rgba(52,199,89,0.1)', borderWidth: 2, pointRadius: 0, fill: true, yAxisID: 'y' },
-                    { label: 'Write MB/s', data: diskWriteHistory[diskName], borderColor: '#ff9500', backgroundColor: 'rgba(255,149,0,0.1)', borderWidth: 2, pointRadius: 0, fill: true, yAxisID: 'y' },
-                    { label: 'Queue', data: diskQueueHistory[diskName], borderColor: '#ff3b30', borderWidth: 1.5, pointRadius: 0, fill: false, yAxisID: 'y1', borderDash: [5,5] }
+                    { label: __('44'), data: diskReadHistory[diskName], borderColor: '#34c759', backgroundColor: 'rgba(52,199,89,0.1)', borderWidth: 2, pointRadius: 0, fill: true, yAxisID: 'y' },
+                    { label: __('45'), data: diskWriteHistory[diskName], borderColor: '#ff9500', backgroundColor: 'rgba(255,149,0,0.1)', borderWidth: 2, pointRadius: 0, fill: true, yAxisID: 'y' },
+                    { label: __('46'), data: diskQueueHistory[diskName], borderColor: '#ff3b30', borderWidth: 1.5, pointRadius: 0, fill: false, yAxisID: 'y1', borderDash: [5,5] }
                 ]
             },
             options: {
@@ -962,7 +991,7 @@ $js_config = [
                 maintainAspectRatio: true,
                 scales: {
                     y: { position: 'left', title: { display: true, text: 'MB/s', font: { size: 9 } }, min: 0 },
-                    y1: { position: 'right', title: { display: true, text: 'Queue', font: { size: 9 } }, min: 0, max: 20, grid: { drawOnChartArea: false } }
+                    y1: { position: 'right', title: { display: true, text: __('46'), font: { size: 9 } }, min: 0, max: 20, grid: { drawOnChartArea: false } }
                 },
                 plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }, tooltip: { mode: 'index', intersect: false } }
             }
@@ -975,9 +1004,9 @@ $js_config = [
         
         // Если нет данных о дисках
         if (!disksIO || Object.keys(disksIO).length === 0) {
-            if (grid.innerHTML !== '<div class="disk-card-loading">No disk I/O data available</div>') {
-                grid.innerHTML = '<div class="disk-card-loading">No disk I/O data available</div>';
-                document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-info-circle"></i> No disks';
+            if (grid.innerHTML !== '<div class="disk-card-loading"><?php echo $lang47; ?></div>') {
+                grid.innerHTML = '<div class="disk-card-loading"><?php echo $lang47; ?></div>';
+                document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-info-circle"></i> <?php echo $lang48; ?>';
             }
             return;
         }
@@ -1005,14 +1034,14 @@ $js_config = [
                 card.innerHTML = `
                     <h4 style="margin:0 0 12px 0; font-size:16px;"><i class="fas fa-hdd"></i> ${diskName}</h4>
                     <div class="disk-info-sm">
-                        <span>📖 Read: <strong id="read-${diskName}">${stats.read_mb_s}</strong> MB/s</span>
-                        <span>✍️ Write: <strong id="write-${diskName}">${stats.write_mb_s}</strong> MB/s</span>
-                        <span>⏳ Queue: <strong id="queue-${diskName}">${stats.queue_length}</strong></span>
+                        <span>📖 <?php echo $lang49; ?>: <strong id="read-${diskName}">${stats.read_mb_s}</strong> MB/s</span>
+                        <span>✍️ <?php echo $lang50; ?>: <strong id="write-${diskName}">${stats.write_mb_s}</strong> MB/s</span>
+                        <span>⏳ <?php echo $lang51; ?>: <strong id="queue-${diskName}">${stats.queue_length}</strong></span>
                     </div>
                     <div id="disk-io-chart-${diskName}" class="disk-chart-container"></div>
                     <div style="font-size:11px; display:flex; justify-content:space-between; color:#8e8e93; margin-top:8px;">
-                        <span>Total Read: <span id="total-read-${diskName}">${stats.total_read_mb}</span> MB</span>
-                        <span>Total Write: <span id="total-write-${diskName}">${stats.total_write_mb}</span> MB</span>
+                        <span><?php echo $lang52; ?>: <span id="total-read-${diskName}">${stats.total_read_mb}</span> MB</span>
+                        <span><?php echo $lang53; ?>: <span id="total-write-${diskName}">${stats.total_write_mb}</span> MB</span>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -1049,7 +1078,7 @@ $js_config = [
             }
         }
         
-        document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-check-circle health-green"></i> Active';
+        document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-check-circle health-green"></i> <?php echo $lang54; ?>';
     }
     
     // Функции здоровья для SMART (по количеству плохих секторов)
@@ -1064,9 +1093,9 @@ $js_config = [
             }
         }
         if (hasBadSectors) {
-            return { class: 'health-danger', text: `⚠️ ${totalBadSectors} bad sectors`, icon: 'fa-exclamation-triangle' };
+            return { class: 'health-danger', text: `⚠️ ${totalBadSectors} <?php echo $lang55; ?>`, icon: 'fa-exclamation-triangle' };
         }
-        return { class: 'health-green', text: '✓ SMART OK', icon: 'fa-check-circle' };
+        return { class: 'health-green', text: '✓ <?php echo $lang56; ?>', icon: 'fa-check-circle' };
     }
     
     function getRaidHealthStatus(raids) {
@@ -1077,15 +1106,15 @@ $js_config = [
             if (r.status === 'auto-read-only' || r.status === 'readonly') hasReadOnly = true;
             if (r.failed_disks > 0 || r.status === 'inactive' || r.status === 'failed' || (r.health_state && r.health_state !== 'active' && r.health_state !== 'clean')) hasFailed = true;
         }
-        if (hasFailed) return { class: 'health-danger', text: '⚠️ RAID Failed', icon: 'fa-exclamation-triangle' };
-        if (hasReadOnly) return { class: 'health-warning', text: '⚠️ Read-only', icon: 'fa-exclamation-triangle' };
-        if (hasDegraded) return { class: 'health-warning', text: '⚠️ Degraded', icon: 'fa-exclamation-triangle' };
-        return { class: 'health-green', text: '✓ Healthy', icon: 'fa-check-circle' };
+        if (hasFailed) return { class: 'health-danger', text: '⚠️ <?php echo $lang57; ?>', icon: 'fa-exclamation-triangle' };
+        if (hasReadOnly) return { class: 'health-warning', text: '⚠️ <?php echo $lang58; ?>', icon: 'fa-exclamation-triangle' };
+        if (hasDegraded) return { class: 'health-warning', text: '⚠️ <?php echo $lang59; ?>', icon: 'fa-exclamation-triangle' };
+        return { class: 'health-green', text: '✓ <?php echo $lang60; ?>', icon: 'fa-check-circle' };
     }
     
     function getLvmHealthStatus(lvs, vgs) {
         if ((!lvs || lvs.length === 0) && (!vgs || vgs.length === 0)) return { class: '', text: '', icon: '' };
-        return { class: 'health-green', text: '✓ Active', icon: 'fa-check-circle' };
+        return { class: 'health-green', text: '✓ <?php echo $lang54; ?>', icon: 'fa-check-circle' };
     }
     
     // Аккордеон
@@ -1187,9 +1216,9 @@ $js_config = [
                 updateDiskCards(data.disks_io);
             } else if (isSectionOpen('diskio')) {
                 const grid = document.getElementById('disksIOGrid');
-                if (grid && grid.innerHTML !== '<div class="disk-card-loading">No disk I/O data available</div>') {
-                    grid.innerHTML = '<div class="disk-card-loading">No disk I/O data available</div>';
-                    document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-info-circle"></i> No disks';
+                if (grid && grid.innerHTML !== '<div class="disk-card-loading"><?php echo $lang47; ?></div>') {
+                    grid.innerHTML = '<div class="disk-card-loading"><?php echo $lang47; ?></div>';
+                    document.getElementById('diskioHealthIcon').innerHTML = '<i class="fas fa-info-circle"></i> <?php echo $lang48; ?>';
                 }
             }
             
@@ -1216,7 +1245,7 @@ $js_config = [
                                 ${badSectors > 0 ? `<span class="smart-failed ml-2"> | Realloc: ${disk.smart.realloc_sectors || 0}, Pending: ${disk.smart.pending_sectors || 0}</span>` : ''}
                             </div>
                             <div style="margin-bottom:12px;">
-                                <span>Total Usage: ${disk.total_used} / ${disk.total_size}</span>
+                                <span><?php echo $lang61; ?>: ${disk.total_used} / ${disk.total_size}</span>
                                 <span class="${percentClass}"> (${disk.total_percent}%)</span>
                                 <div class="progress-bar-sm"><div class="progress-bar-fill" style="width: ${disk.total_percent}%"></div></div>
                             </div>
@@ -1224,7 +1253,7 @@ $js_config = [
                                 ${disk.partitions.map(part => `
                                     <div style="padding:6px 0; border-bottom:1px solid #e5e5ea; font-size:12px;">
                                         <div><i class="fas ${part.mount ? 'fa-folder-open' : (part.is_swap ? 'fa-exchange-alt' : 'fa-database')}"></i> ${part.name} (${part.fstype || 'unknown'})${part.mount ? ` - ${part.mount}` : ''}</div>
-                                        ${!part.is_swap && part.mount ? `<div style="font-size:11px; color:#8e8e93;">Used: ${part.used} / ${part.size} (${part.percent}%)</div><div class="progress-bar-sm"><div class="progress-bar-fill" style="width: ${part.percent}%"></div></div>` : (part.is_swap ? `<div style="font-size:11px;">Swap: ${part.used} / ${part.size} (${part.percent}%)</div>` : '')}
+                                        ${!part.is_swap && part.mount ? `<div style="font-size:11px; color:#8e8e93;"><?php echo $lang62; ?>: ${part.used} / ${part.size} (${part.percent}%)</div><div class="progress-bar-sm"><div class="progress-bar-fill" style="width: ${part.percent}%"></div></div>` : (part.is_swap ? `<div style="font-size:11px;">Swap: ${part.used} / ${part.size} (${part.percent}%)</div>` : '')}
                                     </div>
                                 `).join('')}
                             </div>
@@ -1324,7 +1353,7 @@ $js_config = [
                                             (deviceNames.filter(d => d && d !== 'removed' && d !== 'failed').length));
                         const totalCount = r.total_disks !== undefined ? r.total_disks : deviceNames.length;
                         
-                        devicesHtml = `<div class="raid-devices-list"><strong>Devices:</strong> ${workingCount || 0}/${totalCount || 0} active<br>`;
+                        devicesHtml = `<div class="raid-devices-list"><strong><?php echo $lang63; ?>:</strong> ${workingCount || 0}/${totalCount || 0} <?php echo $lang64; ?><br>`;
                         if (deviceNames.length > 0) {
                             devicesHtml += deviceNames.map(d => `<span style="font-family:monospace; display:inline-block; background:#e5e5ea; padding:2px 6px; border-radius:4px; margin:2px;">${d}</span>`).join(' ');
                         }
@@ -1343,8 +1372,8 @@ $js_config = [
                                     <span>${raidSize}</span>
                                 </div>
                                 <div style="margin:8px 0;">
-                                    Status: <span class="${statusClass}">${statusText}${r.degraded ? ' (DEGRADED)' : ''}</span>
-                                    ${r.failed_disks > 0 ? `<span class="text-danger"> | Failed disks: ${r.failed_disks}</span>` : ''}
+                                    <?php echo $lang66; ?>: <span class="${statusClass}">${statusText}${r.degraded ? ' (DEGRADED)' : ''}</span>
+                                    ${r.failed_disks > 0 ? `<span class="text-danger"> | <?php echo $lang65; ?>: ${r.failed_disks}</span>` : ''}
                                 </div>
                                 ${devicesHtml}
                                 ${r.sync_percent ? `<div class="progress-bar-sm mt-2"><div class="progress-bar-fill" style="width:${r.sync_percent}%"></div><small>Sync ${r.sync_percent}%</small></div>` : ''}
@@ -1378,8 +1407,8 @@ $js_config = [
                             
                             raidHtml += `
                                 <div class="mt-2" style="margin-top:12px;">
-                                    <div><i class="fas fa-folder-open"></i> Mount: ${r.mount_point}</div>
-                                    <div style="font-size:12px; margin-top:6px;">Usage: ${usedSize} / ${totalSize}</div>
+                                    <div><i class="fas fa-folder-open"></i> <?php echo $lang67; ?>: ${r.mount_point}</div>
+                                    <div style="font-size:12px; margin-top:6px;"><?php echo $lang68; ?>: ${usedSize} / ${totalSize}</div>
                                     <div class="progress-bar-sm"><div class="progress-bar-fill" style="width: ${usagePercent}%; background: linear-gradient(90deg, #34c759, #28a745);"></div></div>
                                 </div>
                             `;
@@ -1472,7 +1501,7 @@ document.addEventListener('keydown', function(event) {
                     // Volume Groups
                     if (lvmData.vgs && lvmData.vgs.length) {
                         const sortedVgs = [...lvmData.vgs].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                        lvmHtml += `<div class="lvm-section-header"><i class="fas fa-database"></i> Volume Groups (${sortedVgs.length})</div>`;
+                        lvmHtml += `<div class="lvm-section-header"><i class="fas fa-database"></i> <?php echo $lang69; ?> (${sortedVgs.length})</div>`;
                         lvmHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; margin-bottom: 24px;">`;
                         lvmHtml += sortedVgs.map(vg => `
                             <div class="lvm-card">
@@ -1481,13 +1510,13 @@ document.addEventListener('keydown', function(event) {
                                     <span>${vg.size_formatted}</span>
                                 </div>
                                 <div style="margin: 8px 0;">
-                                    <div>Used: ${vg.used_formatted} / ${vg.size_formatted}</div>
+                                    <div><?php echo $lang70; ?>: ${vg.used_formatted} / ${vg.size_formatted}</div>
                                     <div class="progress-bar-sm"><div class="progress-bar-fill" style="width:${vg.used_percent}%"></div></div>
                                 </div>
                                 <div style="font-size: 11px; color: #8e8e93; display: flex; gap: 16px; margin-top: 8px;">
                                     <span><i class="fas fa-hdd"></i> PV: ${vg.pv_count}</span>
                                     <span><i class="fas fa-chart-line"></i> LV: ${vg.lv_count}</span>
-                                    <span><i class="fas fa-chart-pie"></i> ${vg.used_percent}% used</span>
+                                    <span><i class="fas fa-chart-pie"></i> ${vg.used_percent}% <?php echo $lang71; ?></span>
                                 </div>
                             </div>
                         `).join('');
@@ -1502,7 +1531,7 @@ document.addEventListener('keydown', function(event) {
                             return (a.name || '').localeCompare(b.name || '');
                         });
                         
-                        lvmHtml += `<div class="lvm-section-header" style="margin-top: 8px;"><i class="fas fa-chart-simple"></i> Logical Volumes (${sortedLvs.length})</div>`;
+                        lvmHtml += `<div class="lvm-section-header" style="margin-top: 8px;"><i class="fas fa-chart-simple"></i> <?php echo $lang72; ?> (${sortedLvs.length})</div>`;
                         lvmHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">`;
                         
                         let currentVg = '';
@@ -1545,7 +1574,7 @@ document.addEventListener('keydown', function(event) {
                                     ${lv.mount_point && lv.mount_point !== '' && lv.mount_point !== 'N/A' && lv.mount_point !== 'none' ? `
                                         <div style="margin: 8px 0;">
                                             <div><i class="fas fa-folder-open"></i> ${lv.mount_point}</div>
-                                            <div style="font-size: 12px; margin-top: 6px;">Used: ${usedSize} / ${totalSize}</div>
+                                            <div style="font-size: 12px; margin-top: 6px;"><?php echo $lang70; ?>: ${usedSize} / ${totalSize}</div>
                                             <div class="progress-bar-sm"><div class="progress-bar-fill" style="width: ${usagePercent}%; background: linear-gradient(90deg, #34c759, #28a745);"></div></div>
                                         </div>
                                     ` : ''}
@@ -1556,7 +1585,7 @@ document.addEventListener('keydown', function(event) {
                                     ` : ''}
                                     ${!lv.mount_point || lv.mount_point === '' || lv.mount_point === 'none' ? `
                                         <div style="font-size: 11px; color: #ff9500; margin-top: 8px;">
-                                            <i class="fas fa-info-circle"></i> Not mounted
+                                            <i class="fas fa-info-circle"></i> <?php echo $lang73; ?>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -1565,7 +1594,7 @@ document.addEventListener('keydown', function(event) {
                         lvmHtml += `</div>`;
                     }
                     
-                    document.getElementById('lvmList').innerHTML = lvmHtml || '<div class="disk-card-loading">No LVM data available</div>';
+                    document.getElementById('lvmList').innerHTML = lvmHtml || '<div class="disk-card-loading"><?php echo $lang74; ?></div>';
                     const lvmHealth = getLvmHealthStatus(lvmData.lvs, lvmData.vgs);
                     document.getElementById('lvmHealthIcon').innerHTML = `<i class="fas ${lvmHealth.icon} ${lvmHealth.class}"></i> ${lvmHealth.text}`;
                 } else {
@@ -1587,6 +1616,13 @@ document.addEventListener('keydown', function(event) {
         return lvmLoadPromise;
     }
     
+	async function refreshAll() {
+		await loadRaidData();
+		await loadLvmData();
+		await updateLightMetrics();
+		showAlert('<?php echo $lang287; ?>', 'success');
+	}
+	
     // Запуск
     function init() {
         initCharts();

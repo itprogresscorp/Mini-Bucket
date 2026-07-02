@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -84,8 +85,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         .status-group {
@@ -496,7 +513,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -507,40 +524,40 @@ $menu = require_once 'menu.php';
         
         <div class="status-group" id="statusGroup">
             <span class="status-badge" id="ftpRunningBadge">
-                <i class="fas fa-play-circle"></i> FTP: Loading...
+                <i class="fas fa-play-circle"></i> <?php echo $lang2447; ?>
             </span>
             <span class="status-badge" id="ftpEnabledBadge">
-                <i class="fas fa-check-circle"></i> Auto: Loading...
+                <i class="fas fa-check-circle"></i> <?php echo $lang2448; ?>
             </span>
             <span class="status-badge" id="ftpPidBadge" style="background:#e9ecef; color:#495057; display:none;">
-                <i class="fas fa-microchip"></i> PID: <span id="ftpPid">-</span>
+                <i class="fas fa-microchip"></i> <?php echo $lang2449; ?> <span id="ftpPid">-</span>
             </span>
             <span class="status-badge" id="ftpVersionBadge" style="background:#e9ecef; color:#495057;">
-                <i class="fas fa-code-branch"></i> v<span id="ftpVersion">-</span>
+                <i class="fas fa-code-branch"></i> <?php echo $lang2450; ?><span id="ftpVersion">-</span>
             </span>
         </div>
         <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div class="dropdown">
             <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-power-off"></i> Management
+                <i class="fas fa-power-off"></i> <?php echo $lang2451; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success"></i> Start</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger"></i> Stop</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning"></i> Restart</button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success me-2"></i> <?php echo $lang2452; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger me-2"></i> <?php echo $lang2453; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning me-2"></i> <?php echo $lang2454; ?></button></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info"></i> Enable autostart</button></li>
+                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info me-2"></i> <?php echo $lang2455; ?></button></li>
             </ul>
         </div>
         
         <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i>
         </button>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang2456; ?>"></i>
     </div>
 </div>
 
@@ -553,19 +570,19 @@ $menu = require_once 'menu.php';
             <div class="col-md-8">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-folder-open text-primary"></i> FTP Directories</h3>
+                        <h3><i class="fas fa-folder-open text-primary"></i> <?php echo $lang2457; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFtpShareModal">
-                            <i class="fas fa-plus"></i> Add Directory
+                            <i class="fas fa-plus"></i> <?php echo $lang2458; ?>
                         </button>
                     </div>
                     <div class="widget-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-ftp mb-0">
                                 <thead>
-                                    <tr><th>Name</th><th>Path</th><th>Access</th><th>Actions</th></tr>
+                                    <tr><th><?php echo $lang2459; ?></th><th><?php echo $lang2460; ?></th><th><?php echo $lang2461; ?></th><th><?php echo $lang2462; ?></th></tr>
                                 </thead>
                                 <tbody id="sharesTableBody">
-                                    <tr><td colspan="4" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                                    <tr><td colspan="4" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2463; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -576,34 +593,34 @@ $menu = require_once 'menu.php';
             <div class="col-md-4">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-hdd text-primary"></i> Disk Partitions</h3>
+                        <h3><i class="fas fa-hdd text-primary"></i> <?php echo $lang2464; ?></h3>
                         <a class="btn btn-primary btn-sm" href="disk_manager.php"><i class="fas fa-tools"></i></a>
                     </div>
                     <div class="widget-body" id="storagesContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2465; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-users text-primary"></i> FTP Users</h3>
+                        <h3><i class="fas fa-users text-primary"></i> <?php echo $lang2466; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFtpUserModal">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                     <div class="widget-body" id="usersContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2467; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-history text-primary"></i> FTP Log</h3>
+                        <h3><i class="fas fa-history text-primary"></i> <?php echo $lang2468; ?></h3>
                         <i class="fas fa-sync-alt refresh-btn text-muted" onclick="loadLogs()" style="font-size:12px"></i>
                     </div>
                     <div class="widget-body p-0">
                         <div class="log-viewer" id="logsContainer">
-                            <div class="text-muted text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                            <div class="text-muted text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2469; ?></div>
                         </div>
                     </div>
                 </div>
@@ -617,7 +634,7 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Global FTP Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> <?php echo $lang2470; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="globalConfigForm">
@@ -626,72 +643,72 @@ $menu = require_once 'menu.php';
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="anonymous_enable" class="form-check-input" id="config_anonymous">
-                                <label class="form-check-label" for="config_anonymous">Anonymous Access</label>
+                                <label class="form-check-label" for="config_anonymous"><?php echo $lang2471; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="local_enable" class="form-check-input" id="config_local">
-                                <label class="form-check-label" for="config_local">Local Users</label>
+                                <label class="form-check-label" for="config_local"><?php echo $lang2472; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="write_enable" class="form-check-input" id="config_write">
-                                <label class="form-check-label" for="config_write">Allow Write</label>
+                                <label class="form-check-label" for="config_write"><?php echo $lang2473; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="chroot_local_user" class="form-check-input" id="config_chroot">
-                                <label class="form-check-label" for="config_chroot">Chroot Users</label>
+                                <label class="form-check-label" for="config_chroot"><?php echo $lang2474; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="ssl_enable" class="form-check-input" id="config_ssl">
-                                <label class="form-check-label" for="config_ssl">SSL/TLS Support</label>
+                                <label class="form-check-label" for="config_ssl"><?php echo $lang2475; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="pasv_enable" class="form-check-input" id="config_pasv">
-                                <label class="form-check-label" for="config_pasv">Passive Mode</label>
+                                <label class="form-check-label" for="config_pasv"><?php echo $lang2476; ?></label>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Local umask</label>
+                            <label class="form-label"><?php echo $lang2477; ?></label>
                             <input type="text" name="local_umask" id="config_umask" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Passive Ports (min)</label>
+                            <label class="form-label"><?php echo $lang2478; ?></label>
                             <input type="number" name="pasv_min_port" id="config_pasv_min" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Passive Ports (max)</label>
+                            <label class="form-label"><?php echo $lang2479; ?></label>
                             <input type="number" name="pasv_max_port" id="config_pasv_max" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Max Clients</label>
+                            <label class="form-label"><?php echo $lang2480; ?></label>
                             <input type="number" name="max_clients" id="config_max_clients" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Max per IP</label>
+                            <label class="form-label"><?php echo $lang2481; ?></label>
                             <input type="number" name="max_per_ip" id="config_max_per_ip" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Idle Timeout (sec)</label>
+                            <label class="form-label"><?php echo $lang2482; ?></label>
                             <input type="number" name="idle_session_timeout" id="config_idle_timeout" class="form-control">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Data Timeout (sec)</label>
+                            <label class="form-label"><?php echo $lang2483; ?></label>
                             <input type="number" name="data_connection_timeout" id="config_data_timeout" class="form-control">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2484; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2485; ?></button>
                 </div>
             </form>
         </div>
@@ -702,21 +719,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add FTP User</h5>
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> <?php echo $lang2486; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addUserForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select system user</label>
+                        <label class="form-label"><?php echo $lang2487; ?></label>
                         <select name="username" id="ftpUserSelect" class="form-select" required>
-                            <option value="">Select user...</option>
+                            <option value=""><?php echo $lang2488; ?></option>
                         </select>
-                        <small class="text-muted">Only existing system users can get FTP access</small>
+                        <small class="text-muted"><?php echo $lang2489; ?></small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Add</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2490; ?></button>
                 </div>
             </form>
         </div>
@@ -727,34 +744,34 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Add FTP Directory</h5>
+                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> <?php echo $lang2491; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addShareForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Directory Name *</label>
+                            <label class="form-label"><?php echo $lang2492; ?> *</label>
                             <input type="text" name="name" class="form-control" required placeholder="e.g.: documents">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Folder Path *</label>
+                            <label class="form-label"><?php echo $lang2493; ?> *</label>
                             <div class="input-group">
                                 <input type="text" name="path" id="addFtpPath" class="form-control" readonly required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('addFtpPath')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang2494; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">User Access</label>
+                            <label class="form-label"><?php echo $lang2495; ?></label>
                             <div class="user-select-list" id="shareUsersList"></div>
-                            <small class="text-muted">If no user is selected, the directory will be available to everyone</small>
+                            <small class="text-muted"><?php echo $lang2496; ?></small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Add Directory</button>
+                    <button type="submit" class="btn btn-success"><?php echo $lang2497; ?></button>
                 </div>
             </form>
         </div>
@@ -765,7 +782,7 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit FTP Directory</h5>
+                <h5 class="modal-title"><i class="fas fa-edit"></i> <?php echo $lang2498; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="editShareForm">
@@ -773,15 +790,15 @@ $menu = require_once 'menu.php';
                     <input type="hidden" name="old_id" id="edit_old_id">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Directory Name *</label>
+                            <label class="form-label"><?php echo $lang2499; ?> *</label>
                             <input type="text" name="name" id="edit_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Folder Path *</label>
+                            <label class="form-label"><?php echo $lang2500; ?> *</label>
                             <div class="input-group">
                                 <input type="text" name="path" id="edit_path" class="form-control" readonly required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowserEdit()">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang2501; ?>
                                 </button>
                             </div>
                         </div>
@@ -789,7 +806,7 @@ $menu = require_once 'menu.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2502; ?></button>
                 </div>
             </form>
         </div>
@@ -800,20 +817,20 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2503; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumb"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPath" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> <?php echo $lang2504; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowser"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2505; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()"><?php echo $lang2506; ?></button>
             </div>
         </div>
     </div>
@@ -823,31 +840,31 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2507; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumbEdit"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPathEdit" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> <?php echo $lang2508; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowserEdit"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2509; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()"><?php echo $lang2510; ?></button>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="createFolderDialog" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolder()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2511; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2512; ?></label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2513; ?></label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2514; ?></button><button type="button" class="btn btn-success" onclick="createNewFolder()"><?php echo $lang2515; ?></button></div></div></div>
 </div>
 
 <div class="modal fade" id="createFolderDialogEdit" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2516; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2517; ?></label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2518; ?></label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2519; ?></button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()"><?php echo $lang2520; ?></button></div></div></div>
 </div>
 
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
@@ -899,9 +916,9 @@ async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
         let status = result.data;
-        $('#ftpRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> FTP: ${status.running ? 'Running' : 'Stopped'}`);
+        $('#ftpRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> <?php echo $lang2521; ?> ${status.running ? 'Running' : 'Stopped'}`);
         $('#ftpRunningBadge').removeClass('status-running status-stopped').addClass(status.running ? 'status-running' : 'status-stopped');
-        $('#ftpEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> Auto: ${status.enabled ? 'On' : 'Off'}`);
+        $('#ftpEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> <?php echo $lang2522; ?> ${status.enabled ? 'On' : 'Off'}`);
         $('#ftpEnabledBadge').removeClass('status-enabled status-disabled').addClass(status.enabled ? 'status-enabled' : 'status-disabled');
         if (status.pid) { $('#ftpPidBadge').show(); $('#ftpPid').text(status.pid); } else { $('#ftpPidBadge').hide(); }
         $('#ftpVersion').text(status.version || 'unknown');
@@ -913,8 +930,8 @@ async function loadStatus() {
 
 async function serviceAction(action) {
     let result = await apiCall('service_action', 'POST', { service_action: action });
-    if (result.success) { showAlert(`Service ${action}ed`, 'success'); loadStatus(); }
-    else showAlert(`Error during ${action}`, 'danger');
+    if (result.success) { showAlert(`<?php echo $lang2523; ?> ${action} <?php echo $lang2524; ?>`, 'success'); loadStatus(); }
+    else showAlert(`<?php echo $lang2525; ?> ${action}`, 'danger');
 }
 
 async function toggleAutostart() {
@@ -949,8 +966,8 @@ $('#globalConfigForm').on('submit', async function(e) {
     e.preventDefault();
     let data = $(this).serialize();
     let result = await apiCall('save_config', 'POST', data);
-    if (result.success) { showAlert('Configuration saved', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
-    else showAlert('Save error', 'danger');
+    if (result.success) { showAlert('<?php echo $lang2526; ?>', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
+    else showAlert('<?php echo $lang2527; ?>', 'danger');
 });
 
 async function loadUsers() {
@@ -958,7 +975,7 @@ async function loadUsers() {
     if (result.success) {
         ftpUsersList = result.data;
         if (ftpUsersList.length === 0) {
-            $('#usersContainer').html('<div class="alert alert-info mb-0">No users. Add the first one.</div>');
+            $('#usersContainer').html('<div class="alert alert-info mb-0"><?php echo $lang2528; ?></div>');
         } else {
             let html = '<div class="d-flex flex-wrap">';
             ftpUsersList.forEach(u => {
@@ -976,7 +993,7 @@ async function loadSystemUsers() {
     let result = await apiCall('get_system_users');
     if (result.success) {
         systemUsersList = result.data;
-        let html = '<option value="">Select user...</option>';
+        let html = '<option value=""><?php echo $lang2529; ?></option>';
         systemUsersList.forEach(u => {
             html += `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`;
         });
@@ -985,12 +1002,12 @@ async function loadSystemUsers() {
 }
 
 function updateUserCheckboxes() {
-    let html = '<div class="form-check mb-2"><input type="checkbox" id="select_all_users" class="form-check-input"><label class="form-check-label" for="select_all_users">Select all</label></div><hr>';
+    let html = '<div class="form-check mb-2"><input type="checkbox" id="select_all_users" class="form-check-input"><label class="form-check-label" for="select_all_users"><?php echo $lang2530; ?></label></div><hr>';
     ftpUsersList.forEach(u => {
         html += `<div class="form-check"><input type="checkbox" name="users[]" value="${escapeHtml(u)}" class="form-check-input user-checkbox" id="share_user_${escapeHtml(u)}"><label class="form-check-label" for="share_user_${escapeHtml(u)}">${escapeHtml(u)}</label></div>`;
     });
     if (ftpUsersList.length === 0) {
-        html = '<span class="text-muted">No users with FTP access. Add users first.</span>';
+        html = '<span class="text-muted"><?php echo $lang2531; ?></span>';
     }
     $('#shareUsersList').html(html);
     
@@ -1000,7 +1017,7 @@ function updateUserCheckboxes() {
 }
 
 async function deleteUser(username) {
-    if (!confirm(`Remove user ${username} from FTP access?`)) return;
+    if (!confirm(`<?php echo $lang2532; ?> ${username} <?php echo $lang2533; ?>`)) return;
     let result = await apiCall('delete_user', 'POST', { username: username });
     if (result.success) { showAlert(result.message, 'success'); loadUsers(); loadShares(); }
     else showAlert(result.message, 'danger');
@@ -1019,7 +1036,7 @@ async function loadShares() {
     if (result.success) {
         let shares = result.data;
         if (shares.length === 0) {
-			$('#sharesTableBody').html('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i>No FTP directories created</td></tr>');
+			$('#sharesTableBody').html('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i><?php echo $lang2534; ?></td></tr>');
         } else {
             let html = '';
             shares.forEach(s => {
@@ -1029,7 +1046,7 @@ async function loadShares() {
                         usersHtml += `<span class="share-badge"><i class="fas fa-user"></i> ${escapeHtml(u)}</span>`;
                     });
                 } else {
-                    usersHtml = '<span class="badge bg-info">All users</span>';
+                    usersHtml = '<span class="badge bg-info"><?php echo $lang2535; ?></span>';
                 }
                 html += `<tr>
                     <td><strong>${escapeHtml(s.name)}</strong></td>
@@ -1061,8 +1078,8 @@ function editShare(id, name, path, users) {
     $('#edit_name').val(name);
     $('#edit_path').val(path);
     
-    let html = '<label class="form-label">User Access</label><div class="user-select-list">';
-    html += '<div class="form-check mb-2"><input type="checkbox" id="edit_select_all_users" class="form-check-input"><label class="form-check-label" for="edit_select_all_users">Select all</label></div><hr>';
+    let html = '<label class="form-label"><?php echo $lang2536; ?></label><div class="user-select-list">';
+    html += '<div class="form-check mb-2"><input type="checkbox" id="edit_select_all_users" class="form-check-input"><label class="form-check-label" for="edit_select_all_users"><?php echo $lang2537; ?></label></div><hr>';
     
     ftpUsersList.forEach(u => {
         let checked = users && users.includes(u) ? 'checked' : '';
@@ -1070,7 +1087,7 @@ function editShare(id, name, path, users) {
     });
     
     if (ftpUsersList.length === 0) {
-        html += '<span class="text-muted">No users with FTP access.</span>';
+        html += '<span class="text-muted"><?php echo $lang2538; ?></span>';
     }
     
     html += '</div>';
@@ -1092,7 +1109,7 @@ $('#editShareForm').on('submit', async function(e) {
 });
 
 async function deleteShare(id) {
-    if (!confirm('Удалить FTP каталог?')) return;
+    if (!confirm('<?php echo $lang2539; ?>')) return;
     let result = await apiCall('delete_share', 'POST', { id: id });
     if (result.success) { showAlert(result.message, 'success'); loadShares(); loadStatus(); }
     else showAlert(result.error || 'Error', 'danger');
@@ -1103,12 +1120,12 @@ async function loadStorages() {
     if (result.success) {
         let storages = result.storages;
         if (storages.length === 0) {
-            $('#storagesContainer').html('<div class="alert alert-info">No available partitions. Connect disks.</div>');
+            $('#storagesContainer').html('<div class="alert alert-info"><?php echo $lang2540; ?></div>');
         } else {
             let html = '';
             storages.forEach(s => {
                 let fillColor = s.used_percent > 90 ? '#dc3545' : (s.used_percent > 70 ? '#ffc107' : '#28a745');
-                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> Used: ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> Used: ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> Free: ${s.available || '—'}</span></div></div>`;
+                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> <?php echo $lang2541; ?> ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> <?php echo $lang2542; ?> ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> <?php echo $lang2543; ?> ${s.available || '—'}</span></div></div>`;
             });
             $('#storagesContainer').html(html);
         }
@@ -1121,7 +1138,7 @@ async function loadLogs() {
         let logs = result.data;
         let html = '';
         if (logs.length === 0) {
-            html = '<div class="text-muted text-center py-3">No record in Log file</div>';
+            html = '<div class="text-muted text-center py-3"><?php echo $lang2544; ?></div>';
         } else {
             logs.forEach(log => {
                 html += `<div class="log-line">${escapeHtml(log)}</div>`;
@@ -1152,11 +1169,11 @@ async function loadFolder(path, container, breadcrumbContainer, currentPathInput
         result.items.forEach(item => {
             listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="selectDirectory('${item.path}', '${container}', '${currentPathInput}')"><i class="fas fa-folder"></i> ${escapeHtml(item.name)}</div>`;
         });
-        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted"><?php echo $lang2545; ?></div>';
         listHtml += '</div>';
         $(container).html(listHtml);
     } else {
-        showAlert('Error loading folders', 'danger');
+        showAlert('<?php echo $lang2546; ?>', 'danger');
     }
 }
 
@@ -1175,7 +1192,7 @@ function selectCurrentFolder() {
     if (currentTargetInput) {
         $(`#${currentTargetInput}`).val(currentBrowsePath);
         $('#browseFolderModal').modal('hide');
-        showAlert('Selected folder: ' + currentBrowsePath, 'success');
+        showAlert('<?php echo $lang2547; ?>' + currentBrowsePath, 'success');
     }
 }
 
@@ -1212,12 +1229,12 @@ function showCreateFolderDialogEdit() {
 async function createNewFolder() {
     let path = $('#createFolderPath').text();
     let name = $('#newFolderName').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2548; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialog').modal('hide');
         loadFolder(currentBrowsePath, '#folderBrowser', '#folderBreadcrumb', '#currentPath');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2549; ?>"' + name + '"<?php echo $lang2550; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1226,12 +1243,12 @@ async function createNewFolder() {
 async function createNewFolderEdit() {
     let path = $('#createFolderPathEdit').text();
     let name = $('#newFolderNameEdit').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2551; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialogEdit').modal('hide');
         loadFolder(currentBrowsePathEdit, '#folderBrowserEdit', '#folderBreadcrumbEdit', '#currentPathEdit');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2552; ?>"' + name + '"<?php echo $lang2553; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1239,7 +1256,7 @@ async function createNewFolderEdit() {
 
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadUsers(), loadShares(), loadStorages(), loadLogs()]);
-    showAlert('Data updated...', 'success');
+    showAlert('<?php echo $lang2554; ?>', 'success');
 }
 
 setInterval(() => {

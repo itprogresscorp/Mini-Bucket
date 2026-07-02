@@ -85,6 +85,7 @@ validateApiKey();
 error_reporting(E_ERROR);
 ini_set('display_errors', 0);
 set_time_limit(0);
+require_once '../lang/loader.php';
 
 // ==================== КОНСОЛЬ ЧЕРЕЗ SSH ====================
 define('SSH_SESSION_DIR', '/var/www/minib/tmp/console_sessions/');
@@ -94,8 +95,9 @@ if (!is_dir(SSH_SESSION_DIR)) {
 }
 
 function initConsole() {
+	global $lang4396, $lang4397, $lang4398;
     if (!function_exists('ssh2_connect')) {
-        return ['success' => false, 'error' => 'SSH2 module not installed'];
+        return ['success' => false, 'error' => $lang4396];
     }
     
     $sessionId = session_id() . '_' . time() . '_' . rand(1000, 9999);
@@ -108,7 +110,7 @@ function initConsole() {
     
     $connection = ssh2_connect('127.0.0.1', 22);
     if (!$connection) {
-        return ['success' => false, 'error' => 'SSH connection failed'];
+        return ['success' => false, 'error' => $lang4397];
     }
     
     $auth = ssh2_auth_pubkey_file(
@@ -119,7 +121,7 @@ function initConsole() {
     );
     
     if (!$auth) {
-        return ['success' => false, 'error' => 'SSH key auth failed'];
+        return ['success' => false, 'error' => $lang4398];
     }
     
     $stream = ssh2_exec($connection, 'echo "=== CONSOLE READY ===" && pwd && whoami');
@@ -138,14 +140,15 @@ function initConsole() {
 }
 
 function sendCommand($sessionId, $command) {
+	global $lang4399, $lang4400, $lang4401;
     $sessionFile = SSH_SESSION_DIR . $sessionId . '.json';
     if (!file_exists($sessionFile)) {
-        return ['success' => false, 'error' => 'Session expired'];
+        return ['success' => false, 'error' => $lang4399];
     }
     
     $connection = ssh2_connect('127.0.0.1', 22);
     if (!$connection) {
-        return ['success' => false, 'error' => 'SSH connection failed'];
+        return ['success' => false, 'error' => $lang4400];
     }
     
     $auth = ssh2_auth_pubkey_file(
@@ -156,7 +159,7 @@ function sendCommand($sessionId, $command) {
     );
     
     if (!$auth) {
-        return ['success' => false, 'error' => 'SSH key auth failed'];
+        return ['success' => false, 'error' => $lang4401];
     }
     
     $stream = ssh2_exec($connection, $command . ' 2>&1');
@@ -218,10 +221,11 @@ try {
             break;
             
         case 'command':
+			global $lang4402;
             $sessionId = $input['session_id'] ?? '';
             $command = $input['command'] ?? '';
             if (empty($sessionId)) {
-                $response = ['success' => false, 'error' => 'Session ID required'];
+                $response = ['success' => false, 'error' => $lang4402];
                 break;
             }
             $response = sendCommand($sessionId, $command);

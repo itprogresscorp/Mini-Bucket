@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== CONSTANTS ==========
 if (!defined('CERT_DIR')) {
     define('CERT_DIR', '/var/www/minib/certs/crt');
@@ -375,12 +377,13 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Update comment
 if ($action === 'update_comment') {
+	global $lang3118, $lang3119;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? '');
     $type = $_POST['type'] ?? 'cert';
     $comment = trim($_POST['comment'] ?? '');
     
     if (empty($name)) {
-        echo json_encode(['success' => false, 'error' => 'Name required']);
+        echo json_encode(['success' => false, 'error' => $lang3118]);
         exit;
     }
     
@@ -396,7 +399,7 @@ if ($action === 'update_comment') {
         $stmt->execute();
     }
     
-    echo json_encode(['success' => true, 'message' => 'Comment updated']);
+    echo json_encode(['success' => true, 'message' => $lang3119]);
     exit;
 }
 
@@ -437,11 +440,12 @@ if ($action === 'list_cas') {
 
 // Get certificate details
 if ($action === 'details') {
+	global $lang3120, $lang3121;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'cert';
     
     if (empty($name)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name required']);
+        echo json_encode(['success' => false, 'error' => $lang3120]);
         exit;
     }
     
@@ -457,7 +461,7 @@ if ($action === 'details') {
     }
     
     if (!file_exists($crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate not found']);
+        echo json_encode(['success' => false, 'error' => $lang3121]);
         exit;
     }
     
@@ -566,6 +570,7 @@ if ($action === 'stats') {
 
 // Create Root CA
 if ($action === 'create_ca') {
+	global $lang3122, $lang3123, $lang3124, $lang3125, $lang3126;
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $country = trim($_POST['country'] ?? 'US');
     $state = trim($_POST['state'] ?? 'California');
@@ -581,7 +586,7 @@ if ($action === 'create_ca') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($caName)) {
-        echo json_encode(['success' => false, 'error' => 'CA name required']);
+        echo json_encode(['success' => false, 'error' => $lang3122]);
         exit;
     }
     
@@ -589,7 +594,7 @@ if ($action === 'create_ca') {
     $keyFile = CA_DIR . '/' . $caName . '.key';
     
     if (file_exists($crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'CA already exists']);
+        echo json_encode(['success' => false, 'error' => $lang3123]);
         exit;
     }
     
@@ -621,11 +626,11 @@ if ($action === 'create_ca') {
     $x509 = openssl_csr_sign($csr, null, $privateKey, $days, $caExtensions);
     
     if (!openssl_x509_export_to_file($x509, $crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'Failed to export certificate']);
+        echo json_encode(['success' => false, 'error' => $lang3124]);
         exit;
     }
     if (!openssl_pkey_export_to_file($privateKey, $keyFile)) {
-        echo json_encode(['success' => false, 'error' => 'Failed to export private key']);
+        echo json_encode(['success' => false, 'error' => $lang3125]);
         exit;
     }
     chmod($keyFile, 0600);
@@ -645,12 +650,13 @@ if ($action === 'create_ca') {
     $stmt->bindValue(':comment', $comment, SQLITE3_TEXT);
     $stmt->execute();
     
-    echo json_encode(['success' => true, 'message' => 'Root CA created successfully']);
+    echo json_encode(['success' => true, 'message' => $lang3126]);
     exit;
 }
 
 // Create Intermediate CA
 if ($action === 'create_intermediate_ca') {
+	global $lang3127, $lang3128, $lang3129, $lang3130, $lang3131;
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $rootCAName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['rootCAName'] ?? ''));
     $country = trim($_POST['country'] ?? 'US');
@@ -667,7 +673,7 @@ if ($action === 'create_intermediate_ca') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($caName) || empty($rootCAName)) {
-        echo json_encode(['success' => false, 'error' => 'CA name and Root CA name required']);
+        echo json_encode(['success' => false, 'error' => $lang3127]);
         exit;
     }
     
@@ -677,12 +683,12 @@ if ($action === 'create_intermediate_ca') {
     $keyFile = CA_DIR . '/' . $caName . '.key';
     
     if (!file_exists($rootCrtFile) || !file_exists($rootKeyFile)) {
-        echo json_encode(['success' => false, 'error' => 'Root CA not found']);
+        echo json_encode(['success' => false, 'error' => $lang3128]);
         exit;
     }
     
     if (file_exists($crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'Intermediate CA already exists']);
+        echo json_encode(['success' => false, 'error' => $lang3129]);
         exit;
     }
     
@@ -691,7 +697,7 @@ if ($action === 'create_intermediate_ca') {
     $rootKey = openssl_pkey_get_private($rootKeyContent);
     
     if (!$rootKey) {
-        echo json_encode(['success' => false, 'error' => 'Failed to load root CA private key']);
+        echo json_encode(['success' => false, 'error' => $lang3130]);
         exit;
     }
     
@@ -744,12 +750,13 @@ if ($action === 'create_intermediate_ca') {
     $stmt->bindValue(':comment', $comment, SQLITE3_TEXT);
     $stmt->execute();
     
-    echo json_encode(['success' => true, 'message' => 'Intermediate CA created successfully']);
+    echo json_encode(['success' => true, 'message' => $lang3131]);
     exit;
 }
 
 // Create certificate signed by CA
 if ($action === 'create_signed') {
+	global $lang3132, $lang3133, $lang3134, $lang3135, $lang3136, $lang3137;
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $domain = trim($_POST['domain'] ?? '');
@@ -767,7 +774,7 @@ if ($action === 'create_signed') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($certName) || empty($caName) || empty($domain)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name, CA name and domain required']);
+        echo json_encode(['success' => false, 'error' => $lang3132]);
         exit;
     }
     
@@ -775,7 +782,7 @@ if ($action === 'create_signed') {
     $caKeyFile = CA_DIR . '/' . $caName . '.key';
     
     if (!file_exists($caCrtFile) || !file_exists($caKeyFile)) {
-        echo json_encode(['success' => false, 'error' => 'CA not found']);
+        echo json_encode(['success' => false, 'error' => $lang3133]);
         exit;
     }
     
@@ -783,7 +790,7 @@ if ($action === 'create_signed') {
     $keyFile = CERT_DIR . '/' . $certName . '.key';
     
     if (file_exists($crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate already exists']);
+        echo json_encode(['success' => false, 'error' => $lang3134]);
         exit;
     }
     
@@ -792,7 +799,7 @@ if ($action === 'create_signed') {
     $caKey = openssl_pkey_get_private($caKeyContent);
     
     if (!$caKey) {
-        echo json_encode(['success' => false, 'error' => 'Failed to load CA private key']);
+        echo json_encode(['success' => false, 'error' => $lang3135]);
         exit;
     }
     
@@ -831,7 +838,7 @@ if ($action === 'create_signed') {
     $x509 = openssl_csr_sign($csr, $caCert, $caKey, $days, $extensions);
     
     if (!$x509) {
-        echo json_encode(['success' => false, 'error' => 'Failed to sign certificate']);
+        echo json_encode(['success' => false, 'error' => $lang3136]);
         exit;
     }
     
@@ -859,12 +866,13 @@ if ($action === 'create_signed') {
     ];
     updateMetadata($db, $certInfo);
     
-    echo json_encode(['success' => true, 'message' => 'Certificate created and signed by CA successfully']);
+    echo json_encode(['success' => true, 'message' => $lang3137]);
     exit;
 }
 
 // Sign existing CSR
 if ($action === 'sign_csr') {
+	global $lang3138, $lang3139, $lang3140, $lang3141, $lang3142;
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $caName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['caName'] ?? ''));
     $csrContent = trim($_POST['csrContent'] ?? '');
@@ -874,7 +882,7 @@ if ($action === 'sign_csr') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($certName) || empty($caName) || empty($csrContent)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name, CA name and CSR content required']);
+        echo json_encode(['success' => false, 'error' => $lang3138]);
         exit;
     }
     
@@ -882,7 +890,7 @@ if ($action === 'sign_csr') {
     $caKeyFile = CA_DIR . '/' . $caName . '.key';
     
     if (!file_exists($caCrtFile) || !file_exists($caKeyFile)) {
-        echo json_encode(['success' => false, 'error' => 'CA not found']);
+        echo json_encode(['success' => false, 'error' => $lang3139]);
         exit;
     }
     
@@ -891,7 +899,7 @@ if ($action === 'sign_csr') {
     $caKey = openssl_pkey_get_private($caKeyContent);
     
     if (!$caKey) {
-        echo json_encode(['success' => false, 'error' => 'Failed to load CA private key']);
+        echo json_encode(['success' => false, 'error' => $lang3140]);
         exit;
     }
     
@@ -928,19 +936,20 @@ if ($action === 'sign_csr') {
         
         updateMetadata($db, $certInfo);
         
-        echo json_encode(['success' => true, 'message' => 'CSR signed successfully']);
+        echo json_encode(['success' => true, 'message' => $lang3141]);
     } else {
-        echo json_encode(['success' => false, 'error' => 'Failed to sign CSR']);
+        echo json_encode(['success' => false, 'error' => $lang3142]);
     }
     exit;
 }
 
 // Revoke certificate
 if ($action === 'revoke') {
+	global $lang3143, $lang3144, $lang3145;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? '');
     
     if (empty($name)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name required']);
+        echo json_encode(['success' => false, 'error' => $lang3143]);
         exit;
     }
     
@@ -974,21 +983,22 @@ if ($action === 'revoke') {
         $stmt->bindValue(':name', $name, SQLITE3_TEXT);
         $stmt->execute();
         
-        echo json_encode(['success' => true, 'message' => 'Certificate revoked successfully']);
+        echo json_encode(['success' => true, 'message' => $lang3144]);
     } else {
-        echo json_encode(['success' => false, 'error' => 'Certificate not found']);
+        echo json_encode(['success' => false, 'error' => $lang3145]);
     }
     exit;
 }
 
 // Export certificate
 if ($action === 'export') {
+	global $lang3146, $lang3147, $lang3148;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'cert';
     
     if (empty($name)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Certificate name required']);
+        echo json_encode(['error' => $lang3146]);
         exit;
     }
     
@@ -1006,7 +1016,7 @@ if ($action === 'export') {
     
     if (empty($filesToZip)) {
         http_response_code(404);
-        echo json_encode(['error' => 'No files found to export']);
+        echo json_encode(['error' => $lang3147]);
         exit;
     }
     
@@ -1027,13 +1037,14 @@ if ($action === 'export') {
         unlink($zipPath);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to create ZIP archive']);
+        echo json_encode(['error' => $lang3148]);
     }
     exit;
 }
 
 // Create self-signed certificate
 if ($action === 'create') {
+	global $lang3149, $lang3150, $lang3151, $lang3152;
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $domain = trim($_POST['domain'] ?? '');
     $sans = trim($_POST['sans'] ?? '');
@@ -1050,7 +1061,7 @@ if ($action === 'create') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($certName) || empty($domain)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name and domain required']);
+        echo json_encode(['success' => false, 'error' => $lang3149]);
         exit;
     }
     
@@ -1058,7 +1069,7 @@ if ($action === 'create') {
     $keyFile = CERT_DIR . '/' . $certName . '.key';
     
     if (file_exists($crtFile)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate already exists']);
+        echo json_encode(['success' => false, 'error' => $lang3150]);
         exit;
     }
     
@@ -1097,7 +1108,7 @@ if ($action === 'create') {
     $x509 = openssl_csr_sign($csr, null, $privateKey, $days, $extensions);
     
     if (!$x509) {
-        echo json_encode(['success' => false, 'error' => 'Failed to create certificate']);
+        echo json_encode(['success' => false, 'error' => $lang3151]);
         exit;
     }
     
@@ -1122,12 +1133,13 @@ if ($action === 'create') {
     ];
     updateMetadata($db, $certInfo);
     
-    echo json_encode(['success' => true, 'message' => 'Self-signed certificate created successfully']);
+    echo json_encode(['success' => true, 'message' => $lang3152]);
     exit;
 }
 
 // Import certificate
 if ($action === 'import') {
+	global $lang3153, $lang3154, $lang3155;
     $certName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['certName'] ?? ''));
     $certContent = trim($_POST['certContent'] ?? '');
     $keyContent = trim($_POST['keyContent'] ?? '');
@@ -1136,13 +1148,13 @@ if ($action === 'import') {
     $comment = trim($_POST['comment'] ?? '');
     
     if (empty($certName) || empty($certContent)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name and content required']);
+        echo json_encode(['success' => false, 'error' => $lang3153]);
         exit;
     }
     
     $testCert = @openssl_x509_read($certContent);
     if (!$testCert) {
-        echo json_encode(['success' => false, 'error' => 'Invalid certificate format']);
+        echo json_encode(['success' => false, 'error' => $lang3154]);
         exit;
     }
     
@@ -1200,18 +1212,19 @@ if ($action === 'import') {
         $stmt->execute();
     }
     
-    echo json_encode(['success' => true, 'message' => 'Certificate imported successfully']);
+    echo json_encode(['success' => true, 'message' => $lang3155]);
     exit;
 }
 
 // Delete certificate
 if ($action === 'delete') {
+	global $lang3156, $lang3157, $lang3158;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['name'] ?? $_GET['name'] ?? '');
     $type = $_POST['type'] ?? $_GET['type'] ?? 'cert';
     $force = isset($_POST['force']) ? (int)$_POST['force'] : 0;
     
     if (empty($name)) {
-        echo json_encode(['success' => false, 'error' => 'Certificate name required']);
+        echo json_encode(['success' => false, 'error' => $lang3156]);
         exit;
     }
     
@@ -1236,7 +1249,7 @@ if ($action === 'delete') {
         if ($row && $row['status'] !== 'revoked' && !$isRevoked) {
             echo json_encode([
                 'success' => false, 
-                'error' => 'Certificate is still active! Please revoke it before deletion, or use force_delete=true to override.',
+                'error' => $lang3157,
                 'requires_revocation' => true
             ]);
             exit;
@@ -1273,12 +1286,13 @@ if ($action === 'delete') {
         $stmt->execute();
     }
     
-    echo json_encode(['success' => true, 'message' => count($deleted) . ' file(s) deleted']);
+    echo json_encode(['success' => true, 'message' => count($deleted) . $lang3158]);
     exit;
 }
 
 // Download certificate
 if ($action === 'download') {
+	global $lang3159;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'crt';
     $certType = $_GET['certType'] ?? 'cert';
@@ -1297,7 +1311,7 @@ if ($action === 'download') {
     
     if (!file_exists($file)) {
         http_response_code(404);
-        echo json_encode(['error' => 'File not found']);
+        echo json_encode(['error' => $lang3159]);
         exit;
     }
     
@@ -1310,6 +1324,7 @@ if ($action === 'download') {
 
 // View certificate content
 if ($action === 'view') {
+	global $lang3160;
     $name = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['name'] ?? '');
     $type = $_GET['type'] ?? 'crt';
     $certType = $_GET['certType'] ?? 'cert';
@@ -1327,7 +1342,7 @@ if ($action === 'view') {
     
     if (!file_exists($file)) {
         http_response_code(404);
-        echo "File not found";
+        echo $lang3160;
         exit;
     }
     
@@ -1338,6 +1353,7 @@ if ($action === 'view') {
 
 // Generate CSR
 if ($action === 'generate_csr') {
+	global $lang3161, $lang3162, $lang3163;
     $csrName = preg_replace('/[^a-zA-Z0-9_-]/', '', trim($_POST['csrName'] ?? ''));
     $domain = trim($_POST['domain'] ?? '');
     $sans = trim($_POST['sans'] ?? '');
@@ -1352,7 +1368,7 @@ if ($action === 'generate_csr') {
     $digestAlgo = getDigestAlgo($signatureAlgo);
     
     if (empty($csrName) || empty($domain)) {
-        echo json_encode(['success' => false, 'error' => 'CSR name and domain required']);
+        echo json_encode(['success' => false, 'error' => $lang3161]);
         exit;
     }
     
@@ -1386,7 +1402,7 @@ if ($action === 'generate_csr') {
     
     if (!$csr) {
         unlink($tmpConfig);
-        echo json_encode(['success' => false, 'error' => 'Failed to generate CSR']);
+        echo json_encode(['success' => false, 'error' => $lang3162]);
         exit;
     }
     
@@ -1414,7 +1430,7 @@ if ($action === 'generate_csr') {
     
     echo json_encode([
         'success' => true,
-        'message' => 'CSR generated successfully',
+        'message' => $lang3163,
         'csr' => $csrContent,
         'private_key' => $keyContent,
         'csr_file' => $csrFile,

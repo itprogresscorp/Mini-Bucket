@@ -21,6 +21,7 @@
  */
 
 require_once 'config.php';
+require_once 'lang/loader.php';
 isAuthenticated();
 
 $db = getDB();
@@ -105,8 +106,24 @@ if (isset($_GET['view_mode'])) {
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         * { box-sizing: border-box; }
@@ -375,12 +392,25 @@ if (isset($_GET['view_mode'])) {
         
         .cursor-pointer { cursor: pointer; }
         .log-viewer { font-family: monospace; font-size: 11px; }
+		
+		.language-selector select {
+			background-repeat: no-repeat;
+			background-position: left 10px center;
+			background-size: 16px;
+			padding-left: 35px;
+		}
+		.language-selector option {
+			padding-left: 25px;
+			background-repeat: no-repeat;
+			background-position: 5px center;
+			background-size: 16px;
+		}
     </style>
 </head>
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Загрузка...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -391,27 +421,27 @@ if (isset($_GET['view_mode'])) {
         <i class="fas fa-hdd"></i> Mount Manager
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
-        <div class="stat-badge"><span class="number" id="statMounted"><?= $stats['mounted'] ?></span><span class="label">Mounted</span></div>
-        <div class="stat-badge"><span class="number" id="statFstab"><?= $stats['fstab'] ?></span><span class="label">fstab</span></div>
+        <div class="stat-badge"><span class="number" id="statMounted"><?= $stats['mounted'] ?></span><span class="label"><?php echo $lang169; ?></span></div>
+        <div class="stat-badge"><span class="number" id="statFstab"><?= $stats['fstab'] ?></span><span class="label"><?php echo $lang170; ?></span></div>
         <div class="action-buttons">
             <div class="dropdown">
                 <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-plus"></i> Mount
+                    <i class="fas fa-plus"></i> <?php echo $lang171; ?>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountLocalModal"><i class="fas fa-hdd"></i> Local Device</a></li>
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountRaidModal"><i class="fas fa-server"></i> RAID Device</a></li>
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountLvmModal"><i class="fas fa-chart-pie"></i> LVM Volume</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountLocalModal"><i class="fas fa-hdd me-2"></i> <?php echo $lang172; ?></a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountRaidModal"><i class="fas fa-server me-2"></i> <?php echo $lang173; ?></a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountLvmModal"><i class="fas fa-chart-pie me-2"></i> <?php echo $lang174; ?></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountCifsModal"><i class="fab fa-windows"></i> SMB/CIFS Share</a></li>
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountNfsModal"><i class="fab fa-linux"></i> NFS Share</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountCifsModal"><i class="fab fa-windows me-2"></i> <?php echo $lang175; ?></a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mountNfsModal"><i class="fab fa-linux me-2"></i> <?php echo $lang176; ?></a></li>
                 </ul>
             </div>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Обновить"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang177; ?>"></i>
     </div>
 </div>
 
@@ -426,16 +456,16 @@ if (isset($_GET['view_mode'])) {
         <div class="filters-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search..." onkeyup="filterMounts()">
+                <input type="text" id="searchInput" class="form-control" placeholder="<?php echo $lang178; ?>" onkeyup="filterMounts()">
             </div>
             <div class="filter-tabs">
-                <span class="filter-tab active" data-type="all" onclick="setFilter('all')">All</span>
-                <span class="filter-tab" data-type="local" onclick="setFilter('local')"><i class="fas fa-hdd"></i> Local</span>
-                <span class="filter-tab" data-type="network" onclick="setFilter('network')"><i class="fas fa-network-wired"></i> Network</span>
+                <span class="filter-tab active" data-type="all" onclick="setFilter('all')"><?php echo $lang179; ?></span>
+                <span class="filter-tab" data-type="local" onclick="setFilter('local')"><i class="fas fa-hdd"></i> <?php echo $lang180; ?></span>
+                <span class="filter-tab" data-type="network" onclick="setFilter('network')"><i class="fas fa-network-wired"></i> <?php echo $lang181; ?></span>
             </div>
             <div class="form-check form-switch ms-auto">
                 <input class="form-check-input" type="checkbox" id="showFstabOnly" onchange="filterMounts()">
-                <label class="form-check-label switch-label" for="showFstabOnly">In fstab only</label>
+                <label class="form-check-label switch-label" for="showFstabOnly"><?php echo $lang182; ?></label>
             </div>
             <div class="view-toggle">
                 <button id="viewTableBtn" class="<?= $viewMode == 'table' ? 'active' : '' ?>" onclick="setViewMode('table')"><i class="fas fa-table"></i></button>
@@ -446,13 +476,13 @@ if (isset($_GET['view_mode'])) {
         <!-- ТАБЛИЦА -->
         <div class="card">
             <div class="card-header">
-                <span><i class="fas fa-hdd me-2"></i>Mounted Filesystems</span>
+                <span><i class="fas fa-hdd me-2"></i><?php echo $lang183; ?></span>
             </div>
             
             <div id="tableView" class="table-responsive" style="display: <?= $viewMode == 'table' ? 'block' : 'none' ?>;">
                 <table class="table table-hover align-middle" id="mountsTable">
                     <thead>
-                        <tr><th>Type</th><th>Device/Source</th><th>Mount Point</th><th>Filesystem</th><th>Options</th><th>fstab</th><th>Actions</th></tr>
+                        <tr><th><?php echo $lang184; ?></th><th><?php echo $lang185; ?></th><th><?php echo $lang186; ?></th><th><?php echo $lang187; ?></th><th><?php echo $lang188; ?></th><th><?php echo $lang170; ?></th><th><?php echo $lang189; ?></th></tr>
                     </thead>
                     <tbody id="tableMountsContainer"></tbody>
                 </table>
@@ -466,13 +496,13 @@ if (isset($_GET['view_mode'])) {
         <!-- ЛОГИ (свёрнутые) -->
         <div class="card" id="logsCard" style="display: none;">
             <div class="card-header collapse-header cursor-pointer" onclick="toggleLogs()">
-                <span><i class="fas fa-history me-2"></i>Operation Logs</span>
+                <span><i class="fas fa-history me-2"></i><?php echo $lang190; ?></span>
                 <i class="fas fa-chevron-down" id="logsToggleIcon"></i>
             </div>
             <div id="logsContent" style="display: none;">
                 <div class="p-3">
                     <div class="mb-2 text-end">
-                        <button class="btn btn-sm btn-outline-danger" onclick="clearLogs()"><i class="fas fa-trash"></i> Clear</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearLogs()"><i class="fas fa-trash"></i> <?php echo $lang191; ?></button>
                     </div>
                     <div class="log-viewer" id="logsContainer" style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 12px; max-height: 300px; overflow-y: auto;"></div>
                 </div>
@@ -488,32 +518,32 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-hdd"></i> Mount Local Device</h5>
+                <h5 class="modal-title"><i class="fas fa-hdd"></i> <?php echo $lang192; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="mountLocalForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label">Device / Partition</label>
+                            <label class="form-label"><?php echo $lang193; ?></label>
                             <select name="device" id="localDeviceSelect" class="form-select" required>
-                                <option value="">Select device...</option>
+                                <option value=""><?php echo $lang194; ?></option>
                             </select>
-                            <small class="text-muted">Available unmounted partitions, RAID devices and LVM volumes</small>
+                            <small class="text-muted"><?php echo $lang195; ?></small>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Point</label>
+                            <label class="form-label"><?php echo $lang196; ?></label>
                             <div class="input-group">
                                 <input type="text" name="mount_point" id="localMountPoint" class="form-control" placeholder="/mnt/name" required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('localMountPoint')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang197; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Filesystem Type</label>
+                            <label class="form-label"><?php echo $lang198; ?></label>
                             <select name="fstype" class="form-select">
-                                <option value="auto">Auto-detect</option>
+                                <option value="auto"><?php echo $lang199; ?></option>
                                 <option value="ext4">ext4</option>
                                 <option value="ext3">ext3</option>
                                 <option value="ext2">ext2</option>
@@ -525,28 +555,28 @@ if (isset($_GET['view_mode'])) {
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner UID</label>
+                            <label class="form-label"><?php echo $lang200; ?></label>
                             <select name="uid" id="localUid" class="form-select"></select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner GID</label>
+                            <label class="form-label"><?php echo $lang201; ?></label>
                             <select name="gid" id="localGid" class="form-select"></select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Options</label>
+                            <label class="form-label"><?php echo $lang202; ?></label>
                             <input type="text" name="mount_options" class="form-control" placeholder="defaults, noatime, etc." value="defaults">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check">
                                 <input type="checkbox" name="add_to_fstab" class="form-check-input" id="localAddToFstab">
-                                <label class="form-check-label" for="localAddToFstab">Add to /etc/fstab (auto-mount on boot)</label>
+                                <label class="form-check-label" for="localAddToFstab"><?php echo $lang203; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Mount</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang209; ?></button>
                 </div>
             </form>
         </div>
@@ -558,32 +588,32 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-server"></i> Mount RAID Device</h5>
+                <h5 class="modal-title"><i class="fas fa-server"></i> <?php echo $lang204; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="mountRaidForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label">RAID Device</label>
+                            <label class="form-label"><?php echo $lang205; ?></label>
                             <select name="device" id="raidDeviceSelect" class="form-select" required>
-                                <option value="">Select RAID device...</option>
+                                <option value=""><?php echo $lang206; ?></option>
                             </select>
-                            <small class="text-muted">Available RAID arrays (md devices)</small>
+                            <small class="text-muted"><?php echo $lang207; ?></small>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Point</label>
+                            <label class="form-label"><?php echo $lang208; ?></label>
                             <div class="input-group">
                                 <input type="text" name="mount_point" id="raidMountPoint" class="form-control" placeholder="/mnt/raid_name" required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('raidMountPoint')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang197; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Filesystem Type</label>
+                            <label class="form-label"><?php echo $lang198; ?></label>
                             <select name="fstype" class="form-select">
-                                <option value="auto">Auto-detect</option>
+                                <option value="auto"><?php echo $lang199; ?></option>
                                 <option value="ext4">ext4</option>
                                 <option value="ext3">ext3</option>
                                 <option value="xfs">XFS</option>
@@ -591,28 +621,28 @@ if (isset($_GET['view_mode'])) {
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner UID</label>
+                            <label class="form-label"><?php echo $lang200; ?></label>
                             <select name="uid" id="raidUid" class="form-select"></select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner GID</label>
+                            <label class="form-label"><?php echo $lang201; ?></label>
                             <select name="gid" id="raidGid" class="form-select"></select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Options</label>
+                            <label class="form-label"><?php echo $lang202; ?></label>
                             <input type="text" name="mount_options" class="form-control" placeholder="defaults, noatime, etc." value="defaults">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check">
                                 <input type="checkbox" name="add_to_fstab" class="form-check-input" id="raidAddToFstab">
-                                <label class="form-check-label" for="raidAddToFstab">Add to /etc/fstab (auto-mount on boot)</label>
+                                <label class="form-check-label" for="raidAddToFstab"><?php echo $lang203; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Mount</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang209; ?></button>
                 </div>
             </form>
         </div>
@@ -624,32 +654,32 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-chart-pie"></i> Mount LVM Logical Volume</h5>
+                <h5 class="modal-title"><i class="fas fa-chart-pie"></i> <?php echo $lang210; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="mountLvmForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label">Logical Volume</label>
+                            <label class="form-label"><?php echo $lang211; ?></label>
                             <select name="device" id="lvmDeviceSelect" class="form-select" required>
-                                <option value="">Select LVM volume...</option>
+                                <option value=""><?php echo $lang212; ?></option>
                             </select>
-                            <small class="text-muted">Available unmounted LVM logical volumes</small>
+                            <small class="text-muted"><?php echo $lang213; ?></small>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Point</label>
+                            <label class="form-label"><?php echo $lang214; ?></label>
                             <div class="input-group">
                                 <input type="text" name="mount_point" id="lvmMountPoint" class="form-control" placeholder="/mnt/lvm_volume" required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('lvmMountPoint')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang197; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Filesystem Type</label>
+                            <label class="form-label"><?php echo $lang198; ?></label>
                             <select name="fstype" class="form-select">
-                                <option value="auto">Auto-detect</option>
+                                <option value="auto"><?php echo $lang199; ?></option>
                                 <option value="ext4">ext4</option>
                                 <option value="ext3">ext3</option>
                                 <option value="xfs">XFS</option>
@@ -657,28 +687,28 @@ if (isset($_GET['view_mode'])) {
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner UID</label>
+                            <label class="form-label"><?php echo $lang200; ?></label>
                             <select name="uid" id="lvmUid" class="form-select"></select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner GID</label>
+                            <label class="form-label"><?php echo $lang201; ?></label>
                             <select name="gid" id="lvmGid" class="form-select"></select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Options</label>
+                            <label class="form-label"><?php echo $lang202; ?></label>
                             <input type="text" name="mount_options" class="form-control" placeholder="defaults, noatime, etc." value="defaults">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check">
                                 <input type="checkbox" name="add_to_fstab" class="form-check-input" id="lvmAddToFstab">
-                                <label class="form-check-label" for="lvmAddToFstab">Add to /etc/fstab (auto-mount on boot)</label>
+                                <label class="form-check-label" for="lvmAddToFstab"><?php echo $lang203; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Mount</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang209; ?></button>
                 </div>
             </form>
         </div>
@@ -690,60 +720,60 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fab fa-windows"></i> Mount SMB/CIFS Share</h5>
+                <h5 class="modal-title"><i class="fab fa-windows"></i> <?php echo $lang215; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="mountCifsForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Server Address</label>
+                            <label class="form-label"><?php echo $lang216; ?></label>
                             <input type="text" name="server" class="form-control" placeholder="192.168.1.100 or server-name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Share Name</label>
+                            <label class="form-label"><?php echo $lang217; ?></label>
                             <input type="text" name="share" class="form-control" placeholder="shared_folder" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Point</label>
+                            <label class="form-label"><?php echo $lang218; ?></label>
                             <div class="input-group">
                                 <input type="text" name="mount_point" id="cifsMountPoint" class="form-control" placeholder="/mnt/smb_share" required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('cifsMountPoint')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang197; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Username (optional)</label>
+                            <label class="form-label"><?php echo $lang219; ?></label>
                             <input type="text" name="username" class="form-control" placeholder="guest">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Password (optional)</label>
+                            <label class="form-label"><?php echo $lang220; ?></label>
                             <input type="password" name="password" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Domain/Workgroup</label>
+                            <label class="form-label"><?php echo $lang221; ?></label>
                             <input type="text" name="domain" class="form-control" placeholder="WORKGROUP">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">SMB Version</label>
+                            <label class="form-label"><?php echo $lang222; ?></label>
                             <select name="vers" class="form-select">
-                                <option value="3.0">3.0 (recommended)</option>
+                                <option value="3.0">3.0 <?php echo $lang223; ?></option>
                                 <option value="2.1">2.1</option>
                                 <option value="2.0">2.0</option>
                                 <option value="1.0">1.0 (legacy)</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner UID</label>
+                            <label class="form-label"><?php echo $lang200; ?></label>
                             <select name="uid" id="cifsUid" class="form-select"></select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Owner GID</label>
+                            <label class="form-label"><?php echo $lang201; ?></label>
                             <select name="gid" id="cifsGid" class="form-select"></select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Charset</label>
+                            <label class="form-label"><?php echo $lang224; ?></label>
                             <select name="iocharset" class="form-select">
                                 <option value="utf8">UTF-8</option>
                                 <option value="cp866">CP866</option>
@@ -753,14 +783,14 @@ if (isset($_GET['view_mode'])) {
                         <div class="col-md-12">
                             <div class="form-check">
                                 <input type="checkbox" name="add_to_fstab" class="form-check-input" id="cifsAddToFstab">
-                                <label class="form-check-label" for="cifsAddToFstab">Add to /etc/fstab (auto-mount on boot)</label>
+                                <label class="form-check-label" for="cifsAddToFstab"><?php echo $lang203; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Mount</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang209; ?></button>
                 </div>
             </form>
         </div>
@@ -772,31 +802,31 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fab fa-linux"></i> Mount NFS Share</h5>
+                <h5 class="modal-title"><i class="fab fa-linux"></i> <?php echo $lang225; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="mountNfsForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Server Address</label>
+                            <label class="form-label"><?php echo $lang226; ?></label>
                             <input type="text" name="server" class="form-control" placeholder="192.168.1.100 or server-name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Export Path</label>
+                            <label class="form-label"><?php echo $lang227; ?></label>
                             <input type="text" name="export" class="form-control" placeholder="/exported/path" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Mount Point</label>
+                            <label class="form-label"><?php echo $lang228; ?></label>
                             <div class="input-group">
                                 <input type="text" name="mount_point" id="nfsMountPoint" class="form-control" placeholder="/mnt/nfs_share" required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('nfsMountPoint')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang197; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">NFS Version</label>
+                            <label class="form-label"><?php echo $lang229; ?></label>
                             <select name="nfs_version" class="form-select">
                                 <option value="4.2">4.2</option>
                                 <option value="4.1">4.1</option>
@@ -805,19 +835,19 @@ if (isset($_GET['view_mode'])) {
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mount Options</label>
+                            <label class="form-label"><?php echo $lang230; ?></label>
                             <input type="text" name="mount_options" class="form-control" placeholder="defaults, noatime, etc." value="defaults">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">rsize</label>
+                            <label class="form-label"><?php echo $lang231; ?></label>
                             <input type="text" name="rsize" class="form-control" placeholder="1048576">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">wsize</label>
+                            <label class="form-label"><?php echo $lang232; ?></label>
                             <input type="text" name="wsize" class="form-control" placeholder="1048576">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Protocol</label>
+                            <label class="form-label"><?php echo $lang233; ?></label>
                             <select name="soft_hard" class="form-select">
                                 <option value="hard">hard</option>
                                 <option value="soft">soft</option>
@@ -826,26 +856,26 @@ if (isset($_GET['view_mode'])) {
                         <div class="col-md-6">
                             <div class="form-check">
                                 <input type="checkbox" name="intr" class="form-check-input" id="nfsIntr">
-                                <label class="form-check-label" for="nfsIntr">Allow interrupts (intr)</label>
+                                <label class="form-check-label" for="nfsIntr"><?php echo $lang234; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-check">
                                 <input type="checkbox" name="noatime" class="form-check-input" id="nfsNoatime">
-                                <label class="form-check-label" for="nfsNoatime">No atime update (noatime)</label>
+                                <label class="form-check-label" for="nfsNoatime"><?php echo $lang235; ?></label>
                             </div>
                         </div>
                         <div class="col-md-12">
                             <div class="form-check">
                                 <input type="checkbox" name="add_to_fstab" class="form-check-input" id="nfsAddToFstab">
-                                <label class="form-check-label" for="nfsAddToFstab">Add to /etc/fstab (auto-mount on boot)</label>
+                                <label class="form-check-label" for="nfsAddToFstab"><?php echo $lang203; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Mount</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang236; ?></button>
                 </div>
             </form>
         </div>
@@ -857,20 +887,20 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang237; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumb"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPath" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> <?php echo $lang238; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowser"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()"><?php echo $lang239; ?></button>
             </div>
         </div>
     </div>
@@ -881,16 +911,16 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang240; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPath"></code></div>
-                <div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderName" class="form-control" placeholder="New folder"></div>
+                <div class="mb-3"><label class="form-label"><?php echo $lang241; ?>:</label> <code id="createFolderPath"></code></div>
+                <div class="mb-3"><label class="form-label"><?php echo $lang242; ?></label><input type="text" id="newFolderName" class="form-control" placeholder="New folder"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="createNewFolder()">Create</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-success" onclick="createNewFolder()"><?php echo $lang243; ?></button>
             </div>
         </div>
     </div>
@@ -901,33 +931,33 @@ if (isset($_GET['view_mode'])) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Change Mount Point</h5>
+                <h5 class="modal-title"><i class="fas fa-edit"></i> <?php echo $lang244; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editMountPointForm">
                 <div class="modal-body">
                     <input type="hidden" name="old_mount_point" id="editOldMountPoint">
                     <div class="mb-3">
-                        <label class="form-label">Current Mount Point</label>
+                        <label class="form-label"><?php echo $lang245; ?></label>
                         <input type="text" id="editCurrentMountPoint" class="form-control" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">New Mount Point</label>
+                        <label class="form-label"><?php echo $lang246; ?></label>
                         <div class="input-group">
                             <input type="text" name="new_mount_point" id="editNewMountPoint" class="form-control" required>
                             <button type="button" class="btn btn-secondary" onclick="openFolderBrowserEdit()">
-                                <i class="fas fa-folder-open"></i> Browse
+                                <i class="fas fa-folder-open"></i> <?php echo $lang247; ?>
                             </button>
                         </div>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" name="update_fstab" class="form-check-input" id="editUpdateFstab">
-                        <label class="form-check-label" for="editUpdateFstab">Update /etc/fstab entry</label>
+                        <label class="form-check-label" for="editUpdateFstab"><?php echo $lang248; ?></label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Change</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                    <button type="submit" class="btn btn-warning"><?php echo $lang249; ?></button>
                 </div>
             </form>
         </div>
@@ -948,6 +978,7 @@ let currentBrowsePath = '/';
 let systemUsers = [];
 
 // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
@@ -1050,9 +1081,9 @@ async function loadAvailableDevices() {
     let result = await apiCall('get_available_devices');
     if (result.success && result.devices) {
         let devices = result.devices;
-        let localOpts = '<option value="">Select device...</option>';
-        let raidOpts = '<option value="">Select RAID device...</option>';
-        let lvmOpts = '<option value="">Select LVM volume...</option>';
+        let localOpts = '<option value=""><?php echo $lang250; ?></option>';
+        let raidOpts = '<option value=""><?php echo $lang251; ?></option>';
+        let lvmOpts = '<option value=""><?php echo $lang252; ?></option>';
         
         devices.forEach(dev => {
             let sizeStr = dev.size ? ` (${dev.size})` : '';
@@ -1122,7 +1153,7 @@ function renderMounts() {
     filtered.forEach(m => {
         let typeIcon = m.is_network ? (m.network_type === 'cifs' ? '<i class="fab fa-windows"></i>' : '<i class="fab fa-linux"></i>') : '<i class="fas fa-hdd"></i>';
         let typeText = m.is_network ? (m.network_type === 'cifs' ? 'CIFS' : 'NFS') : 'Local';
-        let fstabBadge = m.in_fstab ? '<span class="badge bg-success">in fstab</span>' : '<span class="badge bg-secondary">manual</span>';
+        let fstabBadge = m.in_fstab ? '<span class="badge bg-success"><?php echo $lang253; ?></span>' : '<span class="badge bg-secondary"><?php echo $lang254; ?></span>';
         
         tableHtml += `<tr>
             <td><span class="badge bg-info">${typeIcon} ${typeText}</span></td>
@@ -1133,16 +1164,16 @@ function renderMounts() {
             <td>${fstabBadge}</td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-warning" onclick="editMountPoint('${escapeHtml(m.mount_point)}')" title="Change mount point"><i class="fas fa-edit"></i></button>
-                    ${!m.in_fstab ? `<button class="btn btn-outline-success" onclick="addToFstab('${escapeHtml(m.mount_point)}')" title="Add to fstab"><i class="fas fa-bookmark"></i></button>` : `<button class="btn btn-outline-danger" onclick="removeFromFstab('${escapeHtml(m.mount_point)}')" title="Remove from fstab"><i class="fas fa-trash-alt"></i></button>`}
-                    <button class="btn btn-outline-danger" onclick="unmount('${escapeHtml(m.mount_point)}')" title="Unmount"><i class="fas fa-eject"></i></button>
+                    <button class="btn btn-outline-warning" onclick="editMountPoint('${escapeHtml(m.mount_point)}')" title="<?php echo $lang255; ?>"><i class="fas fa-edit"></i></button>
+                    ${!m.in_fstab ? `<button class="btn btn-outline-success" onclick="addToFstab('${escapeHtml(m.mount_point)}')" title="<?php echo $lang256; ?>"><i class="fas fa-bookmark"></i></button>` : `<button class="btn btn-outline-danger" onclick="removeFromFstab('${escapeHtml(m.mount_point)}')" title="Remove from fstab"><i class="fas fa-trash-alt"></i></button>`}
+                    <button class="btn btn-outline-danger" onclick="unmount('${escapeHtml(m.mount_point)}')" title="<?php echo $lang257; ?>"><i class="fas fa-eject"></i></button>
                 </div>
             </td>
         </tr>`;
     });
     
     if (filtered.length === 0) {
-        tableHtml = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-info-circle"></i> No mounts found</td></tr>`;
+        tableHtml = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-info-circle"></i> <?php echo $lang258; ?></td></tr>`;
     }
     $('#tableMountsContainer').html(tableHtml);
     
@@ -1150,7 +1181,7 @@ function renderMounts() {
     let gridHtml = '';
     filtered.forEach(m => {
         let typeIcon = m.is_network ? (m.network_type === 'cifs' ? '<i class="fab fa-windows"></i>' : '<i class="fab fa-linux"></i>') : '<i class="fas fa-hdd"></i>';
-        let fstabBadge = m.in_fstab ? '<span class="badge bg-success fstab-badge">fstab</span>' : '';
+        let fstabBadge = m.in_fstab ? '<span class="badge bg-success fstab-badge"><?php echo $lang259; ?></span>' : '';
         
         gridHtml += `<div class="col-md-4 col-lg-3 mb-3">
             <div class="mount-card position-relative">
@@ -1172,14 +1203,14 @@ function renderMounts() {
     });
     
     if (filtered.length === 0) {
-        gridHtml = `<div class="col-12 text-center text-muted py-4"><i class="fas fa-info-circle"></i> No mounts found</div>`;
+        gridHtml = `<div class="col-12 text-center text-muted py-4"><i class="fas fa-info-circle"></i> <?php echo $lang260; ?></div>`;
     }
     $('#gridMountsContainer').html(gridHtml);
 }
 
 // ==================== ДЕЙСТВИЯ С МОНТИРОВАНИЕМ ====================
 async function unmount(mountPoint) {
-    if (!confirm(`Unmount ${mountPoint}?`)) return;
+    if (!confirm(`<?php echo $lang264; ?> ${mountPoint}?`)) return;
     
     let result = await apiCall('unmount', 'POST', {
         mount_point: mountPoint,
@@ -1188,23 +1219,23 @@ async function unmount(mountPoint) {
     });
     
     if (result.success) {
-        showAlert(`Unmounted ${mountPoint}`, 'success');
+        showAlert(`<?php echo $lang265; ?> ${mountPoint}`, 'success');
         await loadAllData();
     } else {
-        if (confirm(`Normal unmount failed. Force unmount? Error: ${result.error}`)) {
+        if (confirm(`<?php echo $lang261; ?>: ${result.error}`)) {
             let forceResult = await apiCall('unmount', 'POST', {
                 mount_point: mountPoint,
                 force: true,
                 remove_from_fstab: false
             });
             if (forceResult.success) {
-                showAlert(`Force unmounted ${mountPoint}`, 'success');
+                showAlert(`<?php echo $lang262; ?> ${mountPoint}`, 'success');
                 await loadAllData();
             } else {
-                showAlert(`Failed to unmount: ${forceResult.error}`, 'danger');
+                showAlert(`<?php echo $lang263; ?>: ${forceResult.error}`, 'danger');
             }
         } else {
-            showAlert(`Failed to unmount: ${result.error}`, 'danger');
+            showAlert(`<?php echo $lang263; ?>: ${result.error}`, 'danger');
         }
     }
 }
@@ -1212,7 +1243,7 @@ async function unmount(mountPoint) {
 async function addToFstab(mountPoint) {
     let mount = mountedData.find(m => m.mount_point === mountPoint);
     if (!mount) {
-        showAlert('Mount not found', 'danger');
+        showAlert('<?php echo $lang266; ?>', 'danger');
         return;
     }
     
@@ -1224,7 +1255,7 @@ async function addToFstab(mountPoint) {
     });
     
     if (result.success) {
-        showAlert(`Added to /etc/fstab`, 'success');
+        showAlert(`<?php echo $lang267; ?>`, 'success');
         await loadAllData();
     } else {
         showAlert(`Failed: ${result.error}`, 'danger');
@@ -1232,14 +1263,14 @@ async function addToFstab(mountPoint) {
 }
 
 async function removeFromFstab(mountPoint) {
-    if (!confirm(`Remove ${mountPoint} from /etc/fstab?`)) return;
+    if (!confirm(`<?php echo $lang268; ?> ${mountPoint} <?php echo $lang269; ?>`)) return;
     
     let result = await apiCall('remove_from_fstab', 'POST', {
         mount_point: mountPoint
     });
     
     if (result.success) {
-        showAlert(`Removed from /etc/fstab`, 'success');
+        showAlert(`<?php echo $lang270; ?>`, 'success');
         await loadAllData();
     } else {
         showAlert(`Failed: ${result.error}`, 'danger');
@@ -1283,13 +1314,13 @@ $('#mountLocalForm').on('submit', async function(e) {
     
     let result = await apiCall('mount_local', 'POST', postData);
     if (result.success) {
-        showAlert(`Mounted to ${result.mount_point}`, 'success');
+        showAlert(`<?php echo $lang271; ?> ${result.mount_point}`, 'success');
         $('#mountLocalModal').modal('hide');
         $('#mountLocalForm')[0].reset();
         await loadAllData();
         await loadAvailableDevices();
     } else {
-        showAlert(`Mount failed: ${result.error}`, 'danger');
+        showAlert(`<?php echo $lang272; ?>: ${result.error}`, 'danger');
     }
 });
 
@@ -1303,13 +1334,13 @@ $('#mountRaidForm').on('submit', async function(e) {
     
     let result = await apiCall('mount_local', 'POST', postData);
     if (result.success) {
-        showAlert(`RAID device mounted to ${result.mount_point}`, 'success');
+        showAlert(`<?php echo $lang273; ?> ${result.mount_point}`, 'success');
         $('#mountRaidModal').modal('hide');
         $('#mountRaidForm')[0].reset();
         await loadAllData();
         await loadAvailableDevices();
     } else {
-        showAlert(`Mount failed: ${result.error}`, 'danger');
+        showAlert(`<?php echo $lang272; ?>: ${result.error}`, 'danger');
     }
 });
 
@@ -1323,13 +1354,13 @@ $('#mountLvmForm').on('submit', async function(e) {
     
     let result = await apiCall('mount_local', 'POST', postData);
     if (result.success) {
-        showAlert(`LVM volume mounted to ${result.mount_point}`, 'success');
+        showAlert(`<?php echo $lang274; ?> ${result.mount_point}`, 'success');
         $('#mountLvmModal').modal('hide');
         $('#mountLvmForm')[0].reset();
         await loadAllData();
         await loadAvailableDevices();
     } else {
-        showAlert(`Mount failed: ${result.error}`, 'danger');
+        showAlert(`<?php echo $lang272; ?>: ${result.error}`, 'danger');
     }
 });
 
@@ -1343,12 +1374,12 @@ $('#mountCifsForm').on('submit', async function(e) {
     
     let result = await apiCall('mount_cifs', 'POST', postData);
     if (result.success) {
-        showAlert(`CIFS share mounted to ${result.mount_point}`, 'success');
+        showAlert(`<?php echo $lang275; ?> ${result.mount_point}`, 'success');
         $('#mountCifsModal').modal('hide');
         $('#mountCifsForm')[0].reset();
         await loadAllData();
     } else {
-        showAlert(`Mount failed: ${result.error}`, 'danger');
+        showAlert(`<?php echo $lang272; ?>: ${result.error}`, 'danger');
     }
 });
 
@@ -1368,18 +1399,18 @@ $('#mountNfsForm').on('submit', async function(e) {
     
     let result = await apiCall('mount_nfs', 'POST', postData);
     if (result.success) {
-        showAlert(`NFS share mounted to ${result.mount_point}`, 'success');
+        showAlert(`<?php echo $lang276; ?> ${result.mount_point}`, 'success');
         $('#mountNfsModal').modal('hide');
         $('#mountNfsForm')[0].reset();
         await loadAllData();
     } else {
-        showAlert(`Mount failed: ${result.error}`, 'danger');
+        showAlert(`<?php echo $lang272; ?>: ${result.error}`, 'danger');
     }
 });
 
 // ==================== БРАУЗЕР ПАПОК ====================
 async function loadFolder(path, containerId, breadcrumbId, currentPathInputId) {
-    $(`#${containerId}`).html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br>Loading...</div>');
+    $(`#${containerId}`).html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br><?php echo $lang277; ?></div>');
     
     if (!path || path === '') path = '/';
     
@@ -1402,25 +1433,25 @@ async function loadFolder(path, containerId, breadcrumbId, currentPathInputId) {
         if (result.path !== '/') {
             let parentPath = result.parent;
             listHtml += `<div class="list-group-item list-group-item-action folder-item" style="cursor: pointer;" onclick="loadFolder('${parentPath.replace(/'/g, "\\'")}', '${containerId}', '${breadcrumbId}', '${currentPathInputId}')">
-                <i class="fas fa-level-up-alt"></i> .. (Parent directory)
+                <i class="fas fa-level-up-alt"></i> .. <?php echo $lang278; ?>
             </div>`;
         }
         
         if (result.items && result.items.length > 0) {
             for (let item of result.items) {
                 listHtml += `<div class="list-group-item list-group-item-action folder-item" style="cursor: pointer;" onclick="loadFolder('${item.path.replace(/'/g, "\\'")}', '${containerId}', '${breadcrumbId}', '${currentPathInputId}')">
-                    <i class="fas fa-folder ${item.readable ? 'text-warning' : 'text-muted'}"></i> ${escapeHtml(item.name)} ${!item.readable ? '<span class="badge bg-secondary">no access</span>' : ''}
+                    <i class="fas fa-folder ${item.readable ? 'text-warning' : 'text-muted'}"></i> ${escapeHtml(item.name)} ${!item.readable ? '<span class="badge bg-secondary"><?php echo $lang279; ?></span>' : ''}
                 </div>`;
             }
         } else {
-            listHtml += '<div class="list-group-item text-muted"><i class="fas fa-folder-open"></i> No subfolders found</div>';
+            listHtml += '<div class="list-group-item text-muted"><i class="fas fa-folder-open"></i> <?php echo $lang280; ?></div>';
         }
         
         listHtml += '</div>';
         $(`#${containerId}`).html(listHtml);
     } else {
-        $(`#${containerId}`).html(`<div class="alert alert-danger">Error: ${escapeHtml(result.error)}</div>`);
-        showAlert('Error loading folders: ' + result.error, 'danger');
+        $(`#${containerId}`).html(`<div class="alert alert-danger"><?php echo $lang281; ?>: ${escapeHtml(result.error)}</div>`);
+        showAlert('<?php echo $lang282; ?>: ' + result.error, 'danger');
     }
 }
 
@@ -1437,7 +1468,7 @@ function selectCurrentFolder() {
             $(`#${currentBrowseTarget}`).val(currentBrowsePath);
         }
         $('#browseFolderModal').modal('hide');
-        showAlert('Folder selected: ' + currentBrowsePath, 'success');
+        showAlert('<?php echo $lang283; ?>: ' + currentBrowsePath, 'success');
     }
 }
 
@@ -1448,7 +1479,7 @@ function openFolderBrowser(targetInputId) {
     
     $('#folderBreadcrumb').empty();
     $('#currentPath').val('');
-    $('#folderBrowser').html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br>Loading...</div>');
+    $('#folderBrowser').html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br><?php echo $lang277; ?></div>');
     
     $('#browseFolderModal').modal('show');
     
@@ -1463,7 +1494,7 @@ function openFolderBrowserEdit() {
     
     $('#folderBreadcrumb').html('');
     $('#currentPath').val('');
-    $('#folderBrowser').html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br>Loading...</div>');
+    $('#folderBrowser').html('<div class="text-center p-4"><div class="spinner-border text-primary"></div><br><?php echo $lang277; ?></div>');
     
     $('#browseFolderModal').modal('show');
     
@@ -1484,7 +1515,7 @@ async function createNewFolder() {
     let path = $('#createFolderPath').text();
     let name = $('#newFolderName').val();
     if (!name) { 
-        showAlert('Enter folder name', 'danger'); 
+        showAlert('<?php echo $lang284; ?>', 'danger'); 
         return; 
     }
     
@@ -1492,7 +1523,7 @@ async function createNewFolder() {
     if (result.success) {
         $('#createFolderDialog').modal('hide');
         loadFolder(currentBrowsePath, 'folderBrowser', 'folderBreadcrumb', 'currentPath');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang285; ?> "' + name + '" <?php echo $lang286; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1506,7 +1537,7 @@ async function loadLogs() {
         result.logs.forEach(log => {
             html += `<div class="log-line" style="padding: 2px 0; border-bottom: 1px solid #333;">${escapeHtml(log)}</div>`;
         });
-        $('#logsContainer').html(html || '<div class="text-muted text-center py-3">No logs</div>');
+        $('#logsContainer').html(html || '<div class="text-muted text-center py-3"><?php echo $lang4781; ?></div>');
     }
 }
 
@@ -1529,7 +1560,7 @@ async function refreshAllData() {
     await loadAllData();
     await loadAvailableDevices();
     await loadLogs();
-    showAlert('Data refreshed', 'success');
+    showAlert('<?php echo $lang287; ?>', 'success');
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================

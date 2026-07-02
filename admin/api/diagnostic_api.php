@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 class DiagnosticAPI {
     
     private function jsonResponse($data, $success = true) {
@@ -268,8 +270,9 @@ class DiagnosticAPI {
     }
     
     public function killProcess($pid, $signal = 15) {
+		global $lang3482, $lang3483, $lang3484, $lang3485;
         if (!is_numeric($pid) || $pid <= 0) {
-            $this->jsonError('Invalid PID');
+            $this->jsonError($lang3485);
         }
         
         $result = $this->executeCommand("kill -{$signal} {$pid}");
@@ -277,14 +280,15 @@ class DiagnosticAPI {
         // Check if process exists
         $check = shell_exec("ps -p {$pid} 2>/dev/null | grep -v PID");
         if (empty(trim($check))) {
-            $this->jsonResponse(['message' => "Process {$pid} terminated"]);
+            $this->jsonResponse(['message' => $lang3482 . $pid . $lang3483]);
         } else {
-            $this->jsonError("Failed to kill process {$pid}");
+            $this->jsonError($lang3484 . $pid);
         }
     }
     
     // ==================== Network Connections ====================
     public function getConnections() {
+		global $lang3486, $lang3487;
         $output = shell_exec('sudo ss -tunap 2>/dev/null | grep -v "LISTEN"');
         $lines = explode("\n", trim($output));
         $connections = [];
@@ -330,7 +334,7 @@ class DiagnosticAPI {
     
     public function killConnection($ip, $port, $protocol = 'tcp') {
         $result = $this->executeCommand("ss -K dst {$ip} dport = {$port} 2>&1");
-        $this->jsonResponse(['message' => "Connection {$ip}:{$port} terminated"]);
+        $this->jsonResponse(['message' =>  $lang3486 . $ip . ":" . $port . $lang3487]);
     }
     
     // ==================== Services ====================
@@ -393,15 +397,16 @@ class DiagnosticAPI {
     }
     
     public function serviceAction($service, $action) {
+		global $lang3488, $lang3489, $lang3490;
         $validActions = ['start', 'stop', 'restart', 'reload', 'enable', 'disable'];
         if (!in_array($action, $validActions)) {
-            $this->jsonError('Invalid action');
+            $this->jsonError($lang3488);
         }
         
         $result = $this->executeCommand("sudo systemctl {$action} {$service} 2>&1");
         
         if (strpos($result, 'Failed') === false && strpos($result, 'not found') === false) {
-            $this->jsonResponse(['message' => "Service {$service} {$action}ed"]);
+            $this->jsonResponse(['message' => $lang3489 . $service . $action . $lang3490]);
         } else {
             $this->jsonError($result);
         }
@@ -409,6 +414,7 @@ class DiagnosticAPI {
     
     // ==================== System Logs ====================
     public function getLogs($lines = 100, $type = 'syslog', $filter = '') {
+		global $lang3491;
         $logFile = '/var/log/syslog';
         
         switch ($type) {
@@ -428,7 +434,7 @@ class DiagnosticAPI {
         }
         
         if (!file_exists($logFile)) {
-            $this->jsonResponse(['error' => 'Log file not found']);
+            $this->jsonResponse(['error' => $lang3491]);
             return;
         }
         
@@ -574,6 +580,7 @@ class DiagnosticAPI {
     
     // ==================== Bandwidth Test ====================
     public function bandwidthTest() {
+		global $lang3492;
         $hasSpeedtest = shell_exec('which speedtest-cli 2>/dev/null');
         
         if (!empty($hasSpeedtest)) {
@@ -635,7 +642,7 @@ class DiagnosticAPI {
                 'ping_ms' => 20 + rand(0, 30),
                 'jitter_ms' => 5 + rand(0, 15),
                 'speed_samples' => $this->generateSpeedSamples($downloadMbps, $uploadMbps),
-                'note' => 'Using approximate test. Install speedtest-cli for accurate results.'
+                'note' => $lang3492
             ]);
         }
     }

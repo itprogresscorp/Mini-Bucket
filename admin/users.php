@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $db = getDB();
 
@@ -94,6 +95,22 @@ $menu = require_once 'menu.php';
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
+		<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
 	window.hostsList = <?php echo json_encode($hosts); ?>;
@@ -398,7 +415,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -407,27 +424,27 @@ $menu = require_once 'menu.php';
     </div>
     <div class="top-bar-right">
         <div class="stats-group" id="statsGroup">
-            <div class="stat-badge"><span class="number" id="statPanelUsers">-</span><span class="label">Panel</span></div>
-            <div class="stat-badge"><span class="number" id="statSystemUsers">-</span><span class="label">System</span></div>
-            <div class="stat-badge"><span class="number" id="statGroups">-</span><span class="label">Groups</span></div>
+            <div class="stat-badge"><span class="number" id="statPanelUsers">-</span><span class="label"><?php echo $lang2726; ?></span></div>
+            <div class="stat-badge"><span class="number" id="statSystemUsers">-</span><span class="label"><?php echo $lang2727; ?></span></div>
+            <div class="stat-badge"><span class="number" id="statGroups">-</span><span class="label"><?php echo $lang2728; ?></span></div>
         </div>
         <div class="host-selector">
             <select id="hostSelector">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div class="dropdown">
             <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-plus"></i> Add
+                <i class="fas fa-plus"></i> <?php echo $lang2729; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addPanelUserModal"><i class="fas fa-database"></i> Panel User</a></li>
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addSystemUserModal"><i class="fab fa-linux"></i> System User</a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addPanelUserModal"><i class="fas fa-database me-2"></i> <?php echo $lang2730; ?></a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addSystemUserModal"><i class="fab fa-linux me-2"></i> <?php echo $lang2731; ?></a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addGroupModal"><i class="fas fa-users"></i> System Group</a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addGroupModal"><i class="fas fa-users me-2"></i> <?php echo $lang2732; ?></a></li>
             </ul>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang2733; ?>"></i>
     </div>
 </div>
 
@@ -444,13 +461,13 @@ $menu = require_once 'menu.php';
                 <input type="text" id="searchInput" class="form-control" placeholder="Search..." onkeyup="filterUsers()">
             </div>
             <div class="filter-tabs">
-                <span class="filter-tab active" data-type="all" onclick="setFilter('all')">All</span>
-                <span class="filter-tab" data-type="panel" onclick="setFilter('panel')"><i class="fas fa-database"></i> Panel</span>
-                <span class="filter-tab" data-type="system" onclick="setFilter('system')"><i class="fab fa-linux"></i> System</span>
+                <span class="filter-tab active" data-type="all" onclick="setFilter('all')"><?php echo $lang2734; ?></span>
+                <span class="filter-tab" data-type="panel" onclick="setFilter('panel')"><i class="fas fa-database"></i> <?php echo $lang2735; ?></span>
+                <span class="filter-tab" data-type="system" onclick="setFilter('system')"><i class="fab fa-linux"></i> <?php echo $lang2736; ?></span>
             </div>
             <div class="form-check form-switch ms-auto">
                 <input class="form-check-input" type="checkbox" id="showActiveOnly" onchange="filterUsers()">
-                <label class="form-check-label" for="showActiveOnly">Active only</label>
+                <label class="form-check-label" for="showActiveOnly"><?php echo $lang2737; ?></label>
             </div>
             <div class="view-toggle">
                 <button class="<?= $viewMode == 'table' ? 'active' : '' ?>" onclick="setViewMode('table')"><i class="fas fa-table"></i></button>
@@ -461,23 +478,23 @@ $menu = require_once 'menu.php';
         <!-- USERS CARD -->
         <div class="card">
             <div class="card-header">
-                <span><i class="fas fa-user me-2"></i>Users</span>
+                <span><i class="fas fa-user me-2"></i><?php echo $lang2738; ?></span>
             </div>
             
             <div id="tableView" class="table-responsive" style="display: <?= $viewMode == 'table' ? 'block' : 'none' ?>;">
                 <table class="table table-hover align-middle">
                     <thead>
-                        <tr><th>Type</th><th>Username</th><th>Role / UID</th><th>Email / Home</th><th>Groups</th><th>Last Login</th><th>Actions</th></tr>
+                        <tr><th><?php echo $lang2739; ?></th><th><?php echo $lang2740; ?></th><th><?php echo $lang2741; ?></th><th><?php echo $lang2742; ?></th><th><?php echo $lang2743; ?></th><th><?php echo $lang2744; ?></th><th><?php echo $lang2745; ?></th></tr>
                     </thead>
                     <tbody id="tableUsersContainer">
-                        <tr><td colspan="7" class="text-center py-4"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                        <tr><td colspan="7" class="text-center py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2746; ?></td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div id="gridView" class="p-3" style="display: <?= $viewMode == 'grid' ? 'block' : 'none' ?>;">
                 <div class="row" id="gridUsersContainer">
-                    <div class="col-12 text-center py-4"><div class="loading-spinner-sm"></div> Loading...</div>
+                    <div class="col-12 text-center py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2747; ?></div>
                 </div>
             </div>
         </div>
@@ -485,17 +502,17 @@ $menu = require_once 'menu.php';
         <!-- GROUPS CARD -->
         <div class="card">
             <div class="card-header collapse-header" onclick="toggleGroups()">
-                <span><i class="fas fa-users me-2"></i>System Groups <span class="badge bg-secondary ms-2" id="groupsCount">0</span></span>
+                <span><i class="fas fa-users me-2"></i><?php echo $lang2748; ?> <span class="badge bg-secondary ms-2" id="groupsCount">0</span></span>
                 <i class="fas fa-chevron-down" id="groupsToggleIcon"></i>
             </div>
             <div id="groupsContent" style="display: none;">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
-                            <tr><th>Group Name</th><th>GID</th><th>Members</th><th>Actions</th></tr>
+                            <tr><th><?php echo $lang2749; ?></th><th><?php echo $lang2750; ?></th><th><?php echo $lang2751; ?></th><th><?php echo $lang2752; ?></th></tr>
                         </thead>
                         <tbody id="groupsTableBody">
-                            <tr><td colspan="4" class="text-center py-4"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                            <tr><td colspan="4" class="text-center py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2753; ?></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -511,16 +528,16 @@ $menu = require_once 'menu.php';
         <div class="modal-content">
             <form id="addPanelUserForm">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Panel User</h5>
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i><?php echo $lang2754; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Username *</label>
+                        <label><?php echo $lang2755; ?> *</label>
                         <input type="text" name="username" id="add_panel_username" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label>Password *</label>
+                        <label><?php echo $lang2756; ?> *</label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="add_panel_password" class="form-control" required>
                             <button type="button" class="generate-password" onclick="generatePassword('add_panel_password')"><i class="fas fa-dice-d6"></i></button>
@@ -529,27 +546,27 @@ $menu = require_once 'menu.php';
                         <div class="password-strength" id="addPanelStrength"></div>
                     </div>
                     <div class="mb-3">
-                        <label>Confirm Password *</label>
+                        <label><?php echo $lang2757; ?> *</label>
                         <div class="password-wrapper">
                             <input type="password" id="add_panel_confirm" class="form-control" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('add_panel_confirm')"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label>Email</label>
+                        <label><?php echo $lang2758; ?></label>
                         <input type="email" name="email" id="add_panel_email" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label>Role</label>
+                        <label><?php echo $lang2759; ?></label>
                         <select name="role" class="form-select">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                            <option value="user"><?php echo $lang2760; ?></option>
+                            <option value="admin"><?php echo $lang2761; ?></option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2762; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2763; ?></button>
                 </div>
             </form>
         </div>
@@ -563,29 +580,29 @@ $menu = require_once 'menu.php';
             <form id="editPanelUserForm">
                 <input type="hidden" name="user_id" id="edit_panel_id">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Panel User</h5>
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i><?php echo $lang2764; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Username</label>
+                        <label><?php echo $lang2765; ?></label>
                         <input type="text" name="username" id="edit_panel_username" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label>Email</label>
+                        <label><?php echo $lang2766; ?></label>
                         <input type="email" name="email" id="edit_panel_email" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label>Role</label>
+                        <label><?php echo $lang2767; ?></label>
                         <select name="role" id="edit_panel_role" class="form-select">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                            <option value="user"><?php echo $lang2768; ?></option>
+                            <option value="admin"><?php echo $lang2769; ?></option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2770; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2771; ?></button>
                 </div>
             </form>
         </div>
@@ -599,13 +616,13 @@ $menu = require_once 'menu.php';
             <form id="changePanelPassForm">
                 <input type="hidden" name="user_id" id="pass_panel_id">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-key me-2"></i>Change Password</h5>
+                    <h5 class="modal-title"><i class="fas fa-key me-2"></i><?php echo $lang2772; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>User: <strong id="pass_panel_username"></strong></p>
+                    <p><?php echo $lang2773; ?> <strong id="pass_panel_username"></strong></p>
                     <div class="mb-3">
-                        <label>New Password</label>
+                        <label><?php echo $lang2774; ?></label>
                         <div class="password-wrapper">
                             <input type="password" name="new_password" id="change_panel_password" class="form-control" required>
                             <button type="button" class="generate-password" onclick="generatePassword('change_panel_password')"><i class="fas fa-dice-d6"></i></button>
@@ -614,7 +631,7 @@ $menu = require_once 'menu.php';
                         <div class="password-strength" id="changePanelStrength"></div>
                     </div>
                     <div class="mb-3">
-                        <label>Confirm Password</label>
+                        <label><?php echo $lang2775; ?></label>
                         <div class="password-wrapper">
                             <input type="password" id="change_panel_confirm" class="form-control" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('change_panel_confirm')"><i class="fas fa-eye"></i></button>
@@ -622,8 +639,8 @@ $menu = require_once 'menu.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Change Password</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2776; ?></button>
+                    <button type="submit" class="btn btn-warning"><?php echo $lang2777; ?></button>
                 </div>
             </form>
         </div>
@@ -636,16 +653,16 @@ $menu = require_once 'menu.php';
         <div class="modal-content">
             <form id="addSystemUserForm">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fab fa-linux me-2"></i>Add System User</h5>
+                    <h5 class="modal-title"><i class="fab fa-linux me-2"></i><?php echo $lang2778; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Username *</label>
+                        <label><?php echo $lang2779; ?> *</label>
                         <input type="text" name="username" id="add_sys_username" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label>Password *</label>
+                        <label><?php echo $lang2780; ?> *</label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="add_sys_password" class="form-control" required>
                             <button type="button" class="generate-password" onclick="generatePassword('add_sys_password')"><i class="fas fa-dice-d6"></i></button>
@@ -654,20 +671,20 @@ $menu = require_once 'menu.php';
                         <div class="password-strength" id="addSysStrength"></div>
                     </div>
                     <div class="mb-3">
-                        <label>Confirm Password *</label>
+                        <label><?php echo $lang2781; ?> *</label>
                         <div class="password-wrapper">
                             <input type="password" id="add_sys_confirm" class="form-control" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('add_sys_confirm')"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label>Groups</label>
+                        <label><?php echo $lang2782; ?></label>
                         <div class="groups-checkboxes" id="addSysGroupsContainer"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2783; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2784; ?></button>
                 </div>
             </form>
         </div>
@@ -681,18 +698,18 @@ $menu = require_once 'menu.php';
             <form id="editSystemUserForm">
                 <input type="hidden" name="username" id="edit_sys_username">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-users-cog me-2"></i>Edit Groups</h5>
+                    <h5 class="modal-title"><i class="fas fa-users-cog me-2"></i><?php echo $lang2785; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>User: <strong id="edit_sys_username_label"></strong></p>
+                    <p><?php echo $lang2786; ?> <strong id="edit_sys_username_label"></strong></p>
                     <div class="mb-3">
                         <div class="groups-checkboxes" id="edit_groups_container"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Groups</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2787; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2788; ?></button>
                 </div>
             </form>
         </div>
@@ -706,13 +723,13 @@ $menu = require_once 'menu.php';
             <form id="changeSystemPassForm">
                 <input type="hidden" name="username" id="change_sys_username">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-key me-2"></i>Change System Password</h5>
+                    <h5 class="modal-title"><i class="fas fa-key me-2"></i><?php echo $lang2789; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>User: <strong id="change_sys_username_label"></strong></p>
+                    <p><?php echo $lang2790; ?> <strong id="change_sys_username_label"></strong></p>
                     <div class="mb-3">
-                        <label>New Password</label>
+                        <label><?php echo $lang2791; ?></label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="change_sys_password" class="form-control" required>
                             <button type="button" class="generate-password" onclick="generatePassword('change_sys_password')"><i class="fas fa-dice-d6"></i></button>
@@ -720,7 +737,7 @@ $menu = require_once 'menu.php';
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label>Confirm Password</label>
+                        <label><?php echo $lang2792; ?></label>
                         <div class="password-wrapper">
                             <input type="password" id="change_sys_confirm" class="form-control" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('change_sys_confirm')"><i class="fas fa-eye"></i></button>
@@ -728,8 +745,8 @@ $menu = require_once 'menu.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Change Password</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2793; ?></button>
+                    <button type="submit" class="btn btn-warning"><?php echo $lang2794; ?></button>
                 </div>
             </form>
         </div>
@@ -743,13 +760,13 @@ $menu = require_once 'menu.php';
             <form id="setSmbPassForm">
                 <input type="hidden" name="username" id="smb_username">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-network-wired me-2"></i>Set SMB Password</h5>
+                    <h5 class="modal-title"><i class="fas fa-network-wired me-2"></i><?php echo $lang2795; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>User: <strong id="smb_username_label"></strong></p>
+                    <p><?php echo $lang2796; ?> <strong id="smb_username_label"></strong></p>
                     <div class="mb-3">
-                        <label>SMB Password</label>
+                        <label><?php echo $lang2797; ?></label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="smb_password" class="form-control" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('smb_password')"><i class="fas fa-eye"></i></button>
@@ -757,8 +774,8 @@ $menu = require_once 'menu.php';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info">Set SMB Password</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2798; ?></button>
+                    <button type="submit" class="btn btn-info"><?php echo $lang2799; ?></button>
                 </div>
             </form>
         </div>
@@ -771,18 +788,18 @@ $menu = require_once 'menu.php';
         <div class="modal-content">
             <form id="addGroupForm">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Group</h5>
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i><?php echo $lang2800; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Group Name</label>
+                        <label><?php echo $lang2801; ?></label>
                         <input type="text" name="groupname" id="add_group_name" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2802; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2803; ?></button>
                 </div>
             </form>
         </div>
@@ -796,19 +813,19 @@ $menu = require_once 'menu.php';
             <form id="renameGroupForm">
                 <input type="hidden" name="oldname" id="rename_old_groupname">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Rename Group</h5>
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i><?php echo $lang2804; ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Current: <strong id="rename_current_name"></strong></p>
+                    <p><?php echo $lang2805; ?> <strong id="rename_current_name"></strong></p>
                     <div class="mb-3">
-                        <label>New Name</label>
+                        <label><?php echo $lang2806; ?></label>
                         <input type="text" name="newname" id="rename_newname" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Rename</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2807; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2808; ?></button>
                 </div>
             </form>
         </div>
@@ -901,7 +918,7 @@ function initHostSelector() {
                     window.location.href = 'users.php';
                 },
                 error: function() {
-                    showAlert('Failed to switch host', 'danger');
+                    showAlert('<?php echo $lang2809; ?>', 'danger');
                     $('#applePreloader').fadeOut(500);
                     selector.val(window.currentHostId);
                 }
@@ -925,11 +942,11 @@ async function loadAllData() {
             
             updateGroupCheckboxes();
         } else {
-            showAlert('Failed to load data', 'danger');
+            showAlert('<?php echo $lang2810; ?>', 'danger');
         }
     } catch (error) {
         console.error('Error loading data:', error);
-        showAlert('Error loading data', 'danger');
+        showAlert('<?php echo $lang2811; ?>', 'danger');
     }
 }
 
@@ -955,7 +972,7 @@ function updateGroupCheckboxes() {
             <label for="group_${escapeHtml(group.name)}">${escapeHtml(group.name)}</label>
         </div>`;
     });
-    $('#addSysGroupsContainer').html(html || '<div class="text-muted">No groups available</div>');
+    $('#addSysGroupsContainer').html(html || '<div class="text-muted"><?php echo $lang2812; ?></div>');
 }
 
 // ========== РЕНДЕРИНГ ПОЛЬЗОВАТЕЛЕЙ ==========
@@ -988,7 +1005,7 @@ function renderUsers() {
 function renderTableView(filtered) {
     const container = $('#tableUsersContainer');
     if (filtered.length === 0) {
-        container.html('<tr><td colspan="7" class="text-center text-muted py-4">No users found</td></tr>');
+        container.html('<tr><td colspan="7" class="text-center text-muted py-4"><?php echo $lang2813; ?></td></tr>');
         return;
     }
     
@@ -997,7 +1014,7 @@ function renderTableView(filtered) {
         if (item.type === 'panel') {
             const u = item.data;
             html += `<tr>
-                <td><span class="badge bg-info"><i class="fas fa-database"></i> Panel</span></td>
+                <td><span class="badge bg-info"><i class="fas fa-database me-2"></i><?php echo $lang2814; ?></span></td>
                 <td><strong>${escapeHtml(u.username)}</strong></td>
                 <td><span class="badge ${u.role === 'admin' ? 'bg-danger' : 'bg-secondary'}">${u.role}</span></td>
                 <td>${escapeHtml(u.email || '-')}</td>
@@ -1008,7 +1025,7 @@ function renderTableView(filtered) {
         } else {
             const u = item.data;
             html += `<tr>
-                <td><span class="badge bg-success"><i class="fab fa-linux"></i> System</span></td>
+                <td><span class="badge bg-success"><i class="fab fa-linux me-2"></i><?php echo $lang2815; ?></span></td>
                 <td><strong>${escapeHtml(u.username)}</strong> ${u.is_active ? '<i class="fas fa-circle text-success ms-1" style="font-size: 8px;"></i>' : ''}</td>
                 <td>UID: ${u.uid}</td>
                 <td><small>${escapeHtml(u.home)}</small></td>
@@ -1024,7 +1041,7 @@ function renderTableView(filtered) {
 function renderGridView(filtered) {
     const container = $('#gridUsersContainer');
     if (filtered.length === 0) {
-        container.html('<div class="col-12 text-center text-muted py-4">No users found</div>');
+        container.html('<div class="col-12 text-center text-muted py-4"><?php echo $lang2816; ?></div>');
         return;
     }
     
@@ -1064,9 +1081,9 @@ function getPanelUserActions(u) {
             <i class="fas fa-bars"></i>
         </button>
         <ul class="dropdown-menu">
-            <li><button class="dropdown-item" onclick='editPanelUser(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-edit"></i> Edit</button></li>
-            <li><button class="dropdown-item" onclick='changePanelPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-key"></i> Change Password</button></li>
-            ${u.username !== 'admin' ? `<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" onclick='deletePanelUser(${u.id})'><i class="fas fa-trash"></i> Delete</button></li>` : ''}
+            <li><button class="dropdown-item" onclick='editPanelUser(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-edit me-2"></i><?php echo $lang2817; ?></button></li>
+            <li><button class="dropdown-item" onclick='changePanelPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-key me-2"></i><?php echo $lang2818; ?></button></li>
+            ${u.username !== 'admin' ? `<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" onclick='deletePanelUser(${u.id})'><i class="fas fa-trash me-2"></i><?php echo $lang2819; ?></button></li>` : ''}
         </ul>
     </div>`;
 }
@@ -1077,10 +1094,10 @@ function getSystemUserActions(u) {
             <i class="fas fa-bars"></i>
         </button>
         <ul class="dropdown-menu">
-            <li><button class="dropdown-item" onclick='editSystemUser(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-users-cog"></i> Edit Groups</button></li>
-            <li><button class="dropdown-item" onclick='changeSystemPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-key"></i> Change Password</button></li>
-            <li><button class="dropdown-item" onclick='setSmbPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-network-wired"></i> SMB Password</button></li>
-            ${u.username !== 'root' && u.username !== window.apiConfig.currentUser ? `<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" onclick='deleteSystemUser("${escapeHtml(u.username)}")'><i class="fas fa-trash"></i> Delete</button></li>` : ''}
+            <li><button class="dropdown-item" onclick='editSystemUser(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-users-cog me-2"></i><?php echo $lang2820; ?></button></li>
+            <li><button class="dropdown-item" onclick='changeSystemPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-key me-2"></i><?php echo $lang2821; ?></button></li>
+            <li><button class="dropdown-item" onclick='setSmbPass(${JSON.stringify(u).replace(/'/g, "\\'")})'><i class="fas fa-network-wired me-2"></i><?php echo $lang2822; ?></button></li>
+            ${u.username !== 'root' && u.username !== window.apiConfig.currentUser ? `<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" onclick='deleteSystemUser("${escapeHtml(u.username)}")'><i class="fas fa-trash me-2"></i><?php echo $lang2823; ?></button></li>` : ''}
         </ul>
     </div>`;
 }
@@ -1089,7 +1106,7 @@ function getSystemUserActions(u) {
 function renderGroups() {
     const container = $('#groupsTableBody');
     if (allGroups.length === 0) {
-        container.html('<tr><td colspan="4" class="text-center text-muted py-4">No groups found</td></tr>');
+        container.html('<tr><td colspan="4" class="text-center text-muted py-4"><?php echo $lang2824; ?></td></tr>');
         return;
     }
     
@@ -1119,12 +1136,12 @@ async function addPanelUser(e) {
     const role = $('select[name="role"]').val();
     
     if (password !== confirm) {
-        showAlert('Passwords do not match', 'danger');
+        showAlert('<?php echo $lang2825; ?>', 'danger');
         return;
     }
     
     if (password.length < 4) {
-        showAlert('Password must be at least 4 characters', 'danger');
+        showAlert('<?php echo $lang2826; ?>', 'danger');
         return;
     }
     
@@ -1135,7 +1152,7 @@ async function addPanelUser(e) {
         $('#addPanelUserForm')[0].reset();
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error adding user', 'danger');
+        showAlert(result.error || '<?php echo $lang2827; ?>', 'danger');
     }
 }
 
@@ -1160,7 +1177,7 @@ async function updatePanelUser(e) {
         $('#editPanelUserModal').modal('hide');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error updating user', 'danger');
+        showAlert(result.error || '<?php echo $lang2828; ?>', 'danger');
     }
 }
 
@@ -1178,12 +1195,12 @@ async function changePanelPasswordSubmit(e) {
     const confirm = $('#change_panel_confirm').val();
     
     if (password !== confirm) {
-        showAlert('Passwords do not match', 'danger');
+        showAlert('<?php echo $lang2829; ?>', 'danger');
         return;
     }
     
     if (password.length < 4) {
-        showAlert('Password must be at least 4 characters', 'danger');
+        showAlert('<?php echo $lang2830; ?>', 'danger');
         return;
     }
     
@@ -1195,18 +1212,18 @@ async function changePanelPasswordSubmit(e) {
         showAlert(result.message, 'success');
         $('#changePanelPassModal').modal('hide');
     } else {
-        showAlert(result.error || 'Error changing password', 'danger');
+        showAlert(result.error || '<?php echo $lang2831; ?>', 'danger');
     }
 }
 
 async function deletePanelUser(id) {
-    if (!confirm('Delete panel user permanently?')) return;
+    if (!confirm('<?php echo $lang2832; ?>')) return;
     const result = await apiCall('delete_panel_user', 'GET', { id: id });
     if (result.success) {
         showAlert(result.message, 'success');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error deleting user', 'danger');
+        showAlert(result.error || '<?php echo $lang2833; ?>', 'danger');
     }
 }
 
@@ -1219,12 +1236,12 @@ async function addSystemUser(e) {
     const groups = $('input[name="groups[]"]:checked').map(function() { return $(this).val(); }).get();
     
     if (password !== confirm) {
-        showAlert('Passwords do not match', 'danger');
+        showAlert('<?php echo $lang2834; ?>', 'danger');
         return;
     }
     
     if (password.length < 4) {
-        showAlert('Password must be at least 4 characters', 'danger');
+        showAlert('<?php echo $lang2835; ?>', 'danger');
         return;
     }
     
@@ -1235,7 +1252,7 @@ async function addSystemUser(e) {
         $('#addSystemUserForm')[0].reset();
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error adding user', 'danger');
+        showAlert(result.error || '<?php echo $lang2836; ?>', 'danger');
     }
 }
 
@@ -1267,7 +1284,7 @@ async function updateSystemUserGroups(e) {
         $('#editSystemUserModal').modal('hide');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error updating groups', 'danger');
+        showAlert(result.error || '<?php echo $lang2837; ?>', 'danger');
     }
 }
 
@@ -1285,12 +1302,12 @@ async function changeSystemPasswordSubmit(e) {
     const confirm = $('#change_sys_confirm').val();
     
     if (password !== confirm) {
-        showAlert('Passwords do not match', 'danger');
+        showAlert('<?php echo $lang2838; ?>', 'danger');
         return;
     }
     
     if (password.length < 4) {
-        showAlert('Password must be at least 4 characters', 'danger');
+        showAlert('<?php echo $lang2839; ?>', 'danger');
         return;
     }
     
@@ -1302,7 +1319,7 @@ async function changeSystemPasswordSubmit(e) {
         showAlert(result.message, 'success');
         $('#changeSystemPassModal').modal('hide');
     } else {
-        showAlert(result.error || 'Error changing password', 'danger');
+        showAlert(result.error || '<?php echo $lang2840; ?>', 'danger');
     }
 }
 
@@ -1323,18 +1340,18 @@ async function setSmbPasswordSubmit(e) {
         showAlert(result.message, 'success');
         $('#setSmbPassModal').modal('hide');
     } else {
-        showAlert(result.error || 'Error setting SMB password', 'danger');
+        showAlert(result.error || '<?php echo $lang2841; ?>', 'danger');
     }
 }
 
 async function deleteSystemUser(username) {
-    if (!confirm(`Delete system user "${username}" permanently?`)) return;
+    if (!confirm(`<?php echo $lang2842; ?> "${username}" <?php echo $lang2843; ?>`)) return;
     const result = await apiCall('delete_system_user', 'POST', { username: username });
     if (result.success) {
         showAlert(result.message, 'success');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error deleting user', 'danger');
+        showAlert(result.error || '<?php echo $lang2844; ?>', 'danger');
     }
 }
 
@@ -1349,7 +1366,7 @@ async function addGroup(e) {
         $('#addGroupForm')[0].reset();
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error adding group', 'danger');
+        showAlert(result.error || '<?php echo $lang2845; ?>', 'danger');
     }
 }
 
@@ -1371,18 +1388,18 @@ async function renameGroupSubmit(e) {
         $('#renameGroupModal').modal('hide');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error renaming group', 'danger');
+        showAlert(result.error || '<?php echo $lang2846; ?>', 'danger');
     }
 }
 
 async function deleteGroup(name) {
-    if (!confirm(`Delete group "${name}"?`)) return;
+    if (!confirm(`<?php echo $lang2847; ?> "${name}"?`)) return;
     const result = await apiCall('delete_system_group', 'POST', { groupname: name });
     if (result.success) {
         showAlert(result.message, 'success');
         await loadAllData();
     } else {
-        showAlert(result.error || 'Error deleting group', 'danger');
+        showAlert(result.error || '<?php echo $lang2848; ?>', 'danger');
     }
 }
 
@@ -1434,9 +1451,9 @@ function initGroupsState() {
 }
 
 async function refreshAllData() {
-    showAlert('Refreshing data...', 'info');
+    showAlert('<?php echo $lang2849; ?>', 'info');
     await loadAllData();
-    showAlert('Data updated', 'success');
+    showAlert('<?php echo $lang2850; ?>', 'success');
 }
 
 // ========== PASSWORD UTILITIES ==========
@@ -1476,7 +1493,7 @@ function updatePasswordStrength(fieldId) {
     if (fieldId === 'change_panel_password') strengthId = 'changePanelStrength';
     if (fieldId === 'add_sys_password') strengthId = 'addSysStrength';
     if (strengthId) {
-        $(`#${strengthId}`).html(`<i class="fas fa-shield-alt"></i> Password strength: <span class="${strength.class}">${strength.text}</span>`);
+        $(`#${strengthId}`).html(`<i class="fas fa-shield-alt"></i> <?php echo $lang2851; ?> <span class="${strength.class}">${strength.text}</span>`);
     }
 }
 

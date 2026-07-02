@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('VSFTPD_CONF', '/etc/vsftpd.conf');
 define('FTP_USERS_FILE', '/etc/vsftpd.userlist');
@@ -424,6 +426,7 @@ switch ($action) {
         break;
         
     case 'save_config':
+		global $lang2555, $lang2556;
         $config = [
             'anonymous_enable' => isset($_POST['anonymous_enable']) ? 'YES' : 'NO',
             'local_enable' => isset($_POST['local_enable']) ? 'YES' : 'NO',
@@ -440,7 +443,7 @@ switch ($action) {
             'data_connection_timeout' => $_POST['data_connection_timeout'] ?? '120'
         ];
         $result = saveFtpConfig($config);
-        echo json_encode(['success' => $result, 'message' => $result ? 'Конфигурация сохранена' : 'Ошибка сохранения']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2555 : $lang2556]);
         break;
         
     case 'get_users':
@@ -452,19 +455,21 @@ switch ($action) {
         break;
         
     case 'create_user':
+		global $lang2557, $lang2558, $lang2559;
         $username = trim($_POST['username'] ?? '');
         if (empty($username)) {
-            echo json_encode(['success' => false, 'error' => 'Выберите пользователя']);
+            echo json_encode(['success' => false, 'error' => $lang2557]);
         } else {
             $result = addFtpUser($username);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Пользователь добавлен' : 'Пользователь уже существует']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang2558 : $lang2559]);
         }
         break;
         
     case 'delete_user':
+		global $lang2560, $lang2561;
         $username = $_POST['username'] ?? '';
         $result = removeFtpUser($username);
-        echo json_encode(['success' => $result, 'message' => $result ? 'Пользователь удален' : 'Ошибка удаления']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2560 : $lang2561]);
         break;
         
     case 'get_shares':
@@ -472,14 +477,15 @@ switch ($action) {
         break;
         
     case 'create_share':
+		global $lang2562, $lang2563, $lang2564, $lang2565;
         $name = trim($_POST['name'] ?? '');
         $path = trim($_POST['path'] ?? '');
         $users = $_POST['users'] ?? [];
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите название каталога']);
+            echo json_encode(['success' => false, 'error' => $lang2562]);
         } elseif (empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Укажите существующий путь']);
+            echo json_encode(['success' => false, 'error' => $lang2563]);
         } else {
             $shares = getFtpShares();
             $shares[] = [
@@ -490,21 +496,22 @@ switch ($action) {
                 'created' => date('Y-m-d H:i:s')
             ];
             if (saveFtpShares($shares)) {
-                echo json_encode(['success' => true, 'message' => 'FTP каталог создан']);
+                echo json_encode(['success' => true, 'message' => $lang2564]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка сохранения']);
+                echo json_encode(['success' => false, 'error' => $lang2565]);
             }
         }
         break;
         
     case 'update_share':
+		global $lang2566, $lang2567, $lang2568;
         $id = $_POST['old_id'] ?? '';
         $name = trim($_POST['name'] ?? '');
         $path = trim($_POST['path'] ?? '');
         $users = $_POST['users'] ?? [];
         
         if (empty($name) || empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Заполните все поля']);
+            echo json_encode(['success' => false, 'error' => $lang2566]);
         } else {
             $shares = getFtpShares();
             $updated = false;
@@ -520,23 +527,24 @@ switch ($action) {
             }
             
             if ($updated && saveFtpShares($shares)) {
-                echo json_encode(['success' => true, 'message' => 'FTP каталог обновлен']);
+                echo json_encode(['success' => true, 'message' => $lang2567]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка обновления']);
+                echo json_encode(['success' => false, 'error' => $lang2568]);
             }
         }
         break;
         
     case 'delete_share':
+		global $lang2569, $lang2570;
         $id = $_POST['id'] ?? '';
         $shares = getFtpShares();
         $shares = array_filter($shares, function($share) use ($id) {
             return $share['id'] !== $id;
         });
         if (saveFtpShares(array_values($shares))) {
-            echo json_encode(['success' => true, 'message' => 'FTP каталог удален']);
+            echo json_encode(['success' => true, 'message' => $lang2569]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Ошибка удаления']);
+            echo json_encode(['success' => false, 'error' => $lang2570]);
         }
         break;
         
@@ -559,19 +567,20 @@ switch ($action) {
         break;
         
     case 'create_folder':
+		global $lang2571, $lang2572, $lang2573, $lang2574;
         $path = $_POST['path'] ?? '';
         $name = trim($_POST['name'] ?? '');
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя папки']);
+            echo json_encode(['success' => false, 'error' => $lang2571]);
         } elseif (!preg_match('/^[a-zA-Z0-9_\-\.\s]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы']);
+            echo json_encode(['success' => false, 'error' => $lang2572]);
         } else {
             $fullPath = rtrim($path, '/') . '/' . $name;
             if (createDirectory($fullPath)) {
-                echo json_encode(['success' => true, 'message' => 'Папка создана', 'path' => $fullPath]);
+                echo json_encode(['success' => true, 'message' => $lang2573, 'path' => $fullPath]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Не удалось создать папку']);
+                echo json_encode(['success' => false, 'error' => $lang2574]);
             }
         }
         break;

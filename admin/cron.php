@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -83,6 +84,22 @@ $menu = require_once 'menu.php';
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/loader.css">
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     
     <style>
         * {
@@ -658,7 +675,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -669,13 +686,13 @@ $menu = require_once 'menu.php';
 	<i class="bi bi-clock-history"></i> Cron Jobs
         <div class="host-selector" style="margin-right: 15px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
 		<button class="btn-apple" onclick="openCronModal()">
-                <i class="bi bi-plus-lg"></i> Add Cron Job
+                <i class="bi bi-plus-lg"></i> <?php echo $lang4187; ?>
             </button>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang4188; ?>"></i>
     </div>
 </div>
 
@@ -686,10 +703,10 @@ $menu = require_once 'menu.php';
         <div id="alertContainer"></div>
         
         <div class="tabs">
-            <button class="tab-btn active" data-tab="jobs">Jobs</button>
-            <button class="tab-btn" data-tab="scripts">Scripts</button>
-            <button class="tab-btn" data-tab="logs">Logs</button>
-            <button class="tab-btn" data-tab="settings">Runner Settings</button>
+            <button class="tab-btn active" data-tab="jobs"><?php echo $lang4189; ?></button>
+            <button class="tab-btn" data-tab="scripts"><?php echo $lang4190; ?></button>
+            <button class="tab-btn" data-tab="logs"><?php echo $lang4191; ?></button>
+            <button class="tab-btn" data-tab="settings"><?php echo $lang4192; ?></button>
         </div>
         
         <div id="jobsTab" class="tab-content active">
@@ -699,19 +716,19 @@ $menu = require_once 'menu.php';
         <div id="scriptsTab" class="tab-content">
             <div class="apple-card">
                 <div class="widget-header">
-                    <h3><i class="bi bi-file-code"></i> User Scripts</h3>
+                    <h3><i class="bi bi-file-code"></i> <?php echo $lang4193; ?></h3>
                     <div>
                         <button class="btn btn-primary btn-sm" onclick="openScriptModal()">
-                            <i class="bi bi-plus-lg"></i> New Script
+                            <i class="bi bi-plus-lg"></i> <?php echo $lang4194; ?>
                         </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="refreshScripts()">
-                            <i class="bi bi-arrow-repeat"></i> Refresh
+                            <i class="bi bi-arrow-repeat"></i> <?php echo $lang4195; ?>
                         </button>
                     </div>
                 </div>
                 <div class="widget-body">
                     <div id="scriptsContainer" class="table-responsive">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang4196; ?></div>
                     </div>
                 </div>
             </div>
@@ -720,15 +737,15 @@ $menu = require_once 'menu.php';
         <div id="logsTab" class="tab-content">
             <div class="apple-card">
                 <div class="widget-header">
-                    <h3><i class="bi bi-file-text"></i> Execution Logs</h3>
+                    <h3><i class="bi bi-file-text"></i> <?php echo $lang4197; ?></h3>
                     <div>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshLogs()"><i class="bi bi-arrow-repeat"></i> Refresh</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="clearLogs()"><i class="bi bi-trash"></i> Clear</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshLogs()"><i class="bi bi-arrow-repeat"></i> <?php echo $lang4198; ?></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearLogs()"><i class="bi bi-trash"></i> <?php echo $lang4199; ?></button>
                     </div>
                 </div>
                 <div class="widget-body">
                     <div id="logViewer" class="log-viewer">
-                        <div class="text-center text-muted">Loading logs...</div>
+                        <div class="text-center text-muted"><?php echo $lang4200; ?></div>
                     </div>
                 </div>
             </div>
@@ -737,22 +754,22 @@ $menu = require_once 'menu.php';
         <div id="settingsTab" class="tab-content">
             <div class="apple-card">
                 <div class="widget-header">
-                    <h3><i class="bi bi-gear"></i> Cron Runner Configuration</h3>
+                    <h3><i class="bi bi-gear"></i> <?php echo $lang4201; ?></h3>
                 </div>
                 <div class="widget-body">
                     <div class="runner-status" id="runnerStatus">
-                        <div class="loading-spinner-sm"></div> Checking runner status...
+                        <div class="loading-spinner-sm"></div> <?php echo $lang4202; ?>
                     </div>
                     
                     <hr>
                     
-                    <h6 class="mt-3">Scripts Directory</h6>
+                    <h6 class="mt-3"><?php echo $lang4203; ?></h6>
                     <p><code id="scriptsDirDisplay"></code></p>
                     
                     <hr>
                     
-                    <h6 class="mt-3">Manual Setup Instructions</h6>
-                    <p>Add this line to your system crontab (<code>crontab -e</code>):</p>
+                    <h6 class="mt-3"><?php echo $lang4204; ?></h6>
+                    <p><?php echo $lang4205; ?> (<code>crontab -e</code>):</p>
                     <pre id="runnerCommandDisplay" class="bg-dark text-light p-3 rounded" style="overflow-x: auto;"></pre>
                 </div>
             </div>
@@ -765,7 +782,7 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-clock me-2"></i><span id="modalTitle">Add Cron Job</span></h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-clock me-2"></i><span id="modalTitle"><?php echo $lang4206; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -774,79 +791,79 @@ $menu = require_once 'menu.php';
                     
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Job Name <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang4207; ?> <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-apple" id="job_name" name="job_name" placeholder="e.g., Database Backup" required>
                         </div>
                         
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Description (Optional)</label>
-                            <textarea class="form-control form-control-apple" id="comment" name="comment" rows="2" placeholder="What does this job do?"></textarea>
+                            <label class="form-label fw-semibold"><?php echo $lang4208; ?></label>
+                            <textarea class="form-control form-control-apple" id="comment" name="comment" rows="2" placeholder="<?php echo $lang4209; ?>"></textarea>
                         </div>
                         
                         <!-- Type Selector -->
                         <div class="col-12 type-selector">
                             <label>
                                 <input type="radio" name="job_type" value="command" checked onchange="toggleJobType()">
-                                <i class="bi bi-terminal"></i> Command
+                                <i class="bi bi-terminal"></i> <?php echo $lang4210; ?>
                             </label>
                             <label>
                                 <input type="radio" name="job_type" value="script" onchange="toggleJobType()">
-                                <i class="bi bi-file-code"></i> Script
+                                <i class="bi bi-file-code"></i> <?php echo $lang4211; ?>
                             </label>
                         </div>
                         
                         <!-- Command Input -->
                         <div class="col-12 command-input-group" id="commandGroup">
-                            <label class="form-label fw-semibold">Command <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang4212; ?> <span class="text-danger">*</span></label>
                             <textarea class="form-control form-control-apple" id="command" name="command" rows="3" placeholder="/usr/bin/php /path/to/script.php"></textarea>
                         </div>
                         
                         <!-- Script Selector -->
                         <div class="col-12 script-selector-group" id="scriptGroup" style="display: none;">
-                            <label class="form-label fw-semibold">Select Script <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang4213; ?> <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <select class="form-select form-select-apple" id="script_name" name="script_name">
-                                    <option value="">-- Select a script --</option>
+                                    <option value=""><?php echo $lang4214; ?></option>
                                 </select>
                                 <button type="button" class="btn btn-outline-primary" onclick="openScriptModalForSelect()">
-                                    <i class="bi bi-plus-lg"></i> New
+                                    <i class="bi bi-plus-lg"></i> <?php echo $lang4215; ?>
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" onclick="editSelectedScript()">
-                                    <i class="bi bi-pencil"></i> Edit
+                                    <i class="bi bi-pencil"></i> <?php echo $lang4216; ?>
                                 </button>
                             </div>
-                            <small class="text-muted mt-1 d-block">Scripts are stored in <code>/var/www/minib/cron/userscripts/</code></small>
+                            <small class="text-muted mt-1 d-block"><?php echo $lang4217; ?> <code>/var/www/minib/cron/userscripts/</code></small>
                         </div>
                         
                         <!-- Cron Schedule -->
                         <div class="row g-2 mt-2">
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Minute</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4218; ?></label>
                                 <input type="text" class="form-control form-control-apple" id="minute" name="minute" value="*" placeholder="*">
                                 <small class="text-muted" style="font-size: 9px;">0-59,*</small>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Hour</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4219; ?></label>
                                 <input type="text" class="form-control form-control-apple" id="hour" name="hour" value="*" placeholder="*">
                                 <small class="text-muted" style="font-size: 9px;">0-23,*</small>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Day</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4220; ?></label>
                                 <input type="text" class="form-control form-control-apple" id="day" name="day" value="*" placeholder="*">
                                 <small class="text-muted" style="font-size: 9px;">1-31,*</small>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Month</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4221; ?></label>
                                 <input type="text" class="form-control form-control-apple" id="month" name="month" value="*" placeholder="*">
                                 <small class="text-muted" style="font-size: 9px;">1-12,*</small>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Weekday</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4222; ?></label>
                                 <input type="text" class="form-control form-control-apple" id="weekday" name="weekday" value="*" placeholder="*">
                                 <small class="text-muted" style="font-size: 9px;">0-7,*</small>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Status</label>
+                                <label class="form-label small fw-semibold"><?php echo $lang4223; ?></label>
                                 <div class="mt-2">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="enabled" name="enabled" checked>
@@ -860,26 +877,26 @@ $menu = require_once 'menu.php';
                     <hr class="my-3">
                     
                     <div>
-                        <strong class="small">Quick Presets:</strong><br>
-                        <span class="cron-preset" onclick="setCronPreset('*/5', '*', '*', '*', '*')">Every 5 min</span>
-                        <span class="cron-preset" onclick="setCronPreset('0', '*', '*', '*', '*')">Every hour</span>
-                        <span class="cron-preset" onclick="setCronPreset('0', '0', '*', '*', '*')">Daily at midnight</span>
-                        <span class="cron-preset" onclick="setCronPreset('0', '2', '*', '*', '1')">Monday 2 AM</span>
-                        <span class="cron-preset" onclick="setCronPreset('0', '*/2', '*', '*', '*')">Every 2 hours</span>
-                        <span class="cron-preset" onclick="setCronPreset('30', '9', '*', '*', '1-5')">Weekdays 9:30 AM</span>
+                        <strong class="small"><?php echo $lang4224; ?></strong><br>
+                        <span class="cron-preset" onclick="setCronPreset('*/5', '*', '*', '*', '*')"><?php echo $lang4225; ?></span>
+                        <span class="cron-preset" onclick="setCronPreset('0', '*', '*', '*', '*')"><?php echo $lang4226; ?></span>
+                        <span class="cron-preset" onclick="setCronPreset('0', '0', '*', '*', '*')"><?php echo $lang4227; ?></span>
+                        <span class="cron-preset" onclick="setCronPreset('0', '2', '*', '*', '1')"><?php echo $lang4228; ?></span>
+                        <span class="cron-preset" onclick="setCronPreset('0', '*/2', '*', '*', '*')"><?php echo $lang4229; ?></span>
+                        <span class="cron-preset" onclick="setCronPreset('30', '9', '*', '*', '1-5')"><?php echo $lang4230; ?></span>
                     </div>
                     
                     <div class="mt-3 p-3 bg-light rounded-3">
-                        <strong>Preview:</strong>
+                        <strong><?php echo $lang4231; ?></strong>
                         <code id="schedulePreview" class="d-block mt-1">* * * * *</code>
                         <span id="humanPreview" class="small text-muted"></span>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal"><?php echo $lang4232; ?></button>
                 <button type="button" class="btn-apple" onclick="saveCronJob()">
-                    <i class="bi bi-save"></i> Save Job
+                    <i class="bi bi-save"></i> <?php echo $lang4233; ?>
                 </button>
             </div>
         </div>
@@ -891,36 +908,36 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-file-code me-2"></i><span id="scriptModalTitle">Create Script</span></h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-file-code me-2"></i><span id="scriptModalTitle"><?php echo $lang4234; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Filename <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold"><?php echo $lang4235; ?> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control form-control-apple" id="script_filename" placeholder="script.sh">
-                        <small class="text-muted">Extension determines script type (.sh, .php, .py, .js, .rb)</small>
+                        <small class="text-muted"><?php echo $lang4236; ?> (.sh, .php, .py, .js, .rb)</small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Template</label>
+                        <label class="form-label fw-semibold"><?php echo $lang4237; ?></label>
                         <select class="form-select form-select-apple" id="script_template" onchange="loadTemplate()">
                             <option value="bash">Bash (.sh)</option>
                             <option value="php">PHP (.php)</option>
                             <option value="python">Python (.py)</option>
                             <option value="node">Node.js (.js)</option>
                             <option value="ruby">Ruby (.rb)</option>
-                            <option value="empty">Empty</option>
+                            <option value="empty"><?php echo $lang4238; ?></option>
                         </select>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Script Content</label>
+                        <label class="form-label fw-semibold"><?php echo $lang4239; ?></label>
                         <textarea id="script_content" class="code-editor" rows="15" style="width: 100%; font-family: monospace;"></textarea>
                     </div>
                     <div class="col-12">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="script_executable" checked>
                             <label class="form-check-label" for="script_executable">
-                                Make executable (chmod +x)
+                                <?php echo $lang4240; ?>
                             </label>
                         </div>
                     </div>
@@ -928,11 +945,11 @@ $menu = require_once 'menu.php';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" id="deleteScriptBtn" onclick="deleteCurrentScript()" style="display: none;">
-                    <i class="bi bi-trash"></i> Delete
+                    <i class="bi bi-trash"></i> <?php echo $lang4241; ?>
                 </button>
-                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal"><?php echo $lang4242; ?></button>
                 <button type="button" class="btn-apple" onclick="saveScript()">
-                    <i class="bi bi-save"></i> Save Script
+                    <i class="bi bi-save"></i> <?php echo $lang4243; ?>
                 </button>
             </div>
         </div>
@@ -944,14 +961,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-code-square"></i> Command Output</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-code-square"></i> <?php echo $lang4244; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <pre id="fullOutput" style="white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto; background: #1c1c1e; color: #e5e5ea; padding: 16px; border-radius: 12px; font-family: monospace; font-size: 12px;"></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal"><?php echo $lang4245; ?></button>
             </div>
         </div>
     </div>
@@ -1093,7 +1110,7 @@ async function loadScripts() {
         currentScripts = result.data;
         renderScripts();
     } else {
-        $('#scriptsContainer').html(`<div class="text-center text-danger">Error loading scripts: ${result.error}</div>`);
+        $('#scriptsContainer').html(`<div class="text-center text-danger"><?php echo $lang4246; ?> ${result.error}</div>`);
     }
 }
 
@@ -1102,10 +1119,10 @@ function renderScripts() {
         $('#scriptsContainer').html(`
             <div class="empty-state">
                 <i class="bi bi-file-code"></i>
-                <h5>No Scripts</h5>
-                <p class="text-muted">Click "New Script" to create your first script</p>
+                <h5><?php echo $lang4247; ?></h5>
+                <p class="text-muted"><?php echo $lang4248; ?></p>
                 <button class="btn-apple" onclick="openScriptModal()">
-                    <i class="bi bi-plus-lg"></i> Create Script
+                    <i class="bi bi-plus-lg"></i> <?php echo $lang4249; ?>
                 </button>
             </div>
         `);
@@ -1114,13 +1131,13 @@ function renderScripts() {
     
     let html = `<table class="table table-hover">
         <thead>
-            <tr><th>Filename</th><th>Size</th><th>Modified</th><th>Permissions</th><th>Actions</th></tr>
+            <tr><th><?php echo $lang4250; ?></th><th><?php echo $lang4251; ?></th><th><?php echo $lang4252; ?></th><th><?php echo $lang4253; ?></th><th><?php echo $lang4254; ?></th></tr>
         </thead>
         <tbody>`;
     
     currentScripts.forEach(script => {
         const extBadge = script.extension ? `<span class="badge bg-secondary">${escapeHtml(script.extension)}</span>` : '';
-        const executableBadge = script.is_executable ? '<span class="badge bg-success">executable</span>' : '<span class="badge bg-warning">not executable</span>';
+        const executableBadge = script.is_executable ? '<span class="badge bg-success"><?php echo $lang4255; ?></span>' : '<span class="badge bg-warning"><?php echo $lang4256; ?></span>';
         
         html += `<tr>
             <td><code>${escapeHtml(script.name)}</code> ${extBadge}</td>
@@ -1130,7 +1147,7 @@ function renderScripts() {
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editScript('${escapeHtml(script.name)}')"><i class="bi bi-pencil"></i></button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteScript('${escapeHtml(script.name)}')"><i class="bi bi-trash"></i></button>
-                ${script.is_executable ? `<button class="btn btn-sm btn-outline-success" onclick="testScript('${escapeHtml(script.name)}')"><i class="bi bi-play-fill"></i> Run</button>` : ''}
+                ${script.is_executable ? `<button class="btn btn-sm btn-outline-success" onclick="testScript('${escapeHtml(script.name)}')"><i class="bi bi-play-fill"></i> <?php echo $lang4257; ?></button>` : ''}
             </td>
         </tr>`;
     });
@@ -1153,7 +1170,7 @@ async function loadScriptsForSelect() {
         const select = $('#script_name');
         const currentVal = select.val();
         select.empty();
-        select.append('<option value="">-- Select a script --</option>');
+        select.append('<option value=""><?php echo $lang4258; ?></option>');
         result.data.forEach(script => {
             if (script.is_executable) {
                 select.append(`<option value="${escapeHtml(script.name)}">${escapeHtml(script.name)}</option>`);
@@ -1169,7 +1186,7 @@ function openScriptModalForSelect() {
 }
 
 function openScriptModal(scriptName = null) {
-    $('#scriptModalTitle').text(scriptName ? 'Edit Script' : 'Create Script');
+    $('#scriptModalTitle').text(scriptName ? '<?php echo $lang4259; ?>' : '<?php echo $lang4260; ?>');
     $('#script_filename').val(scriptName || '');
     $('#script_content').val('');
     $('#deleteScriptBtn').toggle(!!scriptName);
@@ -1226,7 +1243,7 @@ async function saveScript() {
     const makeExecutable = $('#script_executable').is(':checked');
     
     if (!filename) {
-        showAlert('Filename is required', 'danger');
+        showAlert('<?php echo $lang4261; ?>', 'danger');
         return;
     }
     
@@ -1256,7 +1273,7 @@ async function saveScript() {
 async function editSelectedScript() {
     const scriptName = $('#script_name').val();
     if (!scriptName) {
-        showAlert('Select a script first', 'warning');
+        showAlert('<?php echo $lang4262; ?>', 'warning');
         return;
     }
     openScriptModal(scriptName);
@@ -1267,7 +1284,7 @@ async function editScript(filename) {
 }
 
 async function deleteScript(filename) {
-    if (!confirm(`Delete script "${filename}"?`)) return;
+    if (!confirm(`<?php echo $lang4263; ?> "${filename}"?`)) return;
     
     showLoading();
     let result = await apiCall('delete_script', 'GET', { filename: filename });
@@ -1286,7 +1303,7 @@ async function deleteCurrentScript() {
     const filename = $('#script_filename').val();
     if (!filename) return;
     
-    if (!confirm(`Delete script "${filename}"?`)) return;
+    if (!confirm(`<?php echo $lang4264; ?> "${filename}"?`)) return;
     
     showLoading();
     let result = await apiCall('delete_script', 'GET', { filename: filename });
@@ -1304,7 +1321,7 @@ async function deleteCurrentScript() {
 
 async function testScript(filename) {
     showLoading();
-    showAlert('Running script...', 'info');
+    showAlert('<?php echo $lang4265; ?>', 'info');
     
     let result = await apiCall('run_script', 'GET', { filename: filename });
     hideLoading();
@@ -1317,7 +1334,7 @@ async function testScript(filename) {
             outputModal.show();
         }
     } else {
-        showAlert(result.error || 'Error running script', 'danger');
+        showAlert(result.error || '<?php echo $lang4266; ?>', 'danger');
     }
 }
 
@@ -1332,7 +1349,7 @@ async function loadJobs() {
         currentJobs = result.data;
         renderJobs();
     } else {
-        $('#jobsContainer').html(`<div class="empty-state"><i class="bi bi-calendar2-x"></i><h5>Error loading jobs</h5><p class="text-muted">${result.error || 'Unknown error'}</p></div>`);
+        $('#jobsContainer').html(`<div class="empty-state"><i class="bi bi-calendar2-x"></i><h5><?php echo $lang4267; ?></h5><p class="text-muted">${result.error || 'Unknown error'}</p></div>`);
     }
 }
 
@@ -1341,10 +1358,10 @@ function renderJobs() {
         $('#jobsContainer').html(`
             <div class="empty-state">
                 <i class="bi bi-calendar2-x"></i>
-                <h5>No Cron Jobs</h5>
-                <p class="text-muted">Click "Add Cron Job" to create your first scheduled task</p>
+                <h5><?php echo $lang4268; ?></h5>
+                <p class="text-muted"><?php echo $lang4269; ?></p>
                 <button class="btn-apple" onclick="openCronModal()">
-                    <i class="bi bi-plus-lg"></i> Create Cron Job
+                    <i class="bi bi-plus-lg"></i> <?php echo $lang4270; ?>
                 </button>
             </div>
         `);
@@ -1359,8 +1376,8 @@ function renderJobs() {
         
         // Отображаем что выполняется
         const execDisplay = job.job_type === 'script' 
-            ? `<span class="badge bg-info"><i class="bi bi-file-code"></i> Script: ${escapeHtml(job.script_name)}</span>`
-            : `<span class="badge bg-secondary"><i class="bi bi-terminal"></i> Command</span>`;
+            ? `<span class="badge bg-info"><i class="bi bi-file-code"></i> <?php echo $lang4271; ?> ${escapeHtml(job.script_name)}</span>`
+            : `<span class="badge bg-secondary"><i class="bi bi-terminal"></i> <?php echo $lang4272; ?></span>`;
         
         html += `
             <div class="col-md-6 col-lg-4" data-job-id="${escapeHtml(job.unique_id)}">
@@ -1368,7 +1385,7 @@ function renderJobs() {
                     <div class="job-card-header">
                         <div>
                             <div class="job-name">
-                                ${job.enabled ? '<span class="status-badge status-success"><i class="bi bi-play-fill"></i> Active</span>' : '<span class="status-badge status-pending"><i class="bi bi-pause-fill"></i> Paused</span>'}
+                                ${job.enabled ? '<span class="status-badge status-success"><i class="bi bi-play-fill"></i> <?php echo $lang4273; ?></span>' : '<span class="status-badge status-pending"><i class="bi bi-pause-fill"></i> <?php echo $lang4274; ?></span>'}
                                 ${job.last_status !== 'pending' && job.enabled ? `<span class="status-badge ${last_status_class}"><i class="${last_status_icon}"></i> ${job.last_status === 'success' ? 'OK' : 'Failed'}</span>` : ''}
                                 ${execDisplay}
                             </div>
@@ -1381,17 +1398,17 @@ function renderJobs() {
                             </button>
                             <div class="dropdown-menu-actions">
                                 <a href="#" onclick="runJob('${escapeHtml(job.unique_id)}'); return false;">
-                                    <i class="bi bi-play-fill"></i> Run Now
+                                    <i class="bi bi-play-fill"></i> <?php echo $lang4275; ?>
                                 </a>
                                 <a href="#" onclick="toggleJob('${escapeHtml(job.unique_id)}'); return false;">
-                                    <i class="bi bi-${job.enabled ? 'pause-fill' : 'play-fill'}"></i> ${job.enabled ? 'Disable' : 'Enable'}
+                                    <i class="bi bi-${job.enabled ? 'pause-fill' : 'play-fill'}"></i> ${job.enabled ? '<?php echo $lang4276; ?>' : '<?php echo $lang4277; ?>'}
                                 </a>
                                 <a href="#" onclick="editJob('${escapeHtml(job.unique_id)}'); return false;">
-                                    <i class="bi bi-pencil"></i> Edit
+                                    <i class="bi bi-pencil"></i> <?php echo $lang4278; ?>
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a href="#" onclick="deleteJob('${escapeHtml(job.unique_id)}'); return false;" style="color: #ff3b30;">
-                                    <i class="bi bi-trash3"></i> Delete
+                                    <i class="bi bi-trash3"></i> <?php echo $lang4279; ?>
                                 </a>
                             </div>
                         </div>
@@ -1407,19 +1424,19 @@ function renderJobs() {
                         </div>
                         <div class="run-time">
                             <i class="bi bi-hourglass-split"></i>
-                            <span>Next: <strong>${escapeHtml(next_run)}</strong></span>
+                            <span><?php echo $lang4280; ?> <strong>${escapeHtml(next_run)}</strong></span>
                         </div>
-                        ${job.last_run ? `<div class="run-time"><i class="bi bi-clock-history"></i><span>Last: ${escapeHtml(job.last_run)}</span></div>` : ''}
+                        ${job.last_run ? `<div class="run-time"><i class="bi bi-clock-history"></i><span><?php echo $lang4281; ?> ${escapeHtml(job.last_run)}</span></div>` : ''}
                         ${job.last_output ? `
                             <div class="output-preview">
-                                <i class="bi bi-code-square"></i> Last output:<br>
+                                <i class="bi bi-code-square"></i> <?php echo $lang4282; ?><br>
                                 <code>${escapeHtml(job.last_output.substring(0, 120))}</code>
-                                ${job.last_output.length > 120 ? `<button class="btn btn-link btn-sm p-0 mt-1" onclick="showFullOutput('${escapeHtml(job.unique_id)}')" style="font-size: 10px;">Show more...</button>` : ''}
+                                ${job.last_output.length > 120 ? `<button class="btn btn-link btn-sm p-0 mt-1" onclick="showFullOutput('${escapeHtml(job.unique_id)}')" style="font-size: 10px;"><?php echo $lang4283; ?></button>` : ''}
                             </div>
                         ` : ''}
                     </div>
                     <div class="job-card-footer">
-                        <i class="bi bi-calendar-plus"></i> Created: ${escapeHtml(job.created_at)}
+                        <i class="bi bi-calendar-plus"></i> <?php echo $lang4284; ?> ${escapeHtml(job.created_at)}
                     </div>
                 </div>
             </div>
@@ -1431,7 +1448,7 @@ function renderJobs() {
 
 // ========== Job CRUD Operations ==========
 function openCronModal() {
-    $('#modalTitle').text('Add Cron Job');
+    $('#modalTitle').text('<?php echo $lang4285; ?>');
     $('#cronForm')[0].reset();
     $('#minute').val('*');
     $('#hour').val('*');
@@ -1483,7 +1500,7 @@ async function editJob(uniqueId) {
         currentModal = new bootstrap.Modal(document.getElementById('cronModal'));
         currentModal.show();
     } else {
-        showAlert(result.error || 'Error loading job', 'danger');
+        showAlert(result.error || '<?php echo $lang4286; ?>', 'danger');
     }
 }
 
@@ -1491,14 +1508,14 @@ async function saveCronJob() {
     const jobName = $('#job_name').val().trim();
     const jobType = $('input[name="job_type"]:checked').val();
     
-    if (!jobName) { showAlert('Job name is required', 'danger'); return; }
+    if (!jobName) { showAlert('<?php echo $lang4287; ?>', 'danger'); return; }
     
     if (jobType === 'command') {
         const command = $('#command').val().trim();
-        if (!command) { showAlert('Command is required', 'danger'); return; }
+        if (!command) { showAlert('<?php echo $lang4288; ?>', 'danger'); return; }
     } else {
         const scriptName = $('#script_name').val();
-        if (!scriptName) { showAlert('Please select a script', 'danger'); return; }
+        if (!scriptName) { showAlert('<?php echo $lang4289; ?>', 'danger'); return; }
     }
     
     showLoading();
@@ -1511,12 +1528,12 @@ async function saveCronJob() {
         showAlert(result.message, 'success');
         await loadJobs();
     } else {
-        showAlert(result.error || 'Error saving cron job', 'danger');
+        showAlert(result.error || '<?php echo $lang4290; ?>', 'danger');
     }
 }
 
 async function deleteJob(uniqueId) {
-    if (!confirm('Delete this cron job?')) return;
+    if (!confirm('<?php echo $lang4291; ?>')) return;
     showLoading();
     let result = await apiCall('delete_job', 'GET', { unique_id: uniqueId });
     hideLoading();
@@ -1525,7 +1542,7 @@ async function deleteJob(uniqueId) {
         showAlert(result.message, 'success');
         await loadJobs();
     } else {
-        showAlert(result.error || 'Error deleting job', 'danger');
+        showAlert(result.error || '<?php echo $lang4292; ?>', 'danger');
     }
 }
 
@@ -1538,14 +1555,14 @@ async function toggleJob(uniqueId) {
         showAlert(result.message, 'success');
         await loadJobs();
     } else {
-        showAlert(result.error || 'Error toggling job', 'danger');
+        showAlert(result.error || '<?php echo $lang4293; ?>', 'danger');
     }
 }
 
 async function runJob(uniqueId) {
     $('.dropdown-menu-actions').removeClass('show');
     showLoading();
-    showAlert('Executing job...', 'info');
+    showAlert('<?php echo $lang4294; ?>', 'info');
     
     let result = await apiCall('run_job', 'GET', { unique_id: uniqueId });
     hideLoading();
@@ -1559,7 +1576,7 @@ async function runJob(uniqueId) {
         }
         await loadJobs();
     } else {
-        showAlert(result.error || 'Error running job', 'danger');
+        showAlert(result.error || '<?php echo $lang4295; ?>', 'danger');
     }
 }
 
@@ -1573,7 +1590,7 @@ async function showFullOutput(uniqueId) {
         outputModal = new bootstrap.Modal(document.getElementById('outputModal'));
         outputModal.show();
     } else {
-        showAlert('No output available', 'info');
+        showAlert('<?php echo $lang4296; ?>', 'info');
     }
 }
 
@@ -1582,7 +1599,7 @@ async function loadLogs() {
     let result = await apiCall('get_logs', 'GET', { lines: 100 });
     if (result.success && result.logs) {
         if (result.logs.length === 0) {
-            $('#logViewer').html('<div class="text-center text-muted">No logs yet</div>');
+            $('#logViewer').html('<div class="text-center text-muted"><?php echo $lang4297; ?></div>');
         } else {
             let html = '';
             result.logs.forEach(log => {
@@ -1591,7 +1608,7 @@ async function loadLogs() {
             $('#logViewer').html(html);
         }
     } else {
-        $('#logViewer').html('<div class="text-center text-danger">Failed to load logs</div>');
+        $('#logViewer').html('<div class="text-center text-danger"><?php echo $lang4298; ?></div>');
     }
 }
 
@@ -1599,19 +1616,19 @@ async function refreshLogs() {
     showLoading();
     await loadLogs();
     hideLoading();
-    showAlert('Logs refreshed', 'success');
+    showAlert('<?php echo $lang4299; ?>', 'success');
 }
 
 async function clearLogs() {
-    if (!confirm('Clear all cron logs?')) return;
+    if (!confirm('<?php echo $lang4300; ?>')) return;
     showLoading();
     let result = await apiCall('clear_logs');
     hideLoading();
     if (result.success) {
-        showAlert('Logs cleared', 'success');
+        showAlert('<?php echo $lang4301; ?>', 'success');
         await loadLogs();
     } else {
-        showAlert(result.error || 'Failed to clear logs', 'danger');
+        showAlert(result.error || '<?php echo $lang4302; ?>', 'danger');
     }
 }
 
@@ -1622,21 +1639,21 @@ async function loadRunnerStatus() {
         let statusHtml = `
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <div>
-                    <strong>Runner Script:</strong> 
-                    <span class="badge ${result.runner_exists ? 'bg-success' : 'bg-danger'}">${result.runner_exists ? 'Exists' : 'Missing'}</span>
+                    <strong><?php echo $lang4303; ?></strong> 
+                    <span class="badge ${result.runner_exists ? 'bg-success' : 'bg-danger'}">${result.runner_exists ? '<?php echo $lang4304; ?>' : '<?php echo $lang4305; ?>'}</span>
                 </div>
                 <div>
-                    <strong>System Cron:</strong> 
-                    <span class="badge ${result.runner_installed ? 'bg-success' : 'bg-warning'}">${result.runner_installed ? 'Installed' : 'Not Installed'}</span>
+                    <strong><?php echo $lang4306; ?></strong> 
+                    <span class="badge ${result.runner_installed ? 'bg-success' : 'bg-warning'}">${result.runner_installed ? '<?php echo $lang4307; ?>' : '<?php echo $lang4308; ?>'}</span>
                 </div>
-                ${!result.runner_installed ? `<button class="btn btn-sm btn-primary" onclick="installRunner()"><i class="bi bi-download"></i> Install to System Cron</button>` : `<button class="btn btn-sm btn-danger" onclick="uninstallRunner()"><i class="bi bi-x-circle"></i> Remove from System Cron</button>`}
+                ${!result.runner_installed ? `<button class="btn btn-sm btn-primary" onclick="installRunner()"><i class="bi bi-download"></i> <?php echo $lang4309; ?></button>` : `<button class="btn btn-sm btn-danger" onclick="uninstallRunner()"><i class="bi bi-x-circle"></i> <?php echo $lang4310; ?></button>`}
             </div>
         `;
         $('#runnerStatus').html(statusHtml);
         $('#runnerCommandDisplay').text(result.runner_command);
         $('#scriptsDirDisplay').text(result.scripts_dir || '/var/www/minib/cron/userscripts');
     } else {
-        $('#runnerStatus').html('<div class="text-danger">Failed to load runner status</div>');
+        $('#runnerStatus').html('<div class="text-danger"><?php echo $lang4311; ?></div>');
     }
 }
 
@@ -1648,12 +1665,12 @@ async function installRunner() {
         showAlert(result.message, 'success');
         loadRunnerStatus();
     } else {
-        showAlert(result.error || 'Failed to install runner', 'danger');
+        showAlert(result.error || '<?php echo $lang4312; ?>', 'danger');
     }
 }
 
 async function uninstallRunner() {
-    if (!confirm('Remove runner from system crontab? Jobs will stop running automatically.')) return;
+    if (!confirm('<?php echo $lang4313; ?>')) return;
     showLoading();
     let result = await apiCall('uninstall_runner');
     hideLoading();
@@ -1661,7 +1678,7 @@ async function uninstallRunner() {
         showAlert(result.message, 'success');
         loadRunnerStatus();
     } else {
-        showAlert(result.error || 'Failed to remove runner', 'danger');
+        showAlert(result.error || '<?php echo $lang4314; ?>', 'danger');
     }
 }
 
@@ -1670,7 +1687,7 @@ async function refreshAllData() {
     showLoading();
     await Promise.all([loadJobs(), loadLogs(), loadRunnerStatus(), loadScripts()]);
     hideLoading();
-    showAlert('Data updated', 'success');
+    showAlert('<?php echo $lang4315; ?>', 'success');
 }
 
 // ========== Tabs ==========

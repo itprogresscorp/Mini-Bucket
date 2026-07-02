@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function getServiceStatus($serviceName) {
     $status = shell_exec("systemctl is-active " . $serviceName . " 2>/dev/null");
@@ -122,6 +124,65 @@ function getServiceVersion($serviceName) {
     }
     
     return 'unknown';
+}
+
+function getCurrentDomain() {
+    $hostname = getCurrentHostname();
+    $domain = '';
+    
+    if (file_exists('/etc/hosts')) {
+        $hostsContent = file_get_contents('/etc/hosts');
+        $lines = explode("\n", $hostsContent);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || strpos($line, '#') === 0) continue;
+            
+            $parts = preg_split('/\s+/', $line);
+            if (count($parts) >= 2) {
+                $ip = $parts[0];
+                if ($ip === '127.0.1.1' && count($parts) >= 2) {
+                    $fqdn = $parts[1];
+                    if (strpos($fqdn, '.') !== false) {
+                        $domain = substr($fqdn, strpos($fqdn, '.') + 1);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    return $domain;
+}
+
+function setDomain($domain) {
+    $hostname = getCurrentHostname();
+    $domain = trim($domain);
+    
+    $fqdn = !empty($domain) ? $hostname . '.' . $domain : $hostname;
+    
+    $newHosts = "127.0.0.1\tlocalhost\n";
+    $newHosts .= "127.0.1.1\t" . $fqdn;
+    
+    if (!empty($domain)) {
+        $newHosts .= " " . $hostname;
+    }
+    $newHosts .= "\n\n";
+    
+    $newHosts .= "# The following lines are desirable for IPv6 capable hosts\n";
+    $newHosts .= "::1\tlocalhost ip6-localhost ip6-loopback\n";
+    $newHosts .= "fe00::0\tip6-localnet\n";
+    $newHosts .= "ff00::0\tip6-mcastprefix\n";
+    $newHosts .= "ff02::1\tip6-allnodes\n";
+    $newHosts .= "ff02::2\tip6-allrouters\n";
+    
+    $tempFile = '/tmp/hosts_' . uniqid();
+    file_put_contents($tempFile, $newHosts);
+    exec('sudo cp ' . $tempFile . ' /etc/hosts');
+    unlink($tempFile);
+    
+    exec('sudo hostnamectl set-hostname ' . escapeshellarg($hostname));
+    
+    return true;
 }
 
 function startService($serviceName) {
@@ -320,15 +381,21 @@ function getCurrentHostname() {
     return trim(file_get_contents('/etc/hostname'));
 }
 
-function setHostname($hostname) {
+function setHostname($hostname, $domain = '') {
     $hostname = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $hostname);
     if (empty($hostname)) return false;
     
-    exec('sudo hostnamectl set-hostname ' . escapeshellarg($hostname));
+    $domain = trim($domain);
+    $fqdn = !empty($domain) ? $hostname . '.' . $domain : $hostname;
     
     $newHosts = "127.0.0.1\tlocalhost\n";
-    $newHosts .= "127.0.1.1\t" . $hostname . "\n";
-    $newHosts .= "\n";
+    $newHosts .= "127.0.1.1\t" . $fqdn;
+    
+    if (!empty($domain)) {
+        $newHosts .= " " . $hostname;
+    }
+    $newHosts .= "\n\n";
+    
     $newHosts .= "# The following lines are desirable for IPv6 capable hosts\n";
     $newHosts .= "::1\tlocalhost ip6-localhost ip6-loopback\n";
     $newHosts .= "fe00::0\tip6-localnet\n";
@@ -340,6 +407,8 @@ function setHostname($hostname) {
     file_put_contents($tempFile, $newHosts);
     exec('sudo cp ' . $tempFile . ' /etc/hosts');
     unlink($tempFile);
+    
+    exec('sudo hostnamectl set-hostname ' . escapeshellarg($hostname));
     
     return true;
 }
@@ -436,8 +505,14 @@ function getSystemResources() {
 }
 
 function getSystemInfo() {
+    $hostname = getCurrentHostname();
+    $domain = getCurrentDomain();
+    $fqdn = !empty($domain) ? $hostname . '.' . $domain : $hostname;
+    
     return [
-        'hostname' => getCurrentHostname(),
+        'hostname' => $hostname,
+        'domain' => $domain,
+        'fqdn' => $fqdn,
         'os' => getOsDetails(),
         'kernel' => php_uname('r'),
         'php_version' => phpversion(),
@@ -456,6 +531,7 @@ switch ($action) {
         break;
         
     case 'service_action':
+		global $lang3854;
         $service = $_POST['service'] ?? '';
         $action_type = $_POST['service_action'] ?? '';
         
@@ -471,7 +547,7 @@ switch ($action) {
         ];
         
         if (!isset($serviceMap[$service])) {
-            echo json_encode(['success' => false, 'error' => 'Invalid service']);
+            echo json_encode(['success' => false, 'error' => $lang3854]);
             break;
         }
         
@@ -498,15 +574,16 @@ switch ($action) {
     
     // Power Management
     case 'power_action':
+		global $lang3855, $lang3856, $lang3857;
         $powerAction = $_POST['power_action'] ?? '';
         if ($powerAction === 'reboot') {
             systemReboot();
-            echo json_encode(['success' => true, 'message' => 'System rebooting...']);
+            echo json_encode(['success' => true, 'message' => $lang3855]);
         } elseif ($powerAction === 'shutdown') {
             systemShutdown();
-            echo json_encode(['success' => true, 'message' => 'System shutting down...']);
+            echo json_encode(['success' => true, 'message' => $lang3856]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Invalid power action']);
+            echo json_encode(['success' => false, 'error' => $lang3857]);
         }
         break;
     
@@ -521,11 +598,12 @@ switch ($action) {
         break;
         
     case 'set_timezone':
+		global $lang3858, $lang3859;
         $timezone = $_POST['timezone'] ?? '';
         $result = setTimezone($timezone);
         echo json_encode([
             'success' => $result, 
-            'message' => $result ? 'Timezone updated' : 'Failed to update timezone',
+            'message' => $result ? $lang3858 : $lang3859,
             'timezone' => getCurrentTimezone()
         ]);
         break;
@@ -540,39 +618,62 @@ switch ($action) {
         break;
         
     case 'toggle_ntp':
+		global $lang3860, $lang3861, $lang3862;
         $enabled = isset($_POST['ntp_enabled']) && $_POST['ntp_enabled'] == '1';
         $result = setNtpEnabled($enabled);
         echo json_encode([
             'success' => $result,
             'enabled' => getNtpStatus(),
-            'message' => $result ? 'NTP ' . ($enabled ? 'enabled' : 'disabled') : 'Failed to change NTP status'
+            'message' => $result ? 'NTP ' . ($enabled ? $lang3861 : $lang3862) : $lang3860
         ]);
         break;
     
     // Manual Date/Time
     case 'set_datetime':
+		global $lang3863, $lang3864;
         $date = $_POST['date'] ?? '';
         $time = $_POST['time'] ?? '';
         $result = setManualDateTime($date, $time);
         echo json_encode([
             'success' => $result,
-            'message' => $result ? 'System time updated' : 'Failed to set system time',
+            'message' => $result ? $lang3863 : $lang3864,
             'datetime' => getCurrentDateTime()
         ]);
         break;
     
+	case 'get_domain':
+		echo json_encode(['success' => true, 'domain' => getCurrentDomain()]);
+		break;
+
+	case 'set_domain':
+		global $lang4786, $lang4787;
+		$domain = $_POST['domain'] ?? '';
+		$hostname = getCurrentHostname();
+		$result = setDomain($domain);
+		echo json_encode([
+			'success' => $result,
+			'message' => $result ? $lang4786 : $lang4787,
+			'domain' => getCurrentDomain(),
+			'fqdn' => !empty($domain) ? $hostname . '.' . $domain : $hostname
+		]);
+		break;
+	
     // Hostname
     case 'get_hostname':
 		echo json_encode(['success' => true, 'hostname' => getCurrentHostname()]);
 		break;
     
     case 'set_hostname':
+		global $lang3865, $lang3866;
 		$hostname = $_POST['hostname'] ?? '';
-		$result = setHostname($hostname);
+		$domain = $_POST['domain'] ?? ''; // Добавляем домен
+		$result = setHostname($hostname, $domain);
 		echo json_encode([
 			'success' => $result,
-			'message' => $result ? 'Hostname changed' : 'Failed to change hostname',
-			'hostname' => getCurrentHostname()
+			'message' => $result ? $lang3865 : $lang3866,
+			'hostname' => getCurrentHostname(),
+			'domain' => getCurrentDomain(),
+			'fqdn' => !empty($domain) ? $hostname . '.' . $domain : $hostname
 		]);
 		break;
     
@@ -582,6 +683,7 @@ switch ($action) {
         break;
         
     case 'set_network':
+		global $lang3867, $lang3868;
         $interface = $_POST['interface'] ?? '';
         $ipMethod = $_POST['ip_method'] ?? 'dhcp';
         $ipAddress = $_POST['ip_address'] ?? '';
@@ -592,7 +694,7 @@ switch ($action) {
         $result = setNetworkConfig($interface, $ipMethod, $ipAddress, $netmask, $gateway, $dns);
         echo json_encode([
             'success' => $result,
-            'message' => $result ? 'Network configuration updated' : 'Failed to update network'
+            'message' => $result ? $lang3867 : $lang3868
         ]);
         break;
     

@@ -85,6 +85,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 define('PLUGINS_REPOS_DIR', '/var/www/minib/plugins/repositories');
 define('PLUGINS_EXTRACT_DIR', '/var/www/minib/plugins/extract');
 
@@ -96,13 +98,14 @@ foreach ([PLUGINS_REPOS_DIR, PLUGINS_EXTRACT_DIR] as $dir) {
 }
 
 function installPlugin($zipFile, $saveToRepository = true) {
+	global $lang4529, $lang4530, $lang4531, $lang4532, $lang4533, $lang4534;
     if (!extension_loaded('zip')) {
-        return ['success' => false, 'error' => 'ZIP extension not loaded'];
+        return ['success' => false, 'error' => $lang4529];
     }
     
     $zip = new ZipArchive();
     if ($zip->open($zipFile) !== true) {
-        return ['success' => false, 'error' => 'Cannot open ZIP archive'];
+        return ['success' => false, 'error' => $lang4530];
     }
     
     $sysname = null;
@@ -152,7 +155,7 @@ function installPlugin($zipFile, $saveToRepository = true) {
     
     $zip = new ZipArchive();
     if ($zip->open($zipFile) !== true) {
-        return ['success' => false, 'error' => 'Cannot open ZIP archive for extraction'];
+        return ['success' => false, 'error' => $lang4531];
     }
     
     $zip->extractTo($extractPath);
@@ -167,15 +170,15 @@ function installPlugin($zipFile, $saveToRepository = true) {
         exec("cd " . escapeshellarg($extractPath) . " && sudo bash install.sh 2>&1", $output, $returnCode);
         
         if ($returnCode !== 0) {
-            return ['success' => false, 'error' => 'Install script failed', 'output' => $output];
+            return ['success' => false, 'error' => $lang4532, 'output' => $output];
         }
     } else {
-        return ['success' => false, 'error' => 'install.sh not found'];
+        return ['success' => false, 'error' => $lang4533];
     }
     
     exec("rm -rf " . escapeshellarg($extractPath));
     
-    return ['success' => true, 'message' => 'Plugin installed', 'sysname' => $sysname];
+    return ['success' => true, 'message' => $lang4534, 'sysname' => $sysname];
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -194,8 +197,9 @@ switch ($action) {
         break;
         
     case 'install_plugin':
+		global $lang4535, $lang4536, $lang4537;
         if (!isset($_FILES['plugin_file']) || $_FILES['plugin_file']['error'] !== UPLOAD_ERR_OK) {
-            echo json_encode(['success' => false, 'error' => 'Plugin file required']);
+            echo json_encode(['success' => false, 'error' => $lang4535]);
             break;
         }
         
@@ -203,13 +207,13 @@ switch ($action) {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if ($ext !== 'zip') {
-            echo json_encode(['success' => false, 'error' => 'Only ZIP files are allowed']);
+            echo json_encode(['success' => false, 'error' => $lang4536]);
             break;
         }
         
         $tempZip = '/tmp/' . basename($file['name']);
         if (!move_uploaded_file($file['tmp_name'], $tempZip)) {
-            echo json_encode(['success' => false, 'error' => 'Failed to save ZIP file']);
+            echo json_encode(['success' => false, 'error' => $lang4537]);
             break;
         }
         

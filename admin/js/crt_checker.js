@@ -203,70 +203,44 @@ function showCertWindow() {
     }
 }
 
-function showPopupBlockedModal(url) {
-    let modal = document.getElementById('popupBlockedModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'popupBlockedModal';
-        modal.className = 'license-modal';
-        modal.style.display = 'none';
-        modal.innerHTML = `
-            <div class="license-modal-content" style="max-width: 500px;">
-                <div class="license-modal-header">
-                    <div class="license-icon">
-                        <i class="fas fa-ban" style="color: #ff9500;"></i>
-                    </div>
-                    <h2>⚠️ Popup Blocked</h2>
-                    <button class="license-close-btn" onclick="closePopupBlockedModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="license-modal-body">
-                    <div class="license-summary">
-                        <h3><i class="fas fa-exclamation-triangle" style="color: #ff9500;"></i> Browser blocked the popup window</h3>
-                        <p><strong>To accept the SSL certificate or fix connection issues, please:</strong></p>
-                        <ol style="text-align: left; margin: 20px;">
-                            <li>Click the browser's address bar</li>
-                            <li>Look for a popup blocked icon (usually in the address bar)</li>
-                            <li>Allow popups for this site</li>
-                            <li>Click the button below to try again</li>
-                        </ol>
-                        <div class="summary-item">
-                            <i class="fas fa-link"></i>
-                            <div>
-                                <strong>📎 Or open manually in new tab:</strong>
-                                <p><a href="${url}" target="_blank" id="manualCertLink" style="word-break: break-all;">${url}</a></p>
-                            </div>
-                        </div>
-                        <div class="summary-item" style="margin-top: 15px;">
-                            <i class="fas fa-info-circle"></i>
-                            <div>
-                                <strong>ℹ️ After accepting the certificate/security warning:</strong>
-                                <p>The page will reload automatically</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="license-modal-footer">
-                    <button class="btn-license-close" onclick="closePopupBlockedModal()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button class="btn-license-close" onclick="retryOpenCertWindow()" style="background: #007aff;">
-                        <i class="fas fa-redo"></i> Try Again
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    } else {
-        const manualLink = modal.querySelector('#manualCertLink');
-        if (manualLink) manualLink.href = url;
-        modal.style.display = 'block';
+function loadPopupBlockedModal(callback) {
+    if (document.getElementById('popupBlockedModal')) {
+        if (typeof callback === 'function') callback();
+        return;
     }
-    
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+
+    fetch('popup-blocked-modal.php')
+        .then(response => response.text())
+        .then(html => {
+            document.body.insertAdjacentHTML('beforeend', html);
+            if (typeof callback === 'function') callback();
+        })
+        .catch(error => {
+            console.error('Error loading modal:', error);
+            //createFallbackModal();
+            if (typeof callback === 'function') callback();
+        });
 }
+
+function showPopupBlockedModal(url) {
+    loadPopupBlockedModal(function() {
+        const modal = document.getElementById('popupBlockedModal');
+        if (!modal) {
+            console.error('Modal not found');
+            return;
+        }
+
+        const manualLink = modal.querySelector('#manualCertLink');
+        if (manualLink) {
+            manualLink.href = url;
+            manualLink.textContent = url;
+        }
+
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    });
+}
+
 
 function closePopupBlockedModal() {
     const modal = document.getElementById('popupBlockedModal');
@@ -335,11 +309,10 @@ document.addEventListener('DOMContentLoaded', function() {
         certCheckInterval = setInterval(checkApiAvailability, 10000);
     }, 1000);
     
-    // Также проверяем при возврате на вкладку (visibility change)
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             console.log('Page became visible, checking API...');
-            lastCheckTime = 0; // Сбрасываем, чтобы принудительно проверить
+            lastCheckTime = 0;
             checkApiAvailability();
         }
     });

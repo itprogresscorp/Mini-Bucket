@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -83,8 +84,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         :root {
@@ -775,8 +792,8 @@ $menu = require_once 'menu.php';
     </style>
 </head>
 <body>
-<div id="applePreloader" class="apple-preloader"><div class="apple-spinner"></div><div class="mt-2">Loading...</div></div>
-<div id="globalLoader" class="loader-overlay"><div class="loader-content"><div class="apple-spinner mx-auto"></div><p class="mt-2">Operation in progress...</p></div></div>
+<div id="applePreloader" class="apple-preloader"><div class="apple-spinner"></div><div class="mt-2"><?php echo $lang12; ?></div></div>
+<div id="globalLoader" class="loader-overlay"><div class="loader-content"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1274; ?></p></div></div>
 
 <div class="top-bar">
     <div class="top-bar-left">
@@ -794,7 +811,7 @@ $menu = require_once 'menu.php';
             </div>-->
 			<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
 			<button class="btn btn-sm btn-apple-success" onclick="raidManager.showCreateRaid()"><i class="fas fa-plus"></i> RAID</button>
@@ -803,11 +820,11 @@ $menu = require_once 'menu.php';
                     <i class="fas fa-bars"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="raidManager.showBlockDiagram()"><i class="fas fa-project-diagram"></i> Scheme</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info"></i> Legend</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="raidManager.showBlockDiagram()"><i class="fas fa-project-diagram ms-2"></i> <?php echo $lang1275; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info ms-2"></i> <?php echo $lang1276; ?></a></li>
                     
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" onclick="raidManager.refreshAll(true)"><i class="fas fa-sync-alt"></i> Refresh</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="raidManager.refreshAll(true)"><i class="fas fa-sync-alt ms-2"></i> <?php echo $lang1277; ?></a></li>
                 </ul>
             </div>	
 	</div>
@@ -820,7 +837,7 @@ $menu = require_once 'menu.php';
         <div class="raid-layout">
             <div class="devices-sidebar">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0"><i class="fas fa-hdd"></i> Available Devices</h5>
+                    <h5 class="mb-0"><i class="fas fa-hdd"></i> <?php echo $lang1278; ?></h5>
                 </div>
                 <hr class="my-2">
                 <div id="devicesList"></div>
@@ -831,12 +848,12 @@ $menu = require_once 'menu.php';
                     <div class="broken-header" onclick="raidManager.toggleBrokenAccordion()">
                         <div class="broken-title">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <h5>Problematic RAID Arrays</h5>
+                            <h5><?php echo $lang1279; ?></h5>
                             <span class="broken-badge" id="brokenCount">0</span>
                         </div>
                         <div class="btn-group" onclick="event.stopPropagation()">
                             <button class="btn broken-action-btn" onclick="raidManager.cleanupAllBrokenRaids()">
-                                <i class="fas fa-broom"></i> Clean Up All
+                                <i class="fas fa-broom"></i> <?php echo $lang1280; ?>
                             </button>
                         </div>
                         <i class="fas fa-chevron-down broken-chevron" id="brokenChevron"></i>
@@ -857,48 +874,48 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-info-circle"></i> RAID Legend</h5>
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> <?php echo $lang1281; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Color legend -->
                 <div class="legend-section mb-4">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-palette"></i> Color Indication</h6>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-palette"></i> <?php echo $lang1282; ?></h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #5856d6;"></div>
-                                <div><strong>RAID Array</strong><br><small class="text-muted">Disk group</small></div>
+                                <div><strong><?php echo $lang1283; ?></strong><br><small class="text-muted"><?php echo $lang1284; ?></small></div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #4A90D9;"></div>
-                                <div><strong>Disk/Partition</strong><br><small class="text-muted">Physical device</small></div>
+                                <div><strong><?php echo $lang1285; ?></strong><br><small class="text-muted"><?php echo $lang1286; ?></small></div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #9013FE;"></div>
-                                <div><strong>LVM PV</strong><br><small class="text-muted">Used in LVM</small></div>
+                                <div><strong><?php echo $lang1287; ?></strong><br><small class="text-muted"><?php echo $lang1288; ?></small></div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #ff9f0a;"></div>
-                                <div><strong>Spare Disk</strong><br><small class="text-muted">Hot spare</small></div>
+                                <div><strong><?php echo $lang1289; ?></strong><br><small class="text-muted"><?php echo $lang1290; ?></small></div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #ff3b30;"></div>
-                                <div><strong>Failed Disk</strong><br><small class="text-muted">Out of service</small></div>
+                                <div><strong><?php echo $lang1291; ?></strong><br><small class="text-muted"><?php echo $lang1292; ?></small></div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="legend-item-card">
                                 <div class="legend-color-box" style="background: #34c759;"></div>
-                                <div><strong>Available</strong><br><small class="text-muted">For RAID creation</small></div>
+                                <div><strong><?php echo $lang1293; ?></strong><br><small class="text-muted"><?php echo $lang1294; ?></small></div>
                             </div>
                         </div>
                     </div>
@@ -908,7 +925,7 @@ $menu = require_once 'menu.php';
 
                 <!-- RAID levels schema -->
                 <div class="legend-section">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-chart-simple"></i> RAID Levels</h6>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-chart-simple"></i> <?php echo $lang1295; ?></h6>
                     <div class="row g-3">
                         <!-- RAID 0 -->
                         <div class="col-md-6 col-lg-4">
@@ -916,19 +933,19 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon raid-level-0"><i class="fas fa-grip-lines"></i></span>
                                     <span class="fw-bold">RAID 0</span>
-                                    <span class="badge bg-secondary ms-auto">Stripe</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1296; ?></span>
                                 </div>
                                 <div class="raid-schema">
-                                    <div class="disk-schema"><i class="fas fa-hdd"></i> Disk 1</div>
+                                    <div class="disk-schema"><i class="fas fa-hdd"></i> <?php echo $lang1297; ?></div>
                                     <div class="schema-plus">+</div>
-                                    <div class="disk-schema"><i class="fas fa-hdd"></i> Disk 2</div>
+                                    <div class="disk-schema"><i class="fas fa-hdd"></i> <?php echo $lang1298; ?></div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-bolt"></i> Single array</div>
+                                    <div class="raid-result"><i class="fas fa-bolt"></i> <?php echo $lang1299; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-rocket text-success"></i> Max speed<br>
-                                    <i class="fas fa-skull text-danger"></i> No fault tolerance<br>
-                                    <i class="fas fa-hdd"></i> Min 2 disks
+                                    <i class="fas fa-rocket text-success"></i> <?php echo $lang1300; ?><br>
+                                    <i class="fas fa-skull text-danger"></i> <?php echo $lang1301; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1302; ?>
                                 </div>
                             </div>
                         </div>
@@ -939,19 +956,19 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon raid-level-1"><i class="fas fa-copy"></i></span>
                                     <span class="fw-bold">RAID 1</span>
-                                    <span class="badge bg-secondary ms-auto">Mirror</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1303; ?></span>
                                 </div>
                                 <div class="raid-schema">
-                                    <div class="disk-schema"><i class="fas fa-hdd"></i> Disk 1</div>
+                                    <div class="disk-schema"><i class="fas fa-hdd"></i> <?php echo $lang1297; ?></div>
                                     <div class="schema-equal">⇄</div>
-                                    <div class="disk-schema"><i class="fas fa-hdd"></i> Disk 2</div>
+                                    <div class="disk-schema"><i class="fas fa-hdd"></i> <?php echo $lang1298; ?></div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-clone"></i> Mirror</div>
+                                    <div class="raid-result"><i class="fas fa-clone"></i> <?php echo $lang1303; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-shield-alt text-success"></i> Fault tolerance<br>
-                                    <i class="fas fa-balance-scale"></i> 50% capacity<br>
-                                    <i class="fas fa-hdd"></i> Min 2 disks
+                                    <i class="fas fa-shield-alt text-success"></i> <?php echo $lang1304; ?><br>
+                                    <i class="fas fa-balance-scale"></i> <?php echo $lang1305; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1306; ?>
                                 </div>
                             </div>
                         </div>
@@ -962,7 +979,7 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon raid-level-5"><i class="fas fa-chart-line"></i></span>
                                     <span class="fw-bold">RAID 5</span>
-                                    <span class="badge bg-secondary ms-auto">Parity</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1307; ?></span>
                                 </div>
                                 <div class="raid-schema">
                                     <div class="d-flex gap-1 justify-content-center">
@@ -972,12 +989,12 @@ $menu = require_once 'menu.php';
                                         <div class="disk-schema-small parity"><i class="fas fa-calculator"></i>P</div>
                                     </div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-table"></i> Data + Parity</div>
+                                    <div class="raid-result"><i class="fas fa-table"></i> <?php echo $lang1308; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-chart-line text-success"></i> Speed/Reliability balance<br>
-                                    <i class="fas fa-database"></i> Lose 1 disk<br>
-                                    <i class="fas fa-hdd"></i> Min 3 disks
+                                    <i class="fas fa-chart-line text-success"></i> <?php echo $lang1309; ?><br>
+                                    <i class="fas fa-database"></i> <?php echo $lang1310; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1311; ?>
                                 </div>
                             </div>
                         </div>
@@ -988,7 +1005,7 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon raid-level-6"><i class="fas fa-chart-simple"></i></span>
                                     <span class="fw-bold">RAID 6</span>
-                                    <span class="badge bg-secondary ms-auto">Double Parity</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1312; ?></span>
                                 </div>
                                 <div class="raid-schema">
                                     <div class="d-flex gap-1 justify-content-center">
@@ -998,12 +1015,12 @@ $menu = require_once 'menu.php';
                                         <div class="disk-schema-small parity"><i class="fas fa-calculator"></i>Q</div>
                                     </div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-table"></i> Data + 2x Parity</div>
+                                    <div class="raid-result"><i class="fas fa-table"></i> <?php echo $lang1313; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-shield-alt text-success"></i> Lose 2 disks<br>
-                                    <i class="fas fa-microchip"></i> High reliability<br>
-                                    <i class="fas fa-hdd"></i> Min 4 disks
+                                    <i class="fas fa-shield-alt text-success"></i> <?php echo $lang1314; ?><br>
+                                    <i class="fas fa-microchip"></i> <?php echo $lang1315; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1316; ?>
                                 </div>
                             </div>
                         </div>
@@ -1014,7 +1031,7 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon raid-level-10"><i class="fas fa-layer-group"></i></span>
                                     <span class="fw-bold">RAID 10</span>
-                                    <span class="badge bg-secondary ms-auto">Striped Mirrors</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1317; ?></span>
                                 </div>
                                 <div class="raid-schema">
                                     <div class="raid10-schema">
@@ -1023,12 +1040,12 @@ $menu = require_once 'menu.php';
                                         <div class="mirror-group">[<i class="fas fa-hdd"></i>3 ⇄ <i class="fas fa-hdd"></i>4]</div>
                                     </div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-bolt"></i> Stripe + Mirror</div>
+                                    <div class="raid-result"><i class="fas fa-bolt"></i> <?php echo $lang1318; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-tachometer-alt text-success"></i> Speed + Protection<br>
-                                    <i class="fas fa-chart-pie"></i> 50% capacity<br>
-                                    <i class="fas fa-hdd"></i> Min 4 disks
+                                    <i class="fas fa-tachometer-alt text-success"></i> <?php echo $lang1319; ?><br>
+                                    <i class="fas fa-chart-pie"></i> <?php echo $lang1320; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1321; ?>
                                 </div>
                             </div>
                         </div>
@@ -1039,7 +1056,7 @@ $menu = require_once 'menu.php';
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <span class="raid-legend-icon" style="background: #8e8e93;"><i class="fas fa-grip-vertical"></i></span>
                                     <span class="fw-bold">LINEAR / JBOD</span>
-                                    <span class="badge bg-secondary ms-auto">Concatenation</span>
+                                    <span class="badge bg-secondary ms-auto"><?php echo $lang1322; ?></span>
                                 </div>
                                 <div class="raid-schema">
                                     <div class="d-flex gap-1 justify-content-center">
@@ -1050,12 +1067,12 @@ $menu = require_once 'menu.php';
                                         <div class="disk-schema-small"><i class="fas fa-hdd"></i>3</div>
                                     </div>
                                     <div class="schema-arrow">↓</div>
-                                    <div class="raid-result"><i class="fas fa-database"></i> Disk concatenation</div>
+                                    <div class="raid-result"><i class="fas fa-database"></i> <?php echo $lang1323; ?></div>
                                 </div>
                                 <div class="small text-muted mt-2">
-                                    <i class="fas fa-expand-alt"></i> Max capacity<br>
-                                    <i class="fas fa-skull text-danger"></i> No protection<br>
-                                    <i class="fas fa-hdd"></i> 2+ disks
+                                    <i class="fas fa-expand-alt"></i> <?php echo $lang1324; ?><br>
+                                    <i class="fas fa-skull text-danger"></i> <?php echo $lang1325; ?><br>
+                                    <i class="fas fa-hdd"></i> <?php echo $lang1326; ?>
                                 </div>
                             </div>
                         </div>
@@ -1066,37 +1083,37 @@ $menu = require_once 'menu.php';
 
                 <!-- RAID statuses -->
                 <div class="legend-section">
-                    <h6 class="fw-bold mb-2"><i class="fas fa-heartbeat"></i> RAID Statuses</h6>
+                    <h6 class="fw-bold mb-2"><i class="fas fa-heartbeat"></i> <?php echo $lang1327; ?></h6>
                     <div class="row g-3">
                         <div class="col-md-3">
                             <div class="status-legend">
                                 <span class="badge bg-success"><i class="fas fa-check-circle"></i> Clean</span>
-                                <span class="small ms-2">Normal</span>
+                                <span class="small ms-2"><?php echo $lang1329; ?></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="status-legend">
                                 <span class="badge bg-warning"><i class="fas fa-exclamation-triangle"></i> AUTO-READ-ONLY</span>
-                                <span class="small ms-2">Awaiting writes</span>
+                                <span class="small ms-2"><?php echo $lang1331; ?></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="status-legend">
                                 <span class="badge bg-danger blinking"><i class="fas fa-fire"></i> DEGRADED</span>
-                                <span class="small ms-2">Degraded</span>
+                                <span class="small ms-2"><?php echo $lang1328; ?></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="status-legend">
                                 <span class="badge bg-secondary"><i class="fas fa-pause-circle"></i> Stopped</span>
-                                <span class="small ms-2">Inactive</span>
+                                <span class="small ms-2"><?php echo $lang1330; ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-apple" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-apple" data-bs-dismiss="modal"><?php echo $lang1332; ?></button>
             </div>
         </div>
     </div>
@@ -1107,17 +1124,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-project-diagram"></i> Disks & RAID Block Diagram</h5>
+                <h5 class="modal-title"><i class="fas fa-project-diagram"></i> <?php echo $lang1333; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="max-height: 80vh; overflow-y: auto; background: #0f0f1a;">
                 <div id="blockDiagramContent" class="diagram-container">
-                    <div class="text-center p-4 text-white">Loading diagram...</div>
+                    <div class="text-center p-4 text-white"><?php echo $lang1334; ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple" onclick="raidManager.refreshBlockDiagram()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1335; ?></button>
+                <button class="btn btn-apple" onclick="raidManager.refreshBlockDiagram()"><i class="fas fa-sync-alt"></i> <?php echo $lang1336; ?></button>
             </div>
         </div>
     </div>
@@ -1127,18 +1144,18 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><span id="raidInfoTitle">RAID Information</span></h5>
+                <h5 class="modal-title"><span id="raidInfoTitle"><?php echo $lang1337; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="raidInfoContent">
-                <div class="text-center p-4">Loading...</div>
+                <div class="text-center p-4"><?php echo $lang1338; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple-warning" id="checkRaidBtn">Check</button>
-                <button class="btn btn-apple-warning" id="repairRaidBtn">Repair</button>
-                <button class="btn btn-apple-danger" id="stopRaidBtn">Stop</button>
-                <button class="btn btn-apple" id="startRaidBtn">Start</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1339; ?></button>
+                <button class="btn btn-apple-warning" id="checkRaidBtn"><?php echo $lang1340; ?></button>
+                <button class="btn btn-apple-warning" id="repairRaidBtn"><?php echo $lang1341; ?></button>
+                <button class="btn btn-apple-danger" id="stopRaidBtn"><?php echo $lang1342; ?></button>
+                <button class="btn btn-apple" id="startRaidBtn"><?php echo $lang1343; ?></button>
             </div>
         </div>
     </div>
@@ -1148,12 +1165,12 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-hdd"></i> <span id="deviceInfoTitle">Device Information</span></h5>
+                <h5 class="modal-title"><i class="fas fa-hdd"></i> <span id="deviceInfoTitle"><?php echo $lang1344; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="deviceInfoContent"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1345; ?></button>
             </div>
         </div>
     </div>
@@ -1163,37 +1180,37 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-server"></i> Create RAID Array</h5>
+                <h5 class="modal-title"><i class="fas fa-server"></i> <?php echo $lang1346; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning mb-3">
                     <i class="fas fa-exclamation-triangle"></i> 
-                    <strong>Warning!</strong> Data on selected devices will be destroyed!
+                    <strong><?php echo $lang1347; ?></strong> <?php echo $lang1348; ?>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label">RAID Array Name:</label>
+                        <label class="form-label"><?php echo $lang1349; ?></label>
                         <input type="text" class="form-control mb-3" id="raidName" placeholder="md0">
-                        <div class="text-muted small">Use md0, md1, md2, etc.</div>
+                        <div class="text-muted small"><?php echo $lang1350; ?> md0, md1, md2, etc.</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">RAID Level:</label>
+                        <label class="form-label"><?php echo $lang1351; ?></label>
                         <select class="form-select mb-3" id="raidLevel">
-                            <option value="0">RAID 0 (Stripe) - speed, minimum 2 disks</option>
-                            <option value="1" selected>RAID 1 (Mirror) - fault tolerance, minimum 2 disks</option>
-                            <option value="5">RAID 5 - balance, minimum 3 disks</option>
-                            <option value="6">RAID 6 - 2 disk fault tolerance, minimum 4 disks</option>
-                            <option value="10">RAID 10 - mirror+stripe, minimum 4 disks</option>
-                            <option value="linear">Linear (JBOD) - disk concatenation</option>
+                            <option value="0">RAID 0 <?php echo $lang1352; ?></option>
+                            <option value="1" selected>RAID 1 <?php echo $lang1353; ?></option>
+                            <option value="5">RAID 5 - <?php echo $lang1354; ?></option>
+                            <option value="6">RAID 6 - <?php echo $lang1355; ?></option>
+                            <option value="10">RAID 10 - <?php echo $lang1356; ?></option>
+                            <option value="linear">Linear (JBOD) - <?php echo $lang1357; ?></option>
                         </select>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label">Chunk size (optional):</label>
+                        <label class="form-label"><?php echo $lang1358; ?></label>
                         <select class="form-select mb-3" id="raidChunk">
-                            <option value="">Default (512K)</option>
+                            <option value=""><?php echo $lang1359; ?> (512K)</option>
                             <option value="64">64K</option>
                             <option value="128">128K</option>
                             <option value="256">256K</option>
@@ -1202,17 +1219,17 @@ $menu = require_once 'menu.php';
                         </select>
                     </div>
                 </div>
-                <label class="form-label">Select devices for RAID:</label>
+                <label class="form-label"><?php echo $lang1360; ?></label>
                 <div id="raidDevicesList" class="border rounded p-2 mb-3" style="max-height: 250px; overflow-y: auto;"></div>
                 <div id="raidSpareBlock">
-                    <label class="form-label">Spare disks (hot spares):</label>
+                    <label class="form-label"><?php echo $lang1361; ?></label>
                     <div id="raidSpareList" class="border rounded p-2" style="max-height: 150px; overflow-y: auto;"></div>
-                    <div class="text-muted small mt-1">Spare disks will automatically replace failed disks in RAID 1, 5, 6, 10</div>
+                    <div class="text-muted small mt-1"><?php echo $lang1362; ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple-danger" onclick="raidManager.createRaid()">Create RAID</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1363; ?></button>
+                <button class="btn btn-apple-danger" onclick="raidManager.createRaid()"><?php echo $lang1364; ?></button>
             </div>
         </div>
     </div>
@@ -1222,27 +1239,29 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus"></i> Add Device to RAID</h5>
+                <h5 class="modal-title"><i class="fas fa-plus"></i> <?php echo $lang1365; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="addDeviceRaidName">
-                <label class="form-label">Select device:</label>
+                <label class="form-label"><?php echo $lang1366; ?></label>
                 <select class="form-select" id="addDeviceSelect"></select>
                 <div class="alert alert-info mt-3 small">
-                    <i class="fas fa-info-circle"></i> Device will be added as an active disk or spare
+                    <i class="fas fa-info-circle"></i> <?php echo $lang1367; ?>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="raidManager.addDeviceToRaid()">Add</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1368; ?></button>
+                <button class="btn btn-apple" onclick="raidManager.addDeviceToRaid()"><?php echo $lang1369; ?></button>
             </div>
         </div>
     </div>
 </div>
 
+<script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script>
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
+
 // ==================== RAID Manager Class ====================
 class RAIDManager {
     constructor() {
@@ -1304,7 +1323,7 @@ class RAIDManager {
 			return await res.json();
 		} catch (e) {
 			if (e.name === 'AbortError') {
-				return { success: false, error: 'Request timeout' };
+				return { success: false, error: '<?php echo $lang1370; ?>' };
 			}
 			return { success: false, error: e.message };
 		}
@@ -1357,10 +1376,10 @@ class RAIDManager {
                 this.updateRaidIncremental(res.raid, []);
                 await this.getBrokenRaids();
             } else {
-                this.showToast(res.error || 'Load error', 'error');
+                this.showToast(res.error || '<?php echo $lang1371; ?>', 'error');
             }
         } catch (e) {
-            this.showToast('Connection error: ' + e.message, 'error');
+            this.showToast('<?php echo $lang1372; ?>' + e.message, 'error');
         } finally {
             this.isRefreshing = false;
             if (showPreloader) {
@@ -1406,9 +1425,9 @@ class RAIDManager {
 			container.innerHTML = `
 				<div class="raid-card text-center" style="grid-column: 1/-1;">
 					<i class="fas fa-server fa-3x text-muted mb-3"></i>
-					<h5>No RAID Arrays</h5>
-					<p class="text-muted">Create a RAID array from available devices</p>
-					<button class="btn btn-apple" onclick="raidManager.showCreateRaid()"><i class="fas fa-plus"></i> Create RAID</button>
+					<h5><?php echo $lang1373; ?></h5>
+					<p class="text-muted"><?php echo $lang1374; ?></p>
+					<button class="btn btn-apple" onclick="raidManager.showCreateRaid()"><i class="fas fa-plus"></i> <?php echo $lang1375; ?></button>
 				</div>
 			`;
 			this.raidElements.clear();
@@ -1430,13 +1449,13 @@ class RAIDManager {
     
     getDiskStateBadge(state) {
         if (state === 'active' || state === 'in_sync') {
-            return '<span class="disk-status-badge disk-status-active"><i class="fas fa-check-circle"></i> Active</span>';
+            return '<span class="disk-status-badge disk-status-active"><i class="fas fa-check-circle"></i> <?php echo $lang1376; ?></span>';
         } else if (state === 'spare' || state === 'spare rebuilding') {
-            return '<span class="disk-status-badge disk-status-spare"><i class="fas fa-clock"></i> Spare</span>';
+            return '<span class="disk-status-badge disk-status-spare"><i class="fas fa-clock"></i> <?php echo $lang1377; ?></span>';
         } else if (state === 'faulty' || state === 'failed') {
-            return '<span class="disk-status-badge disk-status-failed"><i class="fas fa-exclamation-triangle"></i> Failed</span>';
+            return '<span class="disk-status-badge disk-status-failed"><i class="fas fa-exclamation-triangle"></i> <?php echo $lang1378; ?></span>';
         } else if (state === 'removed') {
-            return '<span class="disk-status-badge disk-status-failed"><i class="fas fa-minus-circle"></i> Removed</span>';
+            return '<span class="disk-status-badge disk-status-failed"><i class="fas fa-minus-circle"></i> <?php echo $lang1379; ?></span>';
         }
         return `<span class="disk-status-badge">${state}</span>`;
     }
@@ -1453,27 +1472,27 @@ class RAIDManager {
     
     if (isFaulty) {
         criticalClass = 'critical';
-        customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-skull-crosswalk"></i> FAULTY</span>';
+        customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-skull-crosswalk"></i> <?php echo $lang1380; ?></span>';
     } 
     else if (isDegraded) {
         criticalClass = 'critical';
         if (isAutoReadOnly) {
-            customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-skull-crosswalk"></i> DEGRADED + READ-ONLY</span>';
+            customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-skull-crosswalk"></i> <?php echo $lang1381; ?></span>';
         } else {
-            customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-exclamation-triangle"></i> DEGRADED</span>';
+            customStatusBadge = '<span class="raid-status-badge critical"><i class="fas fa-exclamation-triangle"></i> <?php echo $lang1382; ?></span>';
         }
     }
     else if (isAutoReadOnly) {
         criticalClass = 'warning';
-        customStatusBadge = '<span class="raid-status-badge degraded"><i class="fas fa-lock"></i> READ-ONLY</span>';
+        customStatusBadge = '<span class="raid-status-badge degraded"><i class="fas fa-lock"></i> <?php echo $lang1383; ?></span>';
     }
     else if (isInactive) {
         criticalClass = 'warning';
-        customStatusBadge = '<span class="raid-status-badge degraded"><i class="fas fa-stop-circle"></i> INACTIVE</span>';
+        customStatusBadge = '<span class="raid-status-badge degraded"><i class="fas fa-stop-circle"></i> <?php echo $lang1384; ?></span>';
     }
     else {
         criticalClass = '';
-        customStatusBadge = '<span class="raid-status-badge active"><i class="fas fa-check-circle"></i> ACTIVE</span>';
+        customStatusBadge = '<span class="raid-status-badge active"><i class="fas fa-check-circle"></i> <?php echo $lang1385; ?></span>';
     }
     
     element.classList.remove('critical', 'warning');
@@ -1508,13 +1527,13 @@ class RAIDManager {
     
     const lvmWarning = raid.in_lvm ? 
         `<div class="alert-lvm mt-2 mb-2">
-            <i class="fas fa-cubes"></i> <strong>Warning:</strong> This RAID is used in LVM as a Physical Volume (VG: ${raid.lvm_vg || 'unknown'})
-            <br><small>To delete the RAID, you must first remove it from LVM via <a href="lvm_manager.php" target="_blank">LVM Manager</a></small>
+            <i class="fas fa-cubes"></i> <strong><?php echo $lang1386; ?></strong> <?php echo $lang1387; ?> (VG: ${raid.lvm_vg || 'unknown'})
+            <br><small><?php echo $lang1388; ?> <a href="lvm_manager.php" target="_blank"><?php echo $lang1389; ?></a></small>
         </div>` : '';
     const partitionWarning = raid.has_partitions ? 
         `<div class="alert alert-warning mt-2 mb-2">
-            <i class="fas fa-layer-group"></i> <strong>Warning:</strong> This RAID device has partitions!
-            <br><small>When deleting the RAID, partitions will be automatically removed</small>
+            <i class="fas fa-layer-group"></i> <strong><?php echo $lang1390; ?></strong> <?php echo $lang1391; ?>
+            <br><small><?php echo $lang1392; ?></small>
         </div>` : '';
     
     let devicesHtml = '';
@@ -1531,7 +1550,7 @@ class RAIDManager {
             devicesHtml += `<span class="device-badge ${spareClass}">${dev.name} ${diskState}${dev.spare ? ' (spare)' : ''}</span>`;
         }
     } else {
-        devicesHtml = '<span class="text-muted">No information about devices</span>';
+        devicesHtml = '<span class="text-muted"><?php echo $lang1393; ?></span>';
     }
     
     let activeDisksText = raid.working_disks || raid.devices?.length || '?';
@@ -1545,30 +1564,30 @@ class RAIDManager {
                 <span class="raid-level-badge ${levelClass} ms-2">${raid.level}</span>
                 ${finalStatusBadge}
                 ${hasSync ? this.getSyncBadge(syncAction, syncPercent) : ''}
-                ${!isActive ? '<span class="badge bg-secondary ms-2"><i class="fas fa-pause-circle"></i> Stopped</span>' : ''}
+                ${!isActive ? '<span class="badge bg-secondary ms-2"><i class="fas fa-pause-circle"></i> <?php echo $lang1394; ?></span>' : ''}
             </div>
             <div class="btn-group" onclick="event.stopPropagation()">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-cog"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="raidManager.showRaidInfo('${raid.name}'); return false;"><i class="fas fa-info-circle me-2"></i>Information</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="raidManager.showAddDevice('${raid.name}'); return false;"><i class="fas fa-plus me-2"></i>Add Disk</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="raidManager.showRaidInfo('${raid.name}'); return false;"><i class="fas fa-info-circle me-2"></i><?php echo $lang1395; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="raidManager.showAddDevice('${raid.name}'); return false;"><i class="fas fa-plus me-2"></i><?php echo $lang1396; ?></a></li>
                     ${isAutoReadOnly && !isDegraded ? 
-                        `<li><a class="dropdown-item" href="#" onclick="raidManager.activateRaid('${raid.name}'); return false;"><i class="fas fa-play-circle me-2"></i>Activate (read-write)</a></li>` : ''
+                        `<li><a class="dropdown-item" href="#" onclick="raidManager.activateRaid('${raid.name}'); return false;"><i class="fas fa-play-circle me-2"></i><?php echo $lang1397; ?></a></li>` : ''
                     }
                     <li><hr class="dropdown-divider"></li>
                     ${isActive ? 
-                        `<li><a class="dropdown-item" href="#" onclick="raidManager.stopRaid('${raid.name}'); return false;"><i class="fas fa-stop me-2"></i>Stop</a></li>` :
-                        `<li><a class="dropdown-item" href="#" onclick="raidManager.startRaid('${raid.name}'); return false;"><i class="fas fa-play me-2"></i>Start</a></li>`
+                        `<li><a class="dropdown-item" href="#" onclick="raidManager.stopRaid('${raid.name}'); return false;"><i class="fas fa-stop me-2"></i><?php echo $lang1398; ?></a></li>` :
+                        `<li><a class="dropdown-item" href="#" onclick="raidManager.startRaid('${raid.name}'); return false;"><i class="fas fa-play me-2"></i><?php echo $lang1399; ?></a></li>`
                     }
                     ${supportsSync ? `
-                        <li><a class="dropdown-item" href="#" onclick="raidManager.checkRaid('${raid.name}')"><i class="fas fa-stethoscope me-2"></i>Check</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="raidManager.repairRaid('${raid.name}')"><i class="fas fa-wrench me-2"></i>Repair</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="raidManager.checkRaid('${raid.name}')"><i class="fas fa-stethoscope me-2"></i><?php echo $lang1400; ?></a></li>
+                        <li><a class="dropdown-item" href="#" onclick="raidManager.repairRaid('${raid.name}')"><i class="fas fa-wrench me-2"></i><?php echo $lang1401; ?></a></li>
                     ` : ''}
                     ${!raid.in_lvm ? 
-                        `<li><a class="dropdown-item text-danger" href="#" onclick="raidManager.deleteRaid('${raid.name}'); return false;"><i class="fas fa-trash me-2"></i>Delete</a></li>` :
-                        `<li><a class="dropdown-item text-muted disabled" href="#"><i class="fas fa-trash me-2"></i>Delete (in LVM)</a></li>`
+                        `<li><a class="dropdown-item text-danger" href="#" onclick="raidManager.deleteRaid('${raid.name}'); return false;"><i class="fas fa-trash me-2"></i><?php echo $lang1402; ?></a></li>` :
+                        `<li><a class="dropdown-item text-muted disabled" href="#"><i class="fas fa-trash me-2"></i><?php echo $lang1403; ?></a></li>`
                     }
                 </ul>
             </div>
@@ -1577,23 +1596,23 @@ class RAIDManager {
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-2">
-                    <div class="small text-muted">Size</div>
+                    <div class="small text-muted"><?php echo $lang1404; ?></div>
                     <strong>${raid.size || 'N/A'}</strong>
                 </div>
                 <div class="mb-2">
-                    <div class="small text-muted">Devices</div>
+                    <div class="small text-muted"><?php echo $lang1405; ?></div>
                     <div>${devicesHtml}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-2">
-                    <div class="small text-muted">Status</div>
+                    <div class="small text-muted"><?php echo $lang1406; ?></div>
                     <div>${raid.health_state || raid.status || 'active'}${isAutoReadOnly ? ' (read-only)' : ''}</div>
                 </div>
                 <div class="mb-2">
-                    <div class="small text-muted">Disks</div>
-                    <div>Active: ${activeDisksText} / Total: ${totalDisksText}</div>
-                    ${raid.failed_disks > 0 ? `<div class="text-danger">Failed: ${raid.failed_disks}</div>` : ''}
+                    <div class="small text-muted"><?php echo $lang1407; ?></div>
+                    <div><?php echo $lang1408; ?> ${activeDisksText} / <?php echo $lang1409; ?> ${totalDisksText}</div>
+                    ${raid.failed_disks > 0 ? `<div class="text-danger"><?php echo $lang1410; ?> ${raid.failed_disks}</div>` : ''}
                 </div>
             </div>
         </div>
@@ -1606,8 +1625,8 @@ class RAIDManager {
             <div class="raid-progress">
                 <div class="raid-progress-fill ${progressClass}" style="width: ${syncPercent}%"></div>
             </div>
-            ${raid.sync_time_left ? `<div class="small text-muted">Time left: ${raid.sync_time_left}</div>` : ''}
-            ${raid.sync_speed ? `<div class="small text-muted">Speed: ${raid.sync_speed}</div>` : ''}
+            ${raid.sync_time_left ? `<div class="small text-muted"><?php echo $lang1411; ?> ${raid.sync_time_left}</div>` : ''}
+            ${raid.sync_speed ? `<div class="small text-muted"><?php echo $lang1412; ?> ${raid.sync_speed}</div>` : ''}
         </div>
         ` : ''}
         <div class="mt-3" onclick="event.stopPropagation()">
@@ -1660,28 +1679,28 @@ class RAIDManager {
         let extraClass = '';
         if (device.is_lvm) {
             extraClass = 'used-in-lvm';
-            statusText = '<i class="fas fa-cubes"></i> Used in LVM';
+            statusText = '<i class="fas fa-cubes"></i> <?php echo $lang1413; ?>';
             statusColor = 'text-info';
         } else if (device.is_raid) {
             extraClass = 'used-in-raid';
-            statusText = '<i class="fas fa-server"></i> Used in RAID';
+            statusText = '<i class="fas fa-server"></i> <?php echo $lang1414; ?>';
             statusColor = 'text-primary';
         } else if (device.is_raid_array) {
             extraClass = 'used-in-raid';
-            statusText = '<i class="fas fa-server"></i> RAID array';
+            statusText = '<i class="fas fa-server"></i> <?php echo $lang1415; ?>';
             statusColor = 'text-primary';
         } else if (device.available) {
             extraClass = 'available';
-            statusText = '<i class="fas fa-check-circle"></i> Available for RAID';
+            statusText = '<i class="fas fa-check-circle"></i> <?php echo $lang1416; ?>';
             statusColor = 'text-success';
         } else if (device.is_mounted) {
-            statusText = '<i class="fas fa-mount"></i> Mounted';
+            statusText = '<i class="fas fa-mount"></i> <?php echo $lang1417; ?>';
             statusColor = 'text-danger';
         } else if (device.has_filesystem) {
-            statusText = '<i class="fas fa-folder"></i> Has filesystem';
+            statusText = '<i class="fas fa-folder"></i> <?php echo $lang1418; ?>';
             statusColor = 'text-warning';
         } else {
-            statusText = '<i class="fas fa-times-circle"></i> Unavailable';
+            statusText = '<i class="fas fa-times-circle"></i> <?php echo $lang1419; ?>';
             statusColor = 'text-danger';
         }
         element.className = `device-item ${extraClass}`;
@@ -1689,9 +1708,9 @@ class RAIDManager {
         element.innerHTML = `
             <div class="device-name"><i class="fas fa-hdd"></i> ${device.name}</div>
             <div class="device-size">${device.size}</div>
-            <div class="small">Type: ${device.type === 'disk' ? 'Disk' : (device.type === 'partition' ? 'Partition' : device.type)}</div>
+            <div class="small"><?php echo $lang1420; ?> ${device.type === 'disk' ? 'Disk' : (device.type === 'partition' ? 'Partition' : device.type)}</div>
             <div class="device-status ${statusColor}">${statusText}</div>
-            ${device.parent_disk ? `<div class="small text-muted">Parent: ${device.parent_disk}</div>` : ''}
+            ${device.parent_disk ? `<div class="small text-muted"><?php echo $lang1421; ?> ${device.parent_disk}</div>` : ''}
         `;
     }
     
@@ -1729,8 +1748,8 @@ class RAIDManager {
                     <div class="broken-disk-item" onclick="event.stopPropagation(); raidManager.cleanDiskFromBroken('${disk.name}', '${raid.name}')">
                         <i class="fas fa-hdd"></i>
                         <strong>${disk.name}</strong>
-                        ${disk.spare ? '<span class="badge bg-warning ms-1" style="font-size: 10px;">spare</span>' : ''}
-                        <small class="text-muted ms-1">slot ${disk.slot}</small>
+                        ${disk.spare ? '<span class="badge bg-warning ms-1" style="font-size: 10px;"><?php echo $lang1422; ?></span>' : ''}
+                        <small class="text-muted ms-1"><?php echo $lang1423; ?> ${disk.slot}</small>
                     </div>
                 `;
             }
@@ -1740,21 +1759,21 @@ class RAIDManager {
                         <div>
                             <i class="fas fa-exclamation-triangle text-danger fa-lg"></i>
                             <strong class="text-danger ms-2">${raid.name}</strong>
-                            <span class="badge bg-danger ms-2">INACTIVE</span>
+                            <span class="badge bg-danger ms-2"><?php echo $lang1424; ?></span>
                         </div>
                         <button class="btn broken-action-btn" onclick="event.stopPropagation(); raidManager.cleanBrokenRaid('${raid.name}')" title="Clean entire RAID">
-                            <i class="fas fa-trash-alt"></i> Clean RAID
+                            <i class="fas fa-trash-alt"></i> <?php echo $lang1425; ?>
                         </button>
                     </div>
                     <div class="mb-2">
-                        <small class="text-muted">Size: ${raid.size}</small>
+                        <small class="text-muted"><?php echo $lang1426; ?> ${raid.size}</small>
                     </div>
                     <div class="mb-2">
-                        <strong>Disks in array (${raid.devices.length}):</strong>
+                        <strong><?php echo $lang1427; ?> (${raid.devices.length}):</strong>
                         <div class="broken-disk-list mt-2">${devicesHtml}</div>
                     </div>
                     <div class="alert alert-warning small mt-2 mb-0">
-                        <i class="fas fa-exclamation-triangle"></i> Array is inactive. It is recommended to clean the disks.
+                        <i class="fas fa-exclamation-triangle"></i> <?php echo $lang1428; ?>
                     </div>
                 </div>
             `;
@@ -1764,60 +1783,60 @@ class RAIDManager {
     }
     
     async cleanDiskFromBroken(diskName, raidName) {
-        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> CLEAN DISK /dev/${diskName}\n\nDisk belongs to problematic array: ${raidName}\n\n3 cleaning stages will be performed:\n1. Clear RAID superblocks\n2. Clear filesystems\n3. Write zeros (50MB)\n\nWARNING: All data on the disk will be PERMANENTLY DESTROYED!`)) return;
+        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1429; ?> /dev/${diskName}\n\n<?php echo $lang1430; ?> ${raidName}\n\n3 <?php echo $lang1431; ?>\n1. <?php echo $lang1432; ?>\n2. <?php echo $lang1433; ?>\n3. <?php echo $lang1434; ?> (50MB)\n\n<?php echo $lang1435; ?>`)) return;
         this.showLoader();
-        this.showToast(`Starting disk cleaning ${diskName}...`, 'info');
+        this.showToast(`<?php echo $lang1442; ?> ${diskName}...`, 'info');
         const res = await this.apiCall('force_clean_disk', { disk: diskName }, 120000);
         this.hideLoader();
         if (res.success) {
-            this.showToast(`<i class="fas fa-check-circle"></i> Disk ${diskName} successfully cleaned`, 'success');
+            this.showToast(`<i class="fas fa-check-circle"></i> <?php echo $lang1436; ?> ${diskName} <?php echo $lang1437; ?>`, 'success');
             await this.refreshAll(true);
             await this.getBrokenRaids();
         } else {
-            this.showToast(`<i class="fas fa-times-circle"></i> Error cleaning ${diskName}: ${res.error}`, 'error');
+            this.showToast(`<i class="fas fa-times-circle"></i> <?php echo $lang1438; ?> ${diskName}: ${res.error}`, 'error');
         }
     }
     
     async cleanBrokenRaid(raidName) {
-        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> CLEAN ENTIRE RAID ARRAY ${raidName}\n\nAll disks in this array will be cleaned.\n\nThis action is IRREVERSIBLE! All data will be destroyed.`)) return;
+        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1439; ?> ${raidName}\n\n<?php echo $lang1440; ?>\n\n<?php echo $lang1441; ?>`)) return;
         this.showLoader();
-        this.showToast(`Cleaning array ${raidName}...`, 'info');
+        this.showToast(`<?php echo $lang1443; ?> ${raidName}...`, 'info');
         const res = await this.apiCall('get_broken_raids', {}, 5000);
         if (res.success && res.broken_raids) {
             const raid = res.broken_raids.find(r => r.name === raidName);
             if (raid && raid.devices.length > 0) {
                 let cleaned = 0, failed = 0;
                 for (const disk of raid.devices) {
-                    this.showToast(`Cleaning disk ${disk.name}...`, 'info');
+                    this.showToast(`<?php echo $lang1444; ?> ${disk.name}...`, 'info');
                     const cleanRes = await this.apiCall('force_clean_disk', { disk: disk.name }, 120000);
                     if (cleanRes.success) cleaned++; else failed++;
                     await new Promise(r => setTimeout(r, 1000));
                 }
                 await this.apiCall('clear_md_array', { name: raidName }, 30000);
                 this.hideLoader();
-                this.showToast(`<i class="fas fa-check-circle"></i> Disks cleaned: ${cleaned}, errors: ${failed}`, cleaned > 0 ? 'success' : 'error');
+                this.showToast(`<i class="fas fa-check-circle"></i> <?php echo $lang1445; ?> ${cleaned}, errors: ${failed}`, cleaned > 0 ? 'success' : 'error');
                 await this.refreshAll(true);
                 await this.getBrokenRaids();
             } else {
                 this.hideLoader();
-                this.showToast('Failed to find disks in array', 'error');
+                this.showToast('<?php echo $lang1446; ?>', 'error');
             }
         } else {
             this.hideLoader();
-            this.showToast('Error getting array information', 'error');
+            this.showToast('<?php echo $lang1447; ?>', 'error');
         }
     }
     
     async cleanupAllBrokenRaids() {
-        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> FULL CLEANUP OF ALL PROBLEMATIC RAIDS\n\nAll problematic RAID arrays and all disks in them will be cleaned.\n\nThis action is IRREVERSIBLE! All data will be destroyed.`)) return;
+        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1448; ?>\n\n<?php echo $lang1449; ?>\n\n<?php echo $lang1450; ?>`)) return;
         this.showLoader();
-        this.showToast('Starting mass cleanup...', 'info');
+        this.showToast('<?php echo $lang1451; ?>', 'info');
         const res = await this.apiCall('get_broken_raids', {}, 5000);
         if (res.success && res.broken_raids && res.broken_raids.length > 0) {
             let totalCleaned = 0;
             let totalRaids = res.broken_raids.length;
             for (const raid of res.broken_raids) {
-                this.showToast(`Cleaning array ${raid.name} (${raid.devices.length} disks)...`, 'info');
+                this.showToast(`<?php echo $lang1452; ?> ${raid.name} (${raid.devices.length} <?php echo $lang1453; ?>)...`, 'info');
                 for (const disk of raid.devices) {
                     const cleanRes = await this.apiCall('force_clean_disk', { disk: disk.name }, 120000);
                     if (cleanRes.success) totalCleaned++;
@@ -1826,12 +1845,12 @@ class RAIDManager {
                 await this.apiCall('clear_md_array', { name: raid.name }, 30000);
             }
             this.hideLoader();
-            this.showToast(`<i class="fas fa-check-circle"></i> Cleaned: ${totalCleaned} disks in ${totalRaids} arrays`, 'success');
+            this.showToast(`<i class="fas fa-check-circle"></i> <?php echo $lang1454; ?> ${totalCleaned} <?php echo $lang1455; ?> ${totalRaids} <?php echo $lang1456; ?>`, 'success');
             await this.refreshAll(true);
             await this.getBrokenRaids();
         } else {
             this.hideLoader();
-            this.showToast('No problematic arrays to clean', 'info');
+            this.showToast('<?php echo $lang1457; ?>', 'info');
         }
     }
     
@@ -1855,10 +1874,10 @@ class RAIDManager {
                             const element = this.raidElements.get(raid.name);
                             if (element) this.updateRaidCard(element, raid);
                             if (raid.degraded && !healthRes.health.degraded) {
-                                this.showToast(`<i class="fas fa-exclamation-triangle"></i> Warning! RAID ${raid.name} is in degraded state!`, 'warning');
+                                this.showToast(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1458; ?> ${raid.name} <?php echo $lang1459; ?>`, 'warning');
                             }
                             if (raid.failed_disks > 0 && healthRes.health.failed_disks > raid.failed_disks) {
-                                this.showToast(`<i class="fas fa-times-circle"></i> RAID ${raid.name}: failed disk detected!`, 'error');
+                                this.showToast(`<i class="fas fa-times-circle"></i> <?php echo $lang1461; ?> ${raid.name}: <?php echo $lang1460; ?>`, 'error');
                             }
                         }
                     }
@@ -1895,14 +1914,14 @@ class RAIDManager {
         const content = document.getElementById('raidInfoContent');
         const title = document.getElementById('raidInfoTitle');
         title.innerHTML = `<i class="fas fa-server"></i> ${raidName}`;
-        content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading information...</p></div>';
+        content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1462; ?></p></div>';
         modal.show();
         const res = await this.apiCall('get_raid_info', { name: raidName }, 10000);
         if (res.success && res.info) {
             this.currentRaidInfo = res.info;
             this.renderRaidInfoModal(res.info);
         } else {
-            content.innerHTML = `<div class="alert alert-danger">Error loading information: ${res.error || 'Unknown error'}</div>`;
+            content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1463; ?> ${res.error || 'Unknown error'}</div>`;
         }
     }
     
@@ -1918,33 +1937,33 @@ class RAIDManager {
         const hasSync = info.sync_action && info.sync_action !== 'idle';
         const syncStatus = hasSync ? `
             <div class="alert alert-info mt-3">
-                <strong>${info.sync_action === 'check' || info.sync_action === 'checking' ? 'Check' : (info.sync_action === 'repair' ? 'Repair' : info.sync_action)} in progress:</strong>
+                <strong>${info.sync_action === 'check' || info.sync_action === 'checking' ? 'Check' : (info.sync_action === 'repair' ? 'Repair' : info.sync_action)} <?php echo $lang1464; ?></strong>
                 <div class="progress mt-2" style="height: 20px;">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${info.sync_percent || 0}%">
                         ${info.sync_percent || 0}%
                     </div>
                 </div>
-                ${info.sync_speed ? `<div class="small mt-1">Speed: ${info.sync_speed}</div>` : ''}
+                ${info.sync_speed ? `<div class="small mt-1"><?php echo $lang1465; ?> ${info.sync_speed}</div>` : ''}
             </div>
         ` : '';
         const isRaid0 = info.level === 'RAID 0' || info.level === 'raid0' || info.level === '0';
         const healthBadge = info.degraded ? 
-            '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <strong>Array is in degraded state!</strong> Some disks are not working.</div>' :
-            (info.failed_disks > 0 ? `<div class="alert alert-warning"><i class="fas fa-microchip"></i> ${info.failed_disks} disk(s) in failed state</div>` : '');
+            '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <strong><?php echo $lang1466; ?></strong> <?php echo $lang1467; ?></div>' :
+            (info.failed_disks > 0 ? `<div class="alert alert-warning"><i class="fas fa-microchip"></i> ${info.failed_disks} <?php echo $lang1468; ?></div>` : '');
         const lvmBlock = info.in_lvm ? `
             <div class="alert alert-warning mt-3">
-                <i class="fas fa-cubes"></i> <strong>RAID is used in LVM!</strong>
-                <p class="mb-0 mt-2">This RAID array is a Physical Volume in Volume Group <code>${info.lvm_vg || 'unknown'}</code>.</p>
-                <p class="mb-0">To delete the RAID, you must first remove it from LVM via <a href="lvm_manager.php" target="_blank" class="alert-link">LVM Manager</a>.</p>
+                <i class="fas fa-cubes"></i> <strong><?php echo $lang1469; ?></strong>
+                <p class="mb-0 mt-2"><?php echo $lang1470; ?> <code>${info.lvm_vg || 'unknown'}</code>.</p>
+                <p class="mb-0"><?php echo $lang1471; ?> <a href="lvm_manager.php" target="_blank" class="alert-link"><?php echo $lang1472; ?></a>.</p>
                 <button class="btn btn-sm btn-outline-warning mt-2" onclick="window.open('lvm_manager.php', '_blank')">
-                    <i class="fas fa-external-link-alt"></i> Go to LVM Manager
+                    <i class="fas fa-external-link-alt"></i> <?php echo $lang1473; ?>
                 </button>
             </div>
         ` : '';
         const partitionsBlock = info.has_partitions ? `
             <div class="alert alert-warning mt-3">
-                <i class="fas fa-layer-group"></i> <strong>Device has partitions!</strong>
-                <p class="mb-0 mt-2">When deleting the RAID, partitions will be automatically removed.</p>
+                <i class="fas fa-layer-group"></i> <strong><?php echo $lang1474; ?></strong>
+                <p class="mb-0 mt-2"><?php echo $lang1475; ?></p>
             </div>
         ` : '';
         const isActive = info.status !== 'inactive';
@@ -1955,27 +1974,27 @@ class RAIDManager {
             <div class="row">
                 <div class="col-md-6">
                     <div class="card mb-3">
-                        <div class="card-header bg-primary text-white">Main Information</div>
+                        <div class="card-header bg-primary text-white"><?php echo $lang1476; ?></div>
                         <div class="card-body">
                             <table class="table table-sm">
-                                <tr><td width="40%"><strong>Name:</strong></td><td>${info.name}</td></tr>
-                                <tr><td><strong>RAID Level:</strong></td><td><span class="raid-level-badge ${this.getRaidLevelClass(info.level)}">${info.level}</span></td></tr>
-                                <tr><td><strong>Size:</strong></td><td>${info.size || 'N/A'}</td></tr>
-                                <tr><td><strong>State:</strong></td><td>${info.health_state || info.status || 'active'} ${isActive ? '<span class="badge bg-success">active</span>' : '<span class="badge bg-secondary">inactive</span>'}</td></tr>
-                                <tr><td><strong>Status:</strong></td><td>${info.degraded ? '<span class="badge bg-danger">DEGRADED</span>' : '<span class="badge bg-success">OK</span>'}</td></tr>
+                                <tr><td width="40%"><strong><?php echo $lang1477; ?></strong></td><td>${info.name}</td></tr>
+                                <tr><td><strong><?php echo $lang1478; ?></strong></td><td><span class="raid-level-badge ${this.getRaidLevelClass(info.level)}">${info.level}</span></td></tr>
+                                <tr><td><strong><?php echo $lang1479; ?></strong></td><td>${info.size || 'N/A'}</td></tr>
+                                <tr><td><strong><?php echo $lang1480; ?></strong></td><td>${info.health_state || info.status || 'active'} ${isActive ? '<span class="badge bg-success"><?php echo $lang1481; ?></span>' : '<span class="badge bg-secondary"><?php echo $lang1482; ?></span>'}</td></tr>
+                                <tr><td><strong><?php echo $lang1483; ?></strong></td><td>${info.degraded ? '<span class="badge bg-danger"><?php echo $lang1484; ?></span>' : '<span class="badge bg-success"><?php echo $lang1485; ?></span>'}</td></tr>
                             </table>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card mb-3">
-                        <div class="card-header bg-info text-white">Disk Statistics</div>
+                        <div class="card-header bg-info text-white"><?php echo $lang1486; ?></div>
                         <div class="card-body">
                             <table class="table table-sm">
-                                <tr><td><strong>Total devices:</strong></td><td>${info.total_devices || info.devices?.length || 0}</td></tr>
-                                <tr><td><strong>Working:</strong></td><td>${info.working_disks || 0}</td></tr>
-                                <tr><td><strong>Failed:</strong></td><td class="text-danger">${info.failed_disks || 0}</td></tr>
-                                <tr><td><strong>Spare:</strong></td><td>${info.spare_disks || 0}</td></tr>
+                                <tr><td><strong><?php echo $lang1487; ?></strong></td><td>${info.total_devices || info.devices?.length || 0}</td></tr>
+                                <tr><td><strong><?php echo $lang1488; ?></strong></td><td>${info.working_disks || 0}</td></tr>
+                                <tr><td><strong><?php echo $lang1489; ?></strong></td><td class="text-danger">${info.failed_disks || 0}</td></tr>
+                                <tr><td><strong><?php echo $lang1490; ?></strong></td><td>${info.spare_disks || 0}</td></tr>
                             </table>
                         </div>
                     </div>
@@ -1983,11 +2002,11 @@ class RAIDManager {
             </div>
             ${syncStatus}
             <div class="card">
-                <div class="card-header bg-secondary text-white">Devices in Array</div>
+                <div class="card-header bg-secondary text-white"><?php echo $lang1491; ?></div>
                 <div class="card-body p-0">
                     <table class="table table-sm mb-0">
-                        <thead><tr><th>Device</th><th>Slot</th><th>State</th><th>Role</th></tr></thead>
-                        <tbody>${devicesHtml || '<tr><td colspan="4" class="text-center">No device information available</td></tr>'}</tbody>
+                        <thead><tr><th><?php echo $lang1492; ?></th><th><?php echo $lang1493; ?></th><th><?php echo $lang1494; ?></th><th><?php echo $lang1495; ?></th></tr></thead>
+                        <tbody>${devicesHtml || '<tr><td colspan="4" class="text-center"><?php echo $lang1496; ?></td></tr>'}</tbody>
                     </table>
                 </div>
             </div>
@@ -2011,75 +2030,75 @@ class RAIDManager {
         const content = document.getElementById('deviceInfoContent');
         const title = document.getElementById('deviceInfoTitle');
         title.innerHTML = `<i class="fas fa-hdd"></i> ${deviceName}`;
-        content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading information...</p></div>';
+        content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1497; ?></p></div>';
         modal.show();
         const device = this.data.available_devices?.find(d => d.name === deviceName);
         if (device) {
             let statusHtml = '';
             let needsCleaning = false;
             if (device.is_lvm) {
-                statusHtml = '<span class="badge bg-info">Used in LVM</span>';
+                statusHtml = '<span class="badge bg-info"><?php echo $lang1498; ?></span>';
                 needsCleaning = true;
             }
             if (device.is_raid) {
-                statusHtml = '<span class="badge bg-primary">Used in RAID</span>';
+                statusHtml = '<span class="badge bg-primary"><?php echo $lang1499; ?></span>';
                 needsCleaning = true;
             }
             if (device.is_raid_array) {
-                statusHtml = '<span class="badge bg-primary">RAID array</span>';
+                statusHtml = '<span class="badge bg-primary"><?php echo $lang1500; ?></span>';
             }
             if (device.available) {
-                statusHtml = '<span class="badge bg-success">Available for RAID</span>';
+                statusHtml = '<span class="badge bg-success"><?php echo $lang1501; ?></span>';
             }
             if (device.is_mounted) {
-                statusHtml = '<span class="badge bg-danger">Mounted</span>';
+                statusHtml = '<span class="badge bg-danger"><?php echo $lang1502; ?></span>';
             }
             if (device.has_filesystem && !device.is_mounted) {
-                statusHtml = '<span class="badge bg-warning">Has filesystem</span>';
+                statusHtml = '<span class="badge bg-warning"><?php echo $lang1503; ?></span>';
                 needsCleaning = true;
             }
             const showCleanBtn = !device.is_mounted && !device.is_raid_array && (device.is_raid || device.has_filesystem || device.is_lvm);
             content.innerHTML = `
                 <div>
-                    <div class="mb-2"><strong>Device:</strong> <code>/dev/${device.name}</code></div>
-                    <div class="mb-2"><strong>Size:</strong> ${device.size}</div>
-                    <div class="mb-2"><strong>Type:</strong> ${device.type === 'disk' ? 'Disk' : (device.type === 'partition' ? 'Partition' : device.type)}</div>
-                    <div class="mb-2"><strong>Status:</strong> ${statusHtml}</div>
-                    ${device.fstype ? `<div class="mb-2"><strong>Filesystem:</strong> ${device.fstype}</div>` : ''}
-                    ${device.parent_disk ? `<div class="mb-2"><strong>Parent disk:</strong> ${device.parent_disk}</div>` : ''}
-                    ${device.model ? `<div class="mb-2"><strong>Model:</strong> ${device.model}</div>` : ''}
-                    <div class="mb-2"><strong>Disk type:</strong> ${device.rota ? 'HDD' : 'SSD'}</div>
+                    <div class="mb-2"><strong><?php echo $lang1504; ?></strong> <code>/dev/${device.name}</code></div>
+                    <div class="mb-2"><strong><?php echo $lang1505; ?></strong> ${device.size}</div>
+                    <div class="mb-2"><strong><?php echo $lang1506; ?></strong> ${device.type === 'disk' ? 'Disk' : (device.type === 'partition' ? 'Partition' : device.type)}</div>
+                    <div class="mb-2"><strong><?php echo $lang1507; ?></strong> ${statusHtml}</div>
+                    ${device.fstype ? `<div class="mb-2"><strong><?php echo $lang1508; ?></strong> ${device.fstype}</div>` : ''}
+                    ${device.parent_disk ? `<div class="mb-2"><strong><?php echo $lang1509; ?></strong> ${device.parent_disk}</div>` : ''}
+                    ${device.model ? `<div class="mb-2"><strong><?php echo $lang1510; ?></strong> ${device.model}</div>` : ''}
+                    <div class="mb-2"><strong><?php echo $lang1511; ?></strong> ${device.rota ? 'HDD' : 'SSD'}</div>
                     ${showCleanBtn ? `
                     <hr>
                     <div class="alert alert-warning mt-3">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Disk contains data!</strong> Detected: 
+                        <strong><?php echo $lang1512; ?></strong> <?php echo $lang1513; ?> 
                         ${device.is_raid ? 'RAID metadata' : ''}
                         ${device.has_filesystem ? ' filesystem' : ''}
                         ${device.is_lvm ? ' LVM labels' : ''}
                     </div>
                     <button class="btn btn-apple-danger w-100" onclick="raidManager.forceCleanDisk('${device.name}')">
-                        <i class="fas fa-trash-alt"></i> Full disk cleanup
+                        <i class="fas fa-trash-alt"></i> <?php echo $lang1514; ?>
                     </button>
-                    <div class="small text-muted mt-2 text-center">WARNING: All data on the disk will be destroyed!</div>
+                    <div class="small text-muted mt-2 text-center"><?php echo $lang1515; ?></div>
                     ` : ''}
                 </div>
             `;
         } else {
-            content.innerHTML = `<div class="alert alert-danger">Device not found</div>`;
+            content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1516; ?></div>`;
         }
     }
     
     async forceCleanDisk(diskName) {
-        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> WARNING! Full disk cleanup of /dev/${diskName}\n\nAll data on the disk will be PERMANENTLY DESTROYED!\n\nCleanup will be performed in 3 stages:\n1. Clear RAID superblocks\n2. Clear filesystems\n3. Write zeros to disk start\n\nContinue?`)) return;
+        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1517; ?> /dev/${diskName}\n\n<?php echo $lang1518; ?>\n\n<?php echo $lang1519; ?>\n1. <?php echo $lang1520; ?>\n2. <?php echo $lang1521; ?>\n3. <?php echo $lang1522; ?>\n\n<?php echo $lang1523; ?>`)) return;
         this.showLoader();
         const res = await this.apiCall('force_clean_disk', { disk: diskName }, 120000);
         if (res.success) {
-            this.showToast(`<i class="fas fa-check-circle"></i> Disk ${diskName} successfully cleaned`, 'success');
+            this.showToast(`<i class="fas fa-check-circle"></i> <?php echo $lang1524; ?> ${diskName} <?php echo $lang1525; ?>`, 'success');
             bootstrap.Modal.getInstance(document.getElementById('deviceInfoModal'))?.hide();
             setTimeout(() => this.refreshAll(true), 2000);
         } else {
-            this.showToast(`<i class="fas fa-times-circle"></i> Cleanup error: ${res.error}`, 'error');
+            this.showToast(`<i class="fas fa-times-circle"></i> <?php echo $lang1526; ?> ${res.error}`, 'error');
         }
         this.hideLoader();
     }
@@ -2087,7 +2106,7 @@ class RAIDManager {
     async showBlockDiagram() {
         const modal = new bootstrap.Modal(document.getElementById('blockDiagramModal'));
         const container = document.getElementById('blockDiagramContent');
-        container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading block diagram...</p></div>';
+        container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1527; ?></p></div>';
         modal.show();
         await this.renderConnectionDiagram();
     }
@@ -2105,7 +2124,7 @@ class RAIDManager {
             }
             raidToDevices.set(raid.name, devList);
         }
-        let html = `<div class="connection-diagram"><div class="connection-arrow"></div><div class="raid-layer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;"><i class="fas fa-server"></i> RAID Arrays (upper level)</div>`;
+        let html = `<div class="connection-diagram"><div class="connection-arrow"></div><div class="raid-layer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;"><i class="fas fa-server"></i> <?php echo $lang1528; ?></div>`;
         if (raidArrays && raidArrays.length) {
             for (const raid of raidArrays) {
                 const levelClass = this.getRaidLevelClass(raid.level);
@@ -2124,15 +2143,15 @@ class RAIDManager {
                         ${isDegraded ? '<span style="color:#ff3b30; margin-left:8px;"><i class="fas fa-exclamation-triangle"></i></span>' : ''}
                     </div>
                     <div class="device-in-raid">
-                        <div style="width:100%; text-align:center; font-size:10px; color:#aaa;"><i class="fas fa-hdd"></i> Devices in RAID:</div>`;
+                        <div style="width:100%; text-align:center; font-size:10px; color:#aaa;"><i class="fas fa-hdd"></i> <?php echo $lang1529; ?></div>`;
                 const raidDevices = raidToDevices.get(raid.name) || [];
                 for (const dev of raidDevices) {
                     const spareClass = dev.spare ? 'spare' : '';
                     const failedClass = dev.failed ? 'failed' : '';
                     html += `<div class="device-badge-diagram ${spareClass} ${failedClass}" onclick="event.stopPropagation(); raidManager.showDeviceInfo('${dev.name}')">
                         <i class="fas fa-hdd"></i> ${dev.name}
-                        ${dev.spare ? '<small>(spare)</small>' : ''}
-                        ${dev.failed ? '<small>(failed)</small>' : ''}
+                        ${dev.spare ? '<small><?php echo $lang1530; ?></small>' : ''}
+                        ${dev.failed ? '<small><?php echo $lang1531; ?></small>' : ''}
                     </div>`;
                 }
                 html += `</div>`;
@@ -2152,9 +2171,9 @@ class RAIDManager {
                 html += `</div>`;
             }
         } else {
-            html += `<div class="text-center text-muted">No RAID arrays</div>`;
+            html += `<div class="text-center text-muted"><?php echo $lang1532; ?></div>`;
         }
-        html += `</div><div class="connection-arrow"></div><div class="physical-layer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;"><i class="fas fa-hdd"></i> Physical devices (lower level)</div>`;
+        html += `</div><div class="connection-arrow"></div><div class="physical-layer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;"><i class="fas fa-hdd"></i> <?php echo $lang1533; ?></div>`;
         const disksMap = new Map();
         for (const dev of devices) {
             if (dev.type === 'disk') {
@@ -2190,7 +2209,7 @@ class RAIDManager {
                             </div>`;
                 }
             } else {
-                html += `<div class="text-muted small">no partitions</div>`;
+                html += `<div class="text-muted small"><?php echo $lang1534; ?></div>`;
             }
             html += `</div></div>`;
         }
@@ -2224,8 +2243,8 @@ class RAIDManager {
             if (!check.can_delete) {
                 let errorMsg = check.errors.join('\n');
                 if (check.lvm_vg) {
-                    errorMsg += `\n\nGo to LVM Manager to manage Volume Group "${check.lvm_vg}"`;
-                    if (confirm(errorMsg + '\n\nOpen LVM Manager?')) {
+                    errorMsg += `\n\n<?php echo $lang1535; ?> "${check.lvm_vg}"`;
+                    if (confirm(errorMsg + '\n\n<?php echo $lang1536; ?>')) {
                         window.open('lvm_manager.php', '_blank');
                     }
                 } else {
@@ -2236,16 +2255,16 @@ class RAIDManager {
             
             let warningMsg = '';
             if (check.warnings.length > 0) warningMsg = check.warnings.join('\n') + '\n\n';
-            warningMsg += `Delete RAID ${raidName}?\n\nWARNING: All data will be destroyed!`;
-            if (check.devices && check.devices.length) warningMsg += `\n\nAffected devices: ${check.devices.join(', ')}`;
+            warningMsg += `<?php echo $lang1537; ?> ${raidName}?\n\n<?php echo $lang1538; ?>`;
+            if (check.devices && check.devices.length) warningMsg += `\n\n<?php echo $lang1539; ?> ${check.devices.join(', ')}`;
             return confirm(warningMsg);
         }
         
-        this.showToast('RAID check error', 'error');
+        this.showToast('<?php echo $lang1540; ?>', 'error');
         return false;
     } catch (e) {
         this.hideLoader();
-        this.showToast('Error checking RAID: ' + e.message, 'error');
+        this.showToast('<?php echo $lang1541; ?> ' + e.message, 'error');
         return false;
     }
 }
@@ -2266,7 +2285,7 @@ class RAIDManager {
             let devicesHtml = '<div class="row">';
             let spareHtml = '<div class="row">';
             for (const dev of disksWithInfo) {
-                const warningIcon = dev.needsCleaning ? '<span class="text-warning ms-1" title="Requires cleanup"><i class="fas fa-exclamation-triangle"></i></span>' : '';
+                const warningIcon = dev.needsCleaning ? '<span class="text-warning ms-1" title="<?php echo $lang1542; ?>"><i class="fas fa-exclamation-triangle"></i></span>' : '';
                 const cardClass = dev.needsCleaning ? 'border-warning' : 'border-success';
                 devicesHtml += `
                     <div class="col-md-6 col-lg-4 mb-2">
@@ -2285,7 +2304,7 @@ class RAIDManager {
                                         ${dev.has_filesystem ? ' filesystem' : ''}
                                         ${dev.is_lvm ? ' LVM' : ''}
                                         <button class="btn btn-sm btn-outline-warning float-end" onclick="event.stopPropagation(); raidManager.forceCleanDiskFromModal('${dev.name}')">
-                                            Cleanup
+                                            <?php echo $lang1543; ?>
                                         </button>
                                     </div>
                                     ` : ''}
@@ -2312,8 +2331,8 @@ class RAIDManager {
             }
             devicesHtml += '</div>';
             spareHtml += '</div>';
-            devicesList.innerHTML = devicesHtml || '<div class="alert alert-warning">No available devices</div>';
-            spareList.innerHTML = spareHtml || '<div class="text-muted">No available devices for spare</div>';
+            devicesList.innerHTML = devicesHtml || '<div class="alert alert-warning"><?php echo $lang1544; ?></div>';
+            spareList.innerHTML = spareHtml || '<div class="text-muted"><?php echo $lang1545; ?></div>';
             let mdNumber = 0;
             const existingNames = (this.data.raid || []).map(r => r.name);
             while (existingNames.includes('md' + mdNumber)) mdNumber++;
@@ -2324,20 +2343,20 @@ class RAIDManager {
             document.getElementById('raidLevel').onchange = () => this.toggleSpareBlock();
             new bootstrap.Modal(document.getElementById('createRaidModal')).show();
         } else {
-            this.showToast('No available devices for RAID creation', 'warning');
+            this.showToast('<?php echo $lang1546; ?>', 'warning');
         }
     }
     
     async forceCleanDiskFromModal(diskName) {
-        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> Cleanup disk /dev/${diskName}?\n\nAll data on the disk will be destroyed!`)) return;
+        if (!confirm(`<i class="fas fa-exclamation-triangle"></i> <?php echo $lang1547; ?> /dev/${diskName}?\n\n<?php echo $lang1548; ?>`)) return;
         this.showLoader();
         const res = await this.apiCall('force_clean_disk', { disk: diskName }, 120000);
         if (res.success) {
-            this.showToast(`<i class="fas fa-check-circle"></i> Disk ${diskName} cleaned`, 'success');
+            this.showToast(`<i class="fas fa-check-circle"></i> <?php echo $lang1549; ?> ${diskName} <?php echo $lang1550; ?>`, 'success');
             await this.refreshAll(false);
             this.showCreateRaid();
         } else {
-            this.showToast(`<i class="fas fa-times-circle"></i> Error: ${res.error}`, 'error');
+            this.showToast(`<i class="fas fa-times-circle"></i> <?php echo $lang1551; ?> ${res.error}`, 'error');
         }
         this.hideLoader();
     }
@@ -2356,23 +2375,23 @@ class RAIDManager {
         const devices = Array.from(document.querySelectorAll('#raidDevicesList input:checked')).map(cb => cb.value);
         const spare = Array.from(document.querySelectorAll('#raidSpareList input:checked')).map(cb => cb.value);
         if (!name || !/^md\d+$/.test(name)) {
-            this.showToast('RAID name must be in format md0, md1, etc.', 'error');
+            this.showToast('<?php echo $lang1552; ?>', 'error');
             return;
         }
         if (devices.length < 2) {
-            this.showToast('Select at least 2 devices for RAID', 'error');
+            this.showToast('<?php echo $lang1553; ?>', 'error');
             return;
         }
-        let warningMsg = `Create RAID ${level} on ${devices.length} active device(s)`;
-        if (spare.length > 0) warningMsg += `\nSpare disks: ${spare.join(', ')}`;
-        warningMsg += `\n\nWARNING: All data on selected devices will be destroyed!`;
+        let warningMsg = `<?php echo $lang1554; ?> ${level} <?php echo $lang1555; ?> ${devices.length} <?php echo $lang1556; ?>`;
+        if (spare.length > 0) warningMsg += `\n<?php echo $lang1557; ?> ${spare.join(', ')}`;
+        warningMsg += `\n\n<?php echo $lang1558; ?>`;
         if (!confirm(warningMsg)) return;
         this.showLoader();
         const res = await this.apiCall('raid_create', { name, level, devices, spare, chunk }, 60000);
         this.hideLoader();
         if (res.success) {
             bootstrap.Modal.getInstance(document.getElementById('createRaidModal')).hide();
-            this.showToast(`RAID ${name} is being created. Synchronization may take some time.`, 'success');
+            this.showToast(`<?php echo $lang1559; ?> ${name} <?php echo $lang1560; ?>`, 'success');
             setTimeout(() => this.refreshAll(true), 3000);
         } else {
             this.showToast(res.error, 'error');
@@ -2380,26 +2399,26 @@ class RAIDManager {
     }
     
     async stopRaid(name) {
-        if (!confirm(`Stop RAID ${name}?`)) return;
+        if (!confirm(`<?php echo $lang1561; ?> ${name}?`)) return;
         this.showLoader();
         const res = await this.apiCall('raid_stop', { name }, 15000);
         this.hideLoader();
         if (res.success) {
             await this.refreshAll(true);
-            this.showToast(`RAID ${name} stopped`);
+            this.showToast(`<?php echo $lang1562; ?> ${name} <?php echo $lang1563; ?>`);
         } else {
             this.showToast(res.error, 'error');
         }
     }
     
     async startRaid(name) {
-        if (!confirm(`Start RAID ${name}?`)) return;
+        if (!confirm(`<?php echo $lang1564; ?> ${name}?`)) return;
         this.showLoader();
         const res = await this.apiCall('raid_start', { name }, 15000);
         this.hideLoader();
         if (res.success) {
             await this.refreshAll(true);
-            this.showToast(`RAID ${name} started`);
+            this.showToast(`<?php echo $lang1565; ?> ${name} <?php echo $lang1566; ?>`);
         } else {
             this.showToast(res.error, 'error');
         }
@@ -2414,15 +2433,15 @@ class RAIDManager {
             if (!check.can_delete && check.in_lvm) {
                 let lvsHtml = '';
                 if (check.lvs && check.lvs.length) {
-                    lvsHtml = '<div class="mt-3"><strong>Logical Volumes in this VG:</strong><ul class="mb-0">';
+                    lvsHtml = '<div class="mt-3"><strong><?php echo $lang1567; ?></strong><ul class="mb-0">';
                     for (const lv of check.lvs) lvsHtml += `<li><code>${lv.name}</code> (${lv.size})</li>`;
                     lvsHtml += '</ul></div>';
                 }
                 const modalHtml = `
-                    <div class="alert alert-danger"><h5><i class="fas fa-cubes"></i> Cannot delete RAID array</h5><p>RAID array <strong>${name}</strong> is used in LVM as a Physical Volume.</p></div>
-                    <div class="card mb-3"><div class="card-header bg-info text-white">LVM Information</div><div class="card-body"><table class="table table-sm"><tr><td width="40%"><strong>Volume Group:</strong></td><td><code>${check.vg_name || 'unknown'}</code></td></tr><tr><td><strong>VG Size:</strong></td><td>${check.vg_size || 'N/A'}</td></tr><tr><td><strong>PV UUID:</strong></td><td><code>${check.pv_uuid || 'N/A'}</code></td></tr></table>${lvsHtml}</div></div>
-                    <div class="alert alert-warning"><strong>To delete the RAID you need to:</strong><ol class="mb-0 mt-2"><li>Delete all Logical Volumes from Volume Group <code>${check.vg_name}</code></li><li>Delete Volume Group <code>${check.vg_name}</code></li><li>Delete Physical Volume from RAID device</li><li>Then you can delete the RAID array</li></ol></div>
-                    <div class="text-center mt-3"><a href="lvm_manager.php" target="_blank" class="btn btn-apple btn-lg"><i class="fas fa-external-link-alt"></i> Open LVM Manager</a></div>
+                    <div class="alert alert-danger"><h5><i class="fas fa-cubes"></i> <?php echo $lang1568; ?></h5><p><?php echo $lang1569; ?> <strong>${name}</strong> <?php echo $lang1570; ?></p></div>
+                    <div class="card mb-3"><div class="card-header bg-info text-white"><?php echo $lang1571; ?></div><div class="card-body"><table class="table table-sm"><tr><td width="40%"><strong><?php echo $lang1572; ?></strong></td><td><code>${check.vg_name || 'unknown'}</code></td></tr><tr><td><strong><?php echo $lang1573; ?></strong></td><td>${check.vg_size || 'N/A'}</td></tr><tr><td><strong><?php echo $lang1574; ?></strong></td><td><code>${check.pv_uuid || 'N/A'}</code></td></tr></table>${lvsHtml}</div></div>
+                    <div class="alert alert-warning"><strong><?php echo $lang1575; ?></strong><ol class="mb-0 mt-2"><li><?php echo $lang1576; ?> <code>${check.vg_name}</code></li><li><?php echo $lang1577; ?> <code>${check.vg_name}</code></li><li><?php echo $lang1578; ?></li><li><?php echo $lang1579; ?></li></ol></div>
+                    <div class="text-center mt-3"><a href="lvm_manager.php" target="_blank" class="btn btn-apple btn-lg"><i class="fas fa-external-link-alt"></i> <?php echo $lang1580; ?></a></div>
                 `;
                 this.showLVMWarningModal(modalHtml);
                 return;
@@ -2433,8 +2452,8 @@ class RAIDManager {
             }
             let warningMsg = '';
             if (check.warnings && check.warnings.length > 0) warningMsg = check.warnings.join('\n') + '\n\n';
-            warningMsg += `Delete RAID ${name}?\n\nWARNING: All data will be destroyed!`;
-            if (check.devices && check.devices.length) warningMsg += `\n\nAffected devices: ${check.devices.join(', ')}`;
+            warningMsg += `<?php echo $lang1581; ?> ${name}?\n\n<?php echo $lang1582; ?>`;
+            if (check.devices && check.devices.length) warningMsg += `\n\n<?php echo $lang1583; ?> ${check.devices.join(', ')}`;
             if (!confirm(warningMsg)) return;
         }
         this.showLoader();
@@ -2442,16 +2461,16 @@ class RAIDManager {
         this.hideLoader();
         if (res.success) {
             await this.refreshAll(true);
-            this.showToast(`RAID ${name} deleted`, 'success');
+            this.showToast(`<?php echo $lang1584; ?> ${name} <?php echo $lang1585; ?>`, 'success');
             if (res.cleaned_devices && res.cleaned_devices.length) {
-                this.showToast(`Cleaned devices: ${res.cleaned_devices.join(', ')}`, 'info');
+                this.showToast(`<?php echo $lang1586; ?> ${res.cleaned_devices.join(', ')}`, 'info');
             }
         } else {
             if (res.in_lvm) {
                 this.showLVMWarningModal(`
-                    <div class="alert alert-danger"><h5><i class="fas fa-cubes"></i> RAID is used in LVM</h5><p>${res.error}</p></div>
-                    <div class="text-center"><a href="lvm_manager.php" target="_blank" class="btn btn-apple"><i class="fas fa-external-link-alt"></i> Open LVM Manager</a>
-                    <button class="btn btn-apple-danger" onclick="raidManager.forceDeleteRaid('${name}')"><i class="fas fa-skull-crosswalk"></i> Force delete (DANGEROUS!)</button></div>
+                    <div class="alert alert-danger"><h5><i class="fas fa-cubes"></i> <?php echo $lang1587; ?></h5><p>${res.error}</p></div>
+                    <div class="text-center"><a href="lvm_manager.php" target="_blank" class="btn btn-apple"><i class="fas fa-external-link-alt"></i> <?php echo $lang1588; ?></a>
+                    <button class="btn btn-apple-danger" onclick="raidManager.forceDeleteRaid('${name}')"><i class="fas fa-skull-crosswalk"></i> <?php echo $lang1589; ?></button></div>
                 `);
             } else {
                 this.showToast(res.error, 'error');
@@ -2469,9 +2488,9 @@ class RAIDManager {
             modal.innerHTML = `
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> LVM Warning</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> <?php echo $lang1590; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body" id="lvmWarningModalBody"></div>
-                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1591; ?></button></div>
                     </div>
                 </div>
             `;
@@ -2489,14 +2508,14 @@ class RAIDManager {
     }
     
     async forceDeleteRaid(name) {
-        if (!confirm(`DANGEROUS! Force deleting RAID ${name} may corrupt LVM data.\n\nContinue?`)) return;
+        if (!confirm(`<?php echo $lang1592; ?> ${name} <?php echo $lang1593; ?>\n\n<?php echo $lang1594; ?>`)) return;
         this.showLoader();
         const res = await this.apiCall('raid_delete', { name: name, force: true }, 60000);
         this.hideLoader();
         if (res.success) {
             bootstrap.Modal.getInstance(document.getElementById('lvmWarningModal'))?.hide();
             await this.refreshAll(true);
-            this.showToast(`RAID ${name} force deleted`, 'warning');
+            this.showToast(`<?php echo $lang1595; ?> ${name} <?php echo $lang1596; ?>`, 'warning');
         } else {
             this.showToast(res.error, 'error');
         }
@@ -2505,14 +2524,14 @@ class RAIDManager {
     async checkRaid(name) {
         const raid = this.data.raid.find(r => r.name === name);
         if (raid && (raid.level === 'RAID 0' || raid.level === 'raid0' || raid.level === '0')) {
-            this.showToast('RAID 0 does not support check (no redundancy)', 'warning');
+            this.showToast('<?php echo $lang1597; ?>', 'warning');
             return;
         }
         this.showLoader();
         const res = await this.apiCall('raid_check', { name }, 10000);
         this.hideLoader();
         if (res.success) {
-            this.showToast(`RAID ${name} check started`);
+            this.showToast(`<?php echo $lang1598; ?> ${name} <?php echo $lang1599; ?>`);
             setTimeout(() => this.refreshAll(true), 2000);
         } else {
             this.showToast(res.error, 'error');
@@ -2522,15 +2541,15 @@ class RAIDManager {
     async repairRaid(name) {
         const raid = this.data.raid.find(r => r.name === name);
         if (raid && (raid.level === 'RAID 0' || raid.level === 'raid0' || raid.level === '0')) {
-            this.showToast('RAID 0 does not support repair (no redundancy)', 'warning');
+            this.showToast('<?php echo $lang1600; ?>', 'warning');
             return;
         }
-        if (!confirm(`Start repair on RAID ${name}?`)) return;
+        if (!confirm(`<?php echo $lang1601; ?> ${name}?`)) return;
         this.showLoader();
         const res = await this.apiCall('raid_repair', { name }, 10000);
         this.hideLoader();
         if (res.success) {
-            this.showToast(`RAID ${name} repair started`);
+            this.showToast(`<?php echo $lang1602; ?> ${name} <?php echo $lang1603; ?>`);
             setTimeout(() => this.refreshAll(true), 2000);
         } else {
             this.showToast(res.error, 'error');
@@ -2538,19 +2557,19 @@ class RAIDManager {
     }
     
     async cleanupStaleRaids() {
-        if (!confirm('Clean up all inactive (stale) RAID arrays?\n\nThis will remove md127, md126 and other inactive arrays from the system.')) return;
+        if (!confirm('<?php echo $lang1604; ?>\n\n<?php echo $lang1605; ?>')) return;
         this.showLoader();
         const res = await this.apiCall('cleanup_all_stale_raid', {}, 30000);
         this.hideLoader();
         if (res.success) {
             if (res.cleaned && res.cleaned.length > 0) {
-                this.showToast(`Cleaned ${res.cleaned.length} stale RAID arrays: ${res.cleaned.join(', ')}`, 'success');
+                this.showToast(`<?php echo $lang1606; ?> ${res.cleaned.length} <?php echo $lang1607; ?> ${res.cleaned.join(', ')}`, 'success');
             } else {
-                this.showToast('No stale RAID arrays found', 'info');
+                this.showToast('<?php echo $lang1608; ?>', 'info');
             }
             await this.refreshAll(true);
         } else {
-            this.showToast(res.error || 'Cleanup error', 'error');
+            this.showToast(res.error || '<?php echo $lang1609; ?>', 'error');
         }
     }
     
@@ -2564,7 +2583,7 @@ class RAIDManager {
             document.getElementById('addDeviceRaidName').value = raidName;
             new bootstrap.Modal(document.getElementById('addDeviceModal')).show();
         } else {
-            this.showToast('No available devices to add', 'warning');
+            this.showToast('<?php echo $lang1610; ?>', 'warning');
         }
     }
     
@@ -2572,17 +2591,17 @@ class RAIDManager {
         const raidName = document.getElementById('addDeviceRaidName').value;
         const device = document.getElementById('addDeviceSelect').value;
         if (!device) {
-            this.showToast('Select a device', 'error');
+            this.showToast('<?php echo $lang1611; ?>', 'error');
             return;
         }
-        if (!confirm(`Add device ${device} to RAID ${raidName}?`)) return;
+        if (!confirm(`<?php echo $lang1612; ?> ${device} <?php echo $lang1613; ?> ${raidName}?`)) return;
         this.showLoader();
         const res = await this.apiCall('raid_add_device', { name: raidName, device }, 20000);
         this.hideLoader();
         if (res.success) {
             bootstrap.Modal.getInstance(document.getElementById('addDeviceModal')).hide();
             await this.refreshAll(true);
-            this.showToast(`Device ${device} added to RAID ${raidName}`);
+            this.showToast(`<?php echo $lang1614; ?> ${device} <?php echo $lang1615; ?> ${raidName}`);
         } else {
             this.showToast(res.error, 'error');
         }

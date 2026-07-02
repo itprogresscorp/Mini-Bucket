@@ -92,6 +92,8 @@ if (php_sapi_name() !== 'cli') {
 
 $action = $_GET['action'] ?? '';
 
+require_once '../lang/loader.php';
+
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
 global $db2;
@@ -238,6 +240,7 @@ function checkDisks() {
     $settings = getSettings();
     
     foreach ($currentDisks as $diskName => $disk) {
+		global $lang3671, $lang3672, $lang3673, $lang3674, $lang3675, $lang3676, $lang3677;
         if (!isset($dbDisks[$diskName])) {
             $stmt = $db2->prepare("INSERT INTO monitored_disks (disk_name, disk_model, disk_size, disk_path, is_new, is_active) 
                                   VALUES (:name, :model, :size, :path, 1, 1)");
@@ -247,8 +250,8 @@ function checkDisks() {
             $stmt->bindValue(':path', '/dev/' . $diskName, SQLITE3_TEXT);
             $stmt->execute();
             
-            addNotification('disk', 'info', 'New Disk Detected', 
-                          "New disk {$diskName} ({$disk['model']}) has been detected",
+            addNotification('disk', 'info', $lang3671, 
+                          $lang3672 . $diskName . " (" . $disk['model'] . ")" . $lang3673,
                           json_encode($disk));
         } else {
             $stmt = $db2->prepare("UPDATE monitored_disks SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE disk_name = :name");
@@ -257,8 +260,8 @@ function checkDisks() {
         }
         
         if ($disk['smart_bad_sectors'] > 0 && $settings['notify_smart_failed'] == 1) {
-            addNotification('smart', 'critical', 'SMART Failure Detected',
-                          "Disk {$diskName} has {$disk['smart_bad_sectors']} bad sectors",
+            addNotification('smart', 'critical', $lang3674,
+                          $lang3675 . $diskName . $lang3676 . $disk['smart_bad_sectors'] . $lang3677,
                           json_encode($disk));
             $result['stats']['critical']++;
         } else {
@@ -270,14 +273,15 @@ function checkDisks() {
     }
     
     foreach ($dbDisks as $diskName => $dbDisk) {
+		global $lang3678, $lang3679, $lang3680;
         if (!isset($currentDisks[$diskName]) && $dbDisk['is_active'] == 1) {
             $stmt = $db2->prepare("UPDATE monitored_disks SET is_active = 0 WHERE disk_name = :name");
             $stmt->bindValue(':name', $diskName, SQLITE3_TEXT);
             $stmt->execute();
             
             if ($settings['notify_disk_missing'] == 1) {
-                addNotification('disk', 'critical', 'Disk Missing',
-                              "Disk {$diskName} is no longer present in the system",
+                addNotification('disk', 'critical', $lang3678,
+                              $lang3679 . $diskName . $lang3680,
                               json_encode($dbDisk));
             }
             $result['stats']['critical']++;
@@ -414,6 +418,7 @@ function checkRaid() {
     }
     
     foreach ($currentRaids as $raidName => $raid) {
+		global $lang3681, $lang3682, $lang3683, $lang3684, $lang3685, $lang3686;
         if (!isset($dbRaids[$raidName])) {
             $stmt = $db2->prepare("INSERT INTO monitored_raids (raid_name, raid_level, raid_size, devices, is_new, is_active) 
                                   VALUES (:name, :level, :size, :devices, 1, 1)");
@@ -423,8 +428,8 @@ function checkRaid() {
             $stmt->bindValue(':devices', json_encode($raid['devices']), SQLITE3_TEXT);
             $stmt->execute();
             
-            addNotification('raid', 'info', 'New RAID Array Detected',
-                          "New RAID array {$raidName} ({$raid['level']}) has been detected",
+            addNotification('raid', 'info', $lang3681,
+                          $lang3682 . $raidName . " (" . $raid['level'] . ")" . $lang3683,
                           json_encode($raid));
         } else {
             $stmt = $db2->prepare("UPDATE monitored_raids SET last_seen = CURRENT_TIMESTAMP, is_active = 1 WHERE raid_name = :name");
@@ -433,8 +438,8 @@ function checkRaid() {
         }
         
         if ($raid['degraded'] && $settings['notify_raid_degraded'] == 1) {
-            addNotification('raid', 'critical', 'RAID Degraded',
-                          "RAID array {$raidName} is degraded. Working: {$raid['working_disks']}/{$raid['total_disks']}",
+            addNotification('raid', 'critical', $lang3684,
+                          $lang3685 . $raidName . $lang3686 . $raid['working_disks'] . "/" . $raid['total_disks'],
                           json_encode($raid));
         }
         
@@ -442,12 +447,13 @@ function checkRaid() {
     }
     
     foreach ($dbRaids as $raidName => $dbRaid) {
+		global $lang3687, $lang3688, $lang3689;
         if (!isset($currentRaids[$raidName]) && $dbRaid['is_active'] == 1) {
             $stmt = $db2->prepare("UPDATE monitored_raids SET is_active = 0 WHERE raid_name = :name");
             $stmt->bindValue(':name', $raidName, SQLITE3_TEXT);
             $stmt->execute();
-            addNotification('raid', 'warning', 'RAID Array Missing',
-                          "RAID array {$raidName} is no longer present",
+            addNotification('raid', 'warning', $lang3687,
+                          $lang3688 . $raidName . $lang3689,
                           json_encode($dbRaid));
         }
     }
@@ -538,6 +544,7 @@ function checkLvm() {
 // ========== ПРОВЕРКА ТЕМПЕРАТУР ==========
 
 function checkTemperatures() {
+	global $lang3690, $lang3691, $lang3692, $lang3693;
     $settings = getSettings();
     $cpuThreshold = intval($settings['cpu_temp_threshold'] ?? 85);
     $diskThreshold = intval($settings['disk_temp_threshold'] ?? 55);
@@ -559,9 +566,9 @@ function checkTemperatures() {
         $stmt->execute();
         
         if ($tempCelsius > $cpuThreshold && $settings['notify_temp_critical'] == 1) {
-            addNotification('temperature', 'critical', 'High CPU Temperature',
-                          "CPU temperature is {$tempCelsius}°C (threshold: {$cpuThreshold}°C)",
-                          "CPU温度: {$tempCelsius}°C");
+            addNotification('temperature', 'critical', $lang3690,
+                          $lang3691 . $tempCelsius . "°C: (" .  $lang3692 . $cpuThreshold . "°C)",
+                          $lang3693 . $tempCelsius . "°C");
         }
     }
     
@@ -569,6 +576,7 @@ function checkTemperatures() {
     $diskNames = array_filter(explode("\n", trim($lsblk)));
     
     foreach ($diskNames as $diskName) {
+		global $lang3694, $lang3695, $lang3696, $lang3697, $lang3698;
         $device = '/dev/' . $diskName;
         
         $tempOutput = shell_exec("sudo smartctl -A " . $device . " 2>/dev/null | grep -E 'Temperature_Celsius|Temperature:|Current Drive Temperature' | head -1");
@@ -585,9 +593,9 @@ function checkTemperatures() {
                 $stmt->execute();
                 
                 if ($tempVal > $diskThreshold && $settings['notify_temp_critical'] == 1) {
-                    addNotification('temperature', 'warning', 'High Disk Temperature',
-                                  "Disk {$diskName} temperature is {$temp} (threshold: {$diskThreshold}°C)",
-                                  "Disk temperature: {$temp}");
+                    addNotification('temperature', 'warning', $lang3694,
+                                  $lang3695 . $diskName . $lang3696 . $temp . " (" . $lang3697 . $diskThreshold . "°C)",
+                                  $lang3698 . $temp);
                 }
             }
         }
@@ -599,6 +607,7 @@ function checkTemperatures() {
 // ========== ПРОВЕРКА СЕТЕВЫХ ШАР ==========
 
 function checkShares() {
+	global $lang3699, $lang3700, $lang3701, $lang3702;
     global $db2;
     
     $result = ['shares' => []];
@@ -617,7 +626,7 @@ function checkShares() {
             $isAvailable = true;
         } elseif (!empty($share['share_path'])) {
             $isAvailable = false;
-            $error = "Path does not exist: {$share['share_path']}";
+            $error = $lang3699 . $share['share_path'];
             
             $pathParts = explode('/', $share['share_path']);
             if (count($pathParts) >= 3) {
@@ -637,8 +646,8 @@ function checkShares() {
         if (!$isAvailable) {
             $settings = getSettings();
             if ($settings['notify_share_down'] == 1) {
-                addNotification('share', 'critical', 'Share Unavailable',
-                              "Share {$share['share_name']} ({$share['share_type']}) is not accessible",
+                addNotification('share', 'critical', $lang3700,
+                              $lang3701 . $share['share_name'] . " (" . $share['share_type'] . ")" . $lang3702,
                               json_encode($share));
             }
         }
@@ -890,6 +899,7 @@ switch ($action) {
         break;
         
     case 'save_settings':
+		global $lang3703;
         $input = json_decode(file_get_contents('php://input'), true);
         if ($input) {
             foreach ($input as $key => $value) {
@@ -901,7 +911,7 @@ switch ($action) {
             }
             echo json_encode(['success' => true]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Invalid input']);
+            echo json_encode(['success' => false, 'error' => $lang3703]);
         }
         break;
         
@@ -1041,6 +1051,7 @@ switch ($action) {
         break;
         
     case 'update_schedule':
+		global $lang3704;
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['check_type'])) {
             $stmt = $db2->prepare("
@@ -1056,7 +1067,7 @@ switch ($action) {
             $stmt->execute();
             echo json_encode(['success' => true]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Missing check_type']);
+            echo json_encode(['success' => false, 'error' => $lang3704]);
         }
         break;
     
@@ -1090,12 +1101,14 @@ switch ($action) {
                     ];
                     break;
                 default:
-                    echo json_encode(['success' => false, 'error' => 'Unknown check type']);
+					global $lang3705;
+                    echo json_encode(['success' => false, 'error' => $lang3705]);
                     exit;
             }
             echo json_encode(['success' => true, 'result' => $result]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Missing check_type']);
+			global $lang3706;
+            echo json_encode(['success' => false, 'error' => $lang3706]);
         }
         break;
         

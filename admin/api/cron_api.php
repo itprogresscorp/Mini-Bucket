@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 $minib_back_dir = '/var/www/minib';
 define('CRON_JOBS_FILE', $minib_back_dir . '/cron/cron_jobs.json');
@@ -151,12 +153,13 @@ function getScriptContent($filename) {
 }
 
 function saveScript($filename, $content, $makeExecutable = true) {
+	global $lang4316, $lang4317, $lang4318;
     if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $filename)) {
         return ['success' => false, 'error' => 'Invalid filename. Use only letters, numbers, underscores, dots and hyphens'];
     }
     
     if (strpos($filename, '..') !== false) {
-        return ['success' => false, 'error' => 'Invalid filename'];
+        return ['success' => false, 'error' => $lang4316];
     }
     
     $filePath = USER_SCRIPTS_DIR . '/' . $filename;
@@ -168,25 +171,26 @@ function saveScript($filename, $content, $makeExecutable = true) {
     
     $result = file_put_contents($filePath, $content);
     if ($result === false) {
-        return ['success' => false, 'error' => 'Failed to write file'];
+        return ['success' => false, 'error' => $lang4317];
     }
     
     chmod($filePath, $makeExecutable ? 0755 : 0644);
     
-    return ['success' => true, 'message' => 'Script saved successfully', 'path' => $filePath];
+    return ['success' => true, 'message' => $lang4318, 'path' => $filePath];
 }
 
 function deleteScript($filename) {
+	global $lang4319, $lang4320, $lang4321;
     $filePath = USER_SCRIPTS_DIR . '/' . $filename;
     if (!file_exists($filePath)) {
-        return ['success' => false, 'error' => 'File not found'];
+        return ['success' => false, 'error' => $lang4319];
     }
     
     if (unlink($filePath)) {
-        return ['success' => true, 'message' => 'Script deleted'];
+        return ['success' => true, 'message' => $lang4320];
     }
     
-    return ['success' => false, 'error' => 'Failed to delete file'];
+    return ['success' => false, 'error' => $lang4321];
 }
 
 function getScriptTemplate($type) {
@@ -418,14 +422,15 @@ function getNextRunTime($cron) {
 }
 
 function executeCronJob($job) {
+	global $lang4322, $lang4323;
     if ($job['job_type'] === 'script' && !empty($job['script_name'])) {
         $script_path = USER_SCRIPTS_DIR . '/' . $job['script_name'];
         
         if (!file_exists($script_path)) {
             return [
                 'status' => 'failed',
-                'output' => "Script not found: " . $script_path,
-                'full_output' => "Script not found: " . $script_path,
+                'output' => $lang4322 . $script_path,
+                'full_output' => $lang4323 . $script_path,
                 'last_run' => date('Y-m-d H:i:s')
             ];
         }
@@ -583,7 +588,6 @@ try {
             // ========== Записываем ВЫВОД скрипта в лог ==========
             file_put_contents($log_file, "[" . date("Y-m-d H:i:s") . "] " . $job["job_name"] . " - " . $job["last_status"] . " (return: $return_var)\n", FILE_APPEND);
             
-            // ОБЯЗАТЕЛЬНО пишем вывод, даже если он пустой
             if (!empty($output_str)) {
                 file_put_contents($log_file, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", FILE_APPEND);
                 file_put_contents($log_file, $output_str . "\n", FILE_APPEND);
@@ -699,6 +703,7 @@ switch ($action) {
         break;
         
     case 'get_job':
+		global $lang4324;
         $unique_id = $_GET['unique_id'] ?? '';
         $jobs = getCronJobs();
         
@@ -709,10 +714,11 @@ switch ($action) {
             }
         }
         
-        echo json_encode(['success' => false, 'error' => 'Job not found']);
+        echo json_encode(['success' => false, 'error' => $lang4324]);
         break;
         
     case 'save_job':
+		global $lang4325, $lang4326, $lang4327, $lang4328, $lang4329, $lang4330;
         $unique_id = $_POST['unique_id'] ?? '';
         $job_name = trim($_POST['job_name'] ?? '');
         $comment = trim($_POST['comment'] ?? '');
@@ -727,17 +733,17 @@ switch ($action) {
         $enabled = isset($_POST['enabled']);
         
         if (empty($job_name)) {
-            echo json_encode(['success' => false, 'error' => 'Job name is required']);
+            echo json_encode(['success' => false, 'error' => $lang4325]);
             break;
         }
         
         if ($job_type === 'command' && empty($command)) {
-            echo json_encode(['success' => false, 'error' => 'Command is required']);
+            echo json_encode(['success' => false, 'error' => $lang4326]);
             break;
         }
         
         if ($job_type === 'script' && empty($script_name)) {
-            echo json_encode(['success' => false, 'error' => 'Script is required']);
+            echo json_encode(['success' => false, 'error' => $lang4327]);
             break;
         }
         
@@ -780,13 +786,14 @@ switch ($action) {
         }
         
         if (saveCronJobs($jobs)) {
-            echo json_encode(['success' => true, 'message' => empty($unique_id) ? 'Job created' : 'Job updated', 'data' => $new_job]);
+            echo json_encode(['success' => true, 'message' => empty($unique_id) ? $lang4328 : $lang4329, 'data' => $new_job]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to save job']);
+            echo json_encode(['success' => false, 'error' => $lang4330]);
         }
         break;
         
     case 'delete_job':
+	global $lang4331, $lang4332, $lang4333;
         $unique_id = $_GET['unique_id'] ?? $_POST['unique_id'] ?? '';
         $jobs = getCronJobs();
         
@@ -794,18 +801,19 @@ switch ($action) {
             if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
                 array_splice($jobs, $idx, 1);
                 if (saveCronJobs($jobs)) {
-                    echo json_encode(['success' => true, 'message' => 'Job deleted']);
+                    echo json_encode(['success' => true, 'message' => $lang4331]);
                 } else {
-                    echo json_encode(['success' => false, 'error' => 'Failed to delete job']);
+                    echo json_encode(['success' => false, 'error' => $lang4332]);
                 }
                 exit;
             }
         }
         
-        echo json_encode(['success' => false, 'error' => 'Job not found']);
+        echo json_encode(['success' => false, 'error' => $lang4333]);
         break;
         
     case 'toggle_job':
+		global $lang4334, $lang4335, $lang4336, $lang4337;
         $unique_id = $_GET['unique_id'] ?? $_POST['unique_id'] ?? '';
         $jobs = getCronJobs();
         
@@ -815,27 +823,28 @@ switch ($action) {
                 if (saveCronJobs($jobs)) {
                     echo json_encode([
                         'success' => true, 
-                        'message' => 'Job ' . ($job['enabled'] ? 'enabled' : 'disabled'),
+                        'message' => 'Job ' . ($job['enabled'] ? $lang4334 : $lang4335),
                         'enabled' => $job['enabled']
                     ]);
                 } else {
-                    echo json_encode(['success' => false, 'error' => 'Failed to toggle job']);
+                    echo json_encode(['success' => false, 'error' => $lang4336]);
                 }
                 exit;
             }
         }
         
-        echo json_encode(['success' => false, 'error' => 'Job not found']);
+        echo json_encode(['success' => false, 'error' => $lang4337]);
         break;
         
     case 'run_job':
+		global $lang4338, $lang4339, $lang4340;
 		$unique_id = $_GET['unique_id'] ?? $_POST['unique_id'] ?? '';
 		$jobs = getCronJobs();
 		
 		foreach ($jobs as $idx => &$job) {
 			if (isset($job['unique_id']) && $job['unique_id'] === $unique_id) {
 				if (!$job['enabled']) {
-					echo json_encode(['success' => false, 'error' => 'Job is disabled']);
+					echo json_encode(['success' => false, 'error' => $lang4338]);
 					exit;
 				}
 				
@@ -860,13 +869,13 @@ switch ($action) {
 						'plain_output' => $result['full_output']
 					]);
 				} else {
-					echo json_encode(['success' => false, 'error' => 'Failed to save job results']);
+					echo json_encode(['success' => false, 'error' => $lang4339]);
 				}
 				exit;
 			}
 		}
 		
-		echo json_encode(['success' => false, 'error' => 'Job not found']);
+		echo json_encode(['success' => false, 'error' => $lang4340]);
 		break;
         
     // ========== СКРИПТЫ ==========
@@ -875,27 +884,29 @@ switch ($action) {
         break;
         
     case 'get_script':
+		global $lang4341, $lang4342;
         $filename = $_GET['filename'] ?? '';
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4341]);
             break;
         }
         
         $content = getScriptContent($filename);
         if ($content === false) {
-            echo json_encode(['success' => false, 'error' => 'Script not found']);
+            echo json_encode(['success' => false, 'error' => $lang4342]);
         } else {
             echo json_encode(['success' => true, 'content' => $content, 'filename' => $filename]);
         }
         break;
         
     case 'save_script':
+		global $lang4343;
         $filename = $_POST['filename'] ?? '';
         $content = $_POST['content'] ?? '';
         $make_executable = isset($_POST['make_executable']);
         
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4343]);
             break;
         }
         
@@ -904,9 +915,10 @@ switch ($action) {
         break;
         
     case 'delete_script':
+		global $lang4344;
         $filename = $_GET['filename'] ?? $_POST['filename'] ?? '';
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4344]);
             break;
         }
         
@@ -924,14 +936,15 @@ switch ($action) {
         break;
         
     case 'run_script':
+		global $lang4345, $lang4346, $lang4347, $lang4348;
         $filename = $_GET['filename'] ?? '';
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4345]);
             break;
         }
         $fullPath = USER_SCRIPTS_DIR . '/' . $filename;
         if (!file_exists($fullPath)) {
-            echo json_encode(['success' => false, 'error' => 'Script not found']);
+            echo json_encode(['success' => false, 'error' => $lang4346]);
             break;
         }
         if (!is_executable($fullPath)) {
@@ -949,7 +962,7 @@ switch ($action) {
             'success' => true,
             'status' => $return_var === 0 ? 'success' : 'failed',
             'output' => $output_str,
-            'message' => $return_var === 0 ? 'Script executed successfully' : 'Script failed with exit code ' . $return_var
+            'message' => $return_var === 0 ? $lang4347 : $lang4348 . $return_var
         ]);
         break;
         
@@ -961,10 +974,11 @@ switch ($action) {
         break;
         
     case 'clear_logs':
+		global $lang4349, $lang4350;
         if (clearCronLogs()) {
-            echo json_encode(['success' => true, 'message' => 'Logs cleared']);
+            echo json_encode(['success' => true, 'message' => $lang4349]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to clear logs']);
+            echo json_encode(['success' => false, 'error' => $lang4350]);
         }
         break;
         
@@ -983,21 +997,23 @@ switch ($action) {
         break;
         
     case 'install_runner':
+		global $lang4351, $lang4352;
         ensureRunnerScript();
         $command = getRunnerCommand();
         if (addSystemCronEntry($command)) {
-            echo json_encode(['success' => true, 'message' => 'Runner installed to system crontab']);
+            echo json_encode(['success' => true, 'message' => $lang4351]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to install runner']);
+            echo json_encode(['success' => false, 'error' => $lang4352]);
         }
         break;
         
     case 'uninstall_runner':
+		global $lang4353, $lang4354;
         $command = getRunnerCommand();
         if (removeSystemCronEntry($command)) {
-            echo json_encode(['success' => true, 'message' => 'Runner removed from system crontab']);
+            echo json_encode(['success' => true, 'message' => $lang4353]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to remove runner']);
+            echo json_encode(['success' => false, 'error' => $lang4354]);
         }
         break;
         

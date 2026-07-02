@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 function execCmd($cmd, $sudo = true, $timeout = 60) {
     $fullCmd = $sudo ? "sudo " . $cmd : $cmd;
     $fullCmd .= " 2>&1";
@@ -598,9 +600,10 @@ function getDiskInfo($disk) {
 // ==================== LVM ОПЕРАЦИИ ====================
 
 function createPV($device) {
+	global $lang2080, $lang2081;
     $checkDevice = execCmd("lsblk " . escapeshellarg($device) . " 2>/dev/null", true, 5);
     if (empty($checkDevice)) {
-        return ['success' => false, 'error' => 'Device ' . $device . ' not found'];
+        return ['success' => false, 'error' => $lang2080 . $device . $lang2081];
     }
     
     $result = execCmd("pvcreate -f " . escapeshellarg($device), true, 30);
@@ -612,11 +615,12 @@ function createPV($device) {
 }
 
 function deletePV($pvName) {
+	global $lang2082, $lang2083, $lang2084;
     $checkVg = execCmd("pvs --noheadings -o vg_name " . escapeshellarg($pvName) . " 2>/dev/null", true, 5);
     $vgName = trim($checkVg);
     
     if (!empty($vgName) && $vgName !== '') {
-        return ['success' => false, 'error' => 'PV ' . $pvName . ' is used by VG ' . $vgName . '. Please remove from VG first using vgreduce'];
+        return ['success' => false, 'error' => $lang2082 . $pvName . $lang2083 . $vgName . $lang2084];
     }
     
     $result = execCmd("pvremove -f " . escapeshellarg($pvName), true, 30);
@@ -708,6 +712,7 @@ function renameVG($oldName, $newName) {
 }
 
 function createLV($vgName, $lvName, $size, $format = false, $fsType = 'ext4') {
+	global $lang2085, $lang2086;
     $size = trim($size);
     
     if (preg_match('/^(\d+(?:\.\d+)?)%FREE$/i', $size, $matches)) {
@@ -746,7 +751,7 @@ function createLV($vgName, $lvName, $size, $format = false, $fsType = 'ext4') {
         }
         
         if (!$deviceExists) {
-            return ['success' => false, 'error' => 'LV created but device node not found'];
+            return ['success' => false, 'error' => $lang2085];
         }
         
         execCmd("sudo lvchange -ay " . escapeshellarg($lvPath) . " 2>/dev/null", true, 10);
@@ -755,7 +760,7 @@ function createLV($vgName, $lvName, $size, $format = false, $fsType = 'ext4') {
         if ($format) {
             $formatResult = formatLV($lvPath, $fsType);
             if (!$formatResult['success']) {
-                return ['success' => false, 'error' => 'LV created but format failed: ' . $formatResult['error']];
+                return ['success' => false, 'error' => $lang2086 . $formatResult['error']];
             }
         }
         
@@ -765,6 +770,7 @@ function createLV($vgName, $lvName, $size, $format = false, $fsType = 'ext4') {
 }
 
 function formatLV($lvPath, $fsType = 'ext4') {
+	global $lang2087, $lang2088, $lang2089, $lang2090, $lang2091, $lang2092, $lang2093, $lang2094;
     $originalPath = $lvPath;
     $lvPath = preg_replace('/^\/dev\//', '', $lvPath);
     $fullPath = '/dev/' . $lvPath;
@@ -776,7 +782,7 @@ function formatLV($lvPath, $fsType = 'ext4') {
     } elseif (file_exists($mapperPath)) {
         $devicePath = $mapperPath;
     } else {
-        return ['success' => false, 'error' => "LV not found: " . $originalPath];
+        return ['success' => false, 'error' => $lang2087 . $originalPath];
     }
     
     $isMounted = false;
@@ -804,7 +810,7 @@ function formatLV($lvPath, $fsType = 'ext4') {
     }
     
     if ($isMounted) {
-        return ['success' => false, 'error' => 'Cannot format mounted LV. Please unmount it first: ' . $mountPoint];
+        return ['success' => false, 'error' => $lang2088 . $mountPoint];
     }
     
     // ============================================================
@@ -817,7 +823,7 @@ function formatLV($lvPath, $fsType = 'ext4') {
         
         $activeCheck2 = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($devicePath) . " 2>/dev/null", true, 5);
         if (empty($activeCheck2) || strpos($activeCheck2, 'a') === false) {
-            return ['success' => false, 'error' => "Cannot activate LV: " . $devicePath];
+            return ['success' => false, 'error' => $lang2089 . $devicePath];
         }
     }
     
@@ -887,16 +893,16 @@ function formatLV($lvPath, $fsType = 'ext4') {
         
         $checkFs = execCmd("blkid -s TYPE -o value " . escapeshellarg($devicePath) . " 2>/dev/null", true, 5);
         if (!empty($checkFs)) {
-            return ['success' => true, 'message' => 'Formatted as ' . $fsType, 'filesystem' => trim($checkFs)];
+            return ['success' => true, 'message' => $lang2090 . $fsType, 'filesystem' => trim($checkFs)];
         }
-        return ['success' => true, 'message' => 'Formatted as ' . $fsType];
+        return ['success' => true, 'message' => $lang2091 . $fsType];
     }
     
     if (stripos($result, 'WARNING:') !== false && (stripos($result, 'done') !== false || stripos($result, 'Creating') !== false)) {
-        return ['success' => true, 'message' => 'Formatted as ' . $fsType . ' (with warnings)'];
+        return ['success' => true, 'message' => $lang2092 . $fsType . $lang2093];
     }
     
-    return ['success' => false, 'error' => 'Format failed: ' . substr($result, 0, 500)];
+    return ['success' => false, 'error' => $lang2094 . substr($result, 0, 500)];
 }
 
 function deleteLV($vgName, $lvName) {
@@ -958,194 +964,379 @@ function renameLV($vgName, $oldName, $newName) {
 // ==================== ФУНКЦИИ МОНТИРОВАНИЯ ====================
 
 function mountLV($device, $mountPoint, $fsType = 'auto', $addToFstab = false) {
-    $originalDevice = $device;
+    $logFile = '/var/www/minib/logs/lvm.log';
+    
+    // Логируем входные параметры
+    $logMessage = date('Y-m-d H:i:s') . " | START | Device: {$device}, MountPoint: {$mountPoint}, FSType: {$fsType}, AddToFstab: " . ($addToFstab ? 'true' : 'false') . "\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    
+    // Определяем правильный путь к устройству
     $device = preg_replace('/^\/dev\//', '', $device);
     $devicePath = "/dev/{$device}";
     $mapperPath = "/dev/mapper/" . str_replace('-', '--', $device);
     
-    $uid = trim(execCmd("id -u www-data 2>/dev/null", false, 3));
-    $gid = trim(execCmd("id -g www-data 2>/dev/null", false, 3));
-    if (empty($uid)) $uid = 33;
-    if (empty($gid)) $gid = 33;
-	
+    $logMessage = date('Y-m-d H:i:s') . " | CHECK | DevicePath: {$devicePath}, MapperPath: {$mapperPath}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    
+    // Выбираем существующий путь
     $usePath = null;
     if (file_exists($devicePath)) {
         $usePath = $devicePath;
     } elseif (file_exists($mapperPath)) {
         $usePath = $mapperPath;
     } else {
-        return ['success' => false, 'error' => "Device not found: {$devicePath} or {$mapperPath}"];
+        $errorMsg = "Device not found: {$devicePath} or {$mapperPath}";
+        $logMessage = date('Y-m-d H:i:s') . " | ERROR | {$errorMsg}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        return ['success' => false, 'error' => $errorMsg];
     }
     
-    $activeCheck = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($usePath) . " 2>/dev/null", true, 5);
-    if (!empty($activeCheck) && strpos($activeCheck, 'a') === false) {
-        execCmd("lvchange -ay " . escapeshellarg($usePath) . " 2>/dev/null", true, 10);
-        sleep(1);
+    $logMessage = date('Y-m-d H:i:s') . " | INFO | Using path: {$usePath}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    
+    // Получаем UID и GID
+    $uid = trim(execCmd("id -u www-data 2>/dev/null", false, 3));
+    $gid = trim(execCmd("id -g www-data 2>/dev/null", false, 3));
+    if (empty($uid)) $uid = 33;
+    if (empty($gid)) $gid = 33;
+    
+    // ПРОВЕРКА: Не смонтировано ли уже устройство (проверяем оба пути)
+    $checkMount = function($path) {
+        return execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($path, '/') . "\\s+'", true, 5);
+    };
+    
+    $mountInfo = $checkMount($usePath);
+    if (empty($mountInfo)) {
+        // Проверяем маппер путь если используем dev путь
+        if ($usePath === $devicePath) {
+            $mountInfo = $checkMount($mapperPath);
+        }
     }
     
-    $mountCheck = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($usePath, '/') . "\\s+'", true, 5);
-    if (!empty($mountCheck)) {
-        $existingPoint = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($usePath, '/') . "\\s+' | awk '{print $2}'", true, 5);
-        return ['success' => false, 'error' => "Device already mounted at " . trim($existingPoint)];
+    if (!empty($mountInfo)) {
+        $existingPoint = trim(execCmd("echo '{$mountInfo}' | awk '{print $2}'", true, 5));
+        
+        // Если уже смонтировано в нужную точку - возвращаем успех
+        if ($existingPoint === $mountPoint) {
+            $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Already mounted at: {$mountPoint}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+            
+            if ($addToFstab) {
+                addToFstab($usePath, $mountPoint, $fsType, $logFile);
+            }
+            
+            return ['success' => true, 'mount_point' => $mountPoint];
+        }
+        
+        // Если смонтировано в другую точку - размонтируем
+        $logMessage = date('Y-m-d H:i:s') . " | INFO | Device mounted at {$existingPoint}, unmounting...\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        execCmd("nsenter -t 1 -m umount {$usePath} 2>/dev/null", true, 5);
+        execCmd("nsenter -t 1 -m umount {$mapperPath} 2>/dev/null", true, 5);
+        sleep(3);
     }
     
+    // ПРОВЕРКА: Точка монтирования не занята другим устройством
     $mpCheck = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '\\s+" . preg_quote($mountPoint, '/') . "\\s+'", true, 5);
     if (!empty($mpCheck)) {
-        return ['success' => false, 'error' => "Mount point {$mountPoint} is already in use"];
+        $mountedDevice = trim(execCmd("echo '{$mpCheck}' | awk '{print $1}'", true, 5));
+        
+        // Если точка занята нашим устройством - возвращаем успех
+        if ($mountedDevice === $usePath || $mountedDevice === $mapperPath) {
+            $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Already mounted at: {$mountPoint}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+            
+            if ($addToFstab) {
+                addToFstab($usePath, $mountPoint, $fsType, $logFile);
+            }
+            
+            return ['success' => true, 'mount_point' => $mountPoint];
+        }
+        
+        // Иначе ошибка
+        $errorMsg = "Mount point {$mountPoint} is busy with device {$mountedDevice}";
+        $logMessage = date('Y-m-d H:i:s') . " | ERROR | {$errorMsg}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        return ['success' => false, 'error' => $errorMsg];
     }
     
-    $detectedFs = $fsType;
+    // АКТИВАЦИЯ LV если нужно
+    $activeCheck = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($usePath) . " 2>/dev/null", true, 5);
+    if (!empty($activeCheck) && strpos($activeCheck, 'a') === false) {
+        $logMessage = date('Y-m-d H:i:s') . " | INFO | Activating LV: {$usePath}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        execCmd("lvchange -ay " . escapeshellarg($usePath) . " 2>/dev/null", true, 10);
+        sleep(3);
+    }
+    
+    // ОПРЕДЕЛЕНИЕ ФАЙЛОВОЙ СИСТЕМЫ
     if ($fsType === 'auto') {
         $detectedFs = trim(execCmd("blkid -s TYPE -o value {$usePath} 2>/dev/null", true, 5));
         if (empty($detectedFs)) {
             $detectedFs = trim(execCmd("lsblk -n -o FSTYPE {$usePath} 2>/dev/null", true, 5));
         }
         if (empty($detectedFs)) {
-            return ['success' => false, 'error' => "Cannot detect filesystem on {$usePath}. Please format it first."];
+            $errorMsg = "Could not detect filesystem on {$usePath}";
+            $logMessage = date('Y-m-d H:i:s') . " | ERROR | {$errorMsg}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+            return ['success' => false, 'error' => $errorMsg];
         }
+        $fsType = $detectedFs;
+        $logMessage = date('Y-m-d H:i:s') . " | INFO | Detected FS: {$fsType}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
     }
     
-    $mountPointCreated = false;
+    // СОЗДАНИЕ ТОЧКИ МОНТИРОВАНИЯ
     if (!is_dir($mountPoint)) {
         $parentDir = dirname($mountPoint);
         if (!is_dir($parentDir) && $parentDir !== '/') {
             execCmd("mkdir -p " . escapeshellarg($parentDir) . " 2>/dev/null", true, 5);
-			execCmd("nsenter -t 1 -m chmod -R 777 \"{$mountPoint}\" 2>/dev/null", true, 5);
-			execCmd("nsenter -t 1 -m chown -R {$uid}:{$gid} \"{$mountPoint}\" 2>/dev/null", true, 5);
         }
         
         $mkdirResult = execCmd("mkdir -p " . escapeshellarg($mountPoint) . " 2>&1", true, 5);
         if (strpos($mkdirResult, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Cannot create mount point: " . $mkdirResult];
+            $errorMsg = "Failed to create mount point: {$mkdirResult}";
+            $logMessage = date('Y-m-d H:i:s') . " | ERROR | {$errorMsg}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+            return ['success' => false, 'error' => $errorMsg];
         }
-        $mountPointCreated = true;
-        execCmd("touch " . escapeshellarg($mountPoint . '/.mount_created_by_disk_manager'), true, 3);
-		execCmd("nsenter -t 1 -m chmod -R 777 \"{$mountPoint}\" 2>/dev/null", true, 5);
-		execCmd("nsenter -t 1 -m chown -R {$uid}:{$gid} \"{$mountPoint}\" 2>/dev/null", true, 5);
+        
+        $logMessage = date('Y-m-d H:i:s') . " | INFO | Created mount point: {$mountPoint}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
     }
     
+    // МОНТИРОВАНИЕ
+    $logMessage = date('Y-m-d H:i:s') . " | INFO | Mounting {$usePath} to {$mountPoint} with FS: {$fsType}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
     
+    // Формируем опции монтирования
+    $mountOptions = 'rw,noatime';
+    if ($fsType === 'ntfs' || $fsType === 'ntfs-3g') {
+        $fsType = 'ntfs-3g';
+        $mountOptions = "uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000,big_writes";
+    } elseif ($fsType === 'vfat' || $fsType === 'fat32') {
+        $fsType = 'vfat';
+        $mountOptions = "uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000,shortname=mixed,utf8";
+    } elseif ($fsType === 'exfat') {
+        $mountOptions = "uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000";
+    } else {
+        $mountOptions = "rw,noatime,uid={$uid},gid={$gid}";
+    }
     
+    // Пытаемся смонтировать
     $mountSuccess = false;
-    $lastError = "";
+    $actualMountPoint = $mountPoint;
     
-    $mountCommands = [];
+    // Способ 1: с опциями
+    $mountCmd = "nsenter -t 1 -m mount -t {$fsType} -o {$mountOptions} {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
+    $logMessage = date('Y-m-d H:i:s') . " | MOUNT | Executing: {$mountCmd}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    execCmd($mountCmd, true, 30);
+    sleep(3);
     
-    switch ($detectedFs) {
-        case 'ntfs':
-        case 'ntfs-3g':
-            $detectedFs = 'ntfs-3g';
-            $mountCommands[] = "nsenter -t 1 -m mount -t ntfs-3g -o uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000,big_writes {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            $mountCommands[] = "nsenter -t 1 -m ntfs-3g -o uid={$uid},gid={$gid},umask=000 {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            break;
-        case 'exfat':
-            $mountCommands[] = "nsenter -t 1 -m mount -t exfat -o uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000 {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            break;
-        case 'vfat':
-        case 'fat32':
-            $detectedFs = 'vfat';
-            $mountCommands[] = "nsenter -t 1 -m mount -t vfat -o uid={$uid},gid={$gid},umask=000,fmask=000,dmask=000,shortname=mixed,utf8 {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            break;
-        case 'xfs':
-            $mountCommands[] = "nsenter -t 1 -m mount -t xfs -o uid={$uid},gid={$gid} {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            break;
-        case 'btrfs':
-            $mountCommands[] = "nsenter -t 1 -m mount -t btrfs -o uid={$uid},gid={$gid} {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            break;
-        default: 
-            $mountCommands[] = "nsenter -t 1 -m mount -t {$detectedFs} -o rw,noatime,uid={$uid},gid={$gid} {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-            $mountCommands[] = "nsenter -t 1 -m mount -t {$detectedFs} -o rw,noatime {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
+    // Проверяем успех (проверяем оба пути)
+    $verify = function() use ($usePath, $mapperPath, $mountPoint) {
+        $result = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($usePath, '/') . "\\s+'", true, 5);
+        if (empty($result) && $usePath !== $mapperPath) {
+            $result = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($mapperPath, '/') . "\\s+'", true, 5);
+        }
+        return $result;
+    };
+    
+    $verifyResult = $verify();
+    
+    if (!empty($verifyResult)) {
+        $actualMountPoint = trim(execCmd("echo '{$verifyResult}' | awk '{print $2}'", true, 5));
+        $mountSuccess = true;
+        $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Mounted at: {$actualMountPoint}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+    } else {
+        // Способ 2: без опций
+        $logMessage = date('Y-m-d H:i:s') . " | WARN | First mount attempt failed, trying without options...\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        
+        $mountCmd = "nsenter -t 1 -m mount {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
+        $logMessage = date('Y-m-d H:i:s') . " | MOUNT | Executing: {$mountCmd}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        execCmd($mountCmd, true, 30);
+        sleep(3);
+        
+        $verifyResult = $verify();
+        if (!empty($verifyResult)) {
+            $actualMountPoint = trim(execCmd("echo '{$verifyResult}' | awk '{print $2}'", true, 5));
+            $mountSuccess = true;
+            $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Mounted at: {$actualMountPoint}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+        }
     }
     
-    $mountCommands[] = "nsenter -t 1 -m mount {$usePath} " . escapeshellarg($mountPoint) . " 2>&1";
-    
-    foreach ($mountCommands as $cmd) {
-        $result = execCmd($cmd, true, 30);
-        sleep(1);
+    // ФИНАЛЬНАЯ ПРОВЕРКА через lsblk
+    if (!$mountSuccess) {
+        $logMessage = date('Y-m-d H:i:s') . " | INFO | Checking mount status via lsblk...\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
         
-        $verifyCheck = execCmd("sudo nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($usePath, '/') . "\\s+'", true, 5);
-        if (!empty($verifyCheck)) {
+        $lsblkCheck = execCmd("lsblk -n -o MOUNTPOINT {$usePath} 2>/dev/null", true, 5);
+        if (!empty($lsblkCheck) && trim($lsblkCheck) === $mountPoint) {
             $mountSuccess = true;
-            $actualMountPoint = trim(execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '^" . preg_quote($usePath, '/') . "\\s+' | awk '{print $2}'", true, 5));
-            execCmd("nsenter -t 1 -m chmod 777 \"{$mountPoint}\" 2>/dev/null", true, 5);
-			execCmd("nsenter -t 1 -m chown {$uid}:{$gid} \"{$mountPoint}\" 2>/dev/null", true, 5);
-			break;
+            $actualMountPoint = $mountPoint;
+            $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Mounted at: {$actualMountPoint} (verified by lsblk)\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
         }
-        
-        $lastError = $result;
     }
     
     if (!$mountSuccess) {
-        if ($mountPointCreated) {
-            execCmd("nsenter -t 1 -m chmod 777 \"{$mountPoint}\" 2>/dev/null", true, 5);
-			execCmd("nsenter -t 1 -m chown {$uid}:{$gid} \"{$mountPoint}\" 2>/dev/null", true, 5);
-        }
-        sleep(1);
-		
-		execCmd("sudo partprobe 2>/dev/null", true, 5);
-		execCmd("sudo udevadm settle 2>/dev/null", true, 5);
-    
-		
-        $errorMsg = "Mount failed: ";
-        if (strpos($lastError, 'wrong fs type') !== false) {
-            $errorMsg .= "Wrong filesystem type. Try formatting the LV first.";
-        } elseif (strpos($lastError, 'bad option') !== false) {
-            $errorMsg .= "Bad mount option for filesystem type '{$detectedFs}'.";
-        } elseif (strpos($lastError, 'bad superblock') !== false) {
-            $errorMsg .= "Bad superblock. Filesystem may be corrupted. Try reformatting.";
-        } elseif (strpos($lastError, 'unknown filesystem') !== false) {
-            $errorMsg .= "Unknown filesystem type '{$detectedFs}'. Install required packages.";
-        } else {
-            $errorMsg .= $lastError;
+        $errorMsg = "Mount failed - device not found in /proc/mounts";
+        $logMessage = date('Y-m-d H:i:s') . " | ERROR | {$errorMsg}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        
+        // Но если устройство все же смонтировано (по lsblk), возвращаем успех
+        $lsblkCheck = execCmd("lsblk -n -o MOUNTPOINT {$usePath} 2>/dev/null", true, 5);
+        if (!empty($lsblkCheck)) {
+            $actualMountPoint = trim($lsblkCheck);
+            $logMessage = date('Y-m-d H:i:s') . " | SUCCESS | Device mounted at: {$actualMountPoint} (detected by lsblk)\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+            
+            if ($addToFstab) {
+                addToFstab($usePath, $actualMountPoint, $fsType, $logFile);
+            }
+            
+            return ['success' => true, 'mount_point' => $actualMountPoint];
         }
         
-        return ['success' => true, 'mount_point' => $actualMountPoint, 'error' => $errorMsg];
+        return ['success' => false, 'error' => $errorMsg];
     }
     
-    execCmd("nsenter -t 1 -m chmod 777 \"{$mountPoint}\" 2>/dev/null", true, 5);
-    execCmd("nsenter -t 1 -m chown {$uid}:{$gid} \"{$mountPoint}\" 2>/dev/null", true, 5);
+    // Устанавливаем права
+    execCmd("nsenter -t 1 -m chmod 777 \"{$actualMountPoint}\" 2>/dev/null", true, 5);
+    execCmd("nsenter -t 1 -m chown {$uid}:{$gid} \"{$actualMountPoint}\" 2>/dev/null", true, 5);
     
+    // Добавляем в fstab если нужно
     if ($addToFstab) {
-        $uuid = trim(execCmd("blkid -s UUID -o value {$usePath} 2>/dev/null", true, 5));
-        if (!empty($uuid)) {
-            $fstabOptions = 'defaults,noatime';
-            if ($detectedFs === 'ntfs-3g') {
-                $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000';
-            } elseif ($detectedFs === 'vfat') {
-                $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000,shortname=mixed,utf8';
-            } elseif ($detectedFs === 'exfat') {
-                $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000';
-            }
-            $fstabLine = "UUID={$uuid} {$actualMountPoint} {$detectedFs} {$fstabOptions} 0 2\n";
-            $currentFstab = @file_get_contents('/etc/fstab');
-            if ($currentFstab !== false && strpos($currentFstab, $uuid) === false && strpos($currentFstab, $actualMountPoint) === false) {
-                @file_put_contents('/etc/fstab', $fstabLine, FILE_APPEND);
-            }
-        }
+        addToFstab($usePath, $actualMountPoint, $fsType, $logFile);
     }
+    
+    $logMessage = date('Y-m-d H:i:s') . " | COMPLETE | Mount successful, mount point: {$actualMountPoint}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
     
     return ['success' => true, 'mount_point' => $actualMountPoint];
 }
 
-function umountLV($mountPoint) {
-    $checkMount = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '\\s+" . preg_quote($mountPoint, '/') . "\\s+'", true, 5);
-    if (empty($checkMount)) {
-        return ['success' => false, 'error' => 'Mount point not found in /proc/mounts'];
+//  функция для добавления в fstab
+function addToFstab($device, $mountPoint, $fsType, $logFile) {
+    $uuid = trim(execCmd("blkid -s UUID -o value {$device} 2>/dev/null", true, 5));
+    if (empty($uuid)) {
+        $logMessage = date('Y-m-d H:i:s') . " | FSTAB | Cannot get UUID for {$device}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        return;
     }
     
+    $fstabOptions = 'defaults,noatime';
+    if ($fsType === 'ntfs-3g') {
+        $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000';
+    } elseif ($fsType === 'vfat') {
+        $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000,shortname=mixed,utf8';
+    } elseif ($fsType === 'exfat') {
+        $fstabOptions = 'defaults,noatime,uid=0,gid=0,umask=000,fmask=000,dmask=000';
+    }
+    
+    $fstabLine = "UUID={$uuid} {$mountPoint} {$fsType} {$fstabOptions} 0 2\n";
+    $currentFstab = @file_get_contents('/etc/fstab');
+    
+    if ($currentFstab !== false) {
+        if (strpos($currentFstab, $uuid) === false && strpos($currentFstab, $mountPoint) === false) {
+            @file_put_contents('/etc/fstab', $fstabLine, FILE_APPEND);
+            $logMessage = date('Y-m-d H:i:s') . " | FSTAB | Added: {$fstabLine}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+        } else {
+            $logMessage = date('Y-m-d H:i:s') . " | FSTAB | Entry already exists, skipped\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+        }
+    }
+}
+
+function umountLV($mountPoint, $removeFromFstab = false) {
+    global $lang2109, $lang2110;
+    
+    $logFile = '/var/www/minib/logs/lvm.log';
+    $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | Start | MountPoint: {$mountPoint}, RemoveFromFstab: " . ($removeFromFstab ? 'true' : 'false') . "\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    
+    // Проверяем, смонтирована ли точка
+    $checkMount = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '\\s+" . preg_quote($mountPoint, '/') . "\\s+'", true, 5);
+    if (empty($checkMount)) {
+        $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | ERROR | Not mounted: {$mountPoint}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        return ['success' => false, 'error' => $lang2109];
+    }
+    
+    // Получаем информацию об устройстве
     $device = execCmd("nsenter -t 1 -m cat /proc/mounts | grep -E '\\s+" . preg_quote($mountPoint, '/') . "\\s+' | awk '{print $1}'", true, 5);
     $device = trim($device);
     
+    $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | Device: {$device}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    
+    // Получаем UUID устройства для удаления из fstab
+    $uuid = trim(execCmd("blkid -s UUID -o value {$device} 2>/dev/null", true, 5));
+    
+    // Проверяем, есть ли запись в fstab
+    $fstabEntry = null;
+    $fstabContent = @file_get_contents('/etc/fstab');
+    if ($fstabContent !== false) {
+        $lines = explode("\n", $fstabContent);
+        foreach ($lines as $line) {
+            if (empty(trim($line)) || strpos($line, '#') === 0) continue;
+            
+            $parts = preg_split('/\s+/', trim($line));
+            if (count($parts) >= 2) {
+                // Проверяем по UUID или точке монтирования
+                if (!empty($uuid) && strpos($parts[0], $uuid) !== false) {
+                    $fstabEntry = $line;
+                    break;
+                }
+                if ($parts[1] === $mountPoint) {
+                    $fstabEntry = $line;
+                    break;
+                }
+                // Проверяем по пути устройства
+                if ($parts[0] === $device) {
+                    $fstabEntry = $line;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Удаляем из fstab если нужно
+    if ($removeFromFstab && $fstabEntry !== null && $fstabContent !== false) {
+        $newFstab = str_replace($fstabEntry . "\n", '', $fstabContent);
+        $newFstab = str_replace($fstabEntry, '', $newFstab);
+        
+        // Убираем лишние пустые строки
+        $newFstab = preg_replace("/\n{3,}/", "\n\n", $newFstab);
+        $newFstab = trim($newFstab) . "\n";
+        
+        $result = @file_put_contents('/etc/fstab', $newFstab);
+        if ($result !== false) {
+            $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | FSTAB | Removed entry: {$fstabEntry}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+        } else {
+            $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | FSTAB | Failed to remove entry\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND);
+        }
+    }
+    
+    // Пытаемся размонтировать
     $result = execCmd("nsenter -t 1 -m umount " . escapeshellarg($mountPoint), true, 30);
     
     $markerFile = $mountPoint . '/.mount_created_by_disk_manager';
     $wasCreatedByMount = file_exists($markerFile);
-	
+    
     if (strpos($result, 'not mounted') !== false) {
         $result = '';
     }
     
-    if (empty($result) || strpos($result, 'success') !== false) {
+    if (empty($result) || strpos($result, 'success') !== false || strpos($result, 'umount') !== false) {
         if ($wasCreatedByMount && is_dir($mountPoint)) {
             execCmd("rm -f " . escapeshellarg($markerFile), true, 3);
             
@@ -1160,11 +1351,17 @@ function umountLV($mountPoint) {
             
             if ($isEmpty) {
                 execCmd("rmdir " . escapeshellarg($mountPoint) . " 2>/dev/null", true, 3);
+                $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | Removed empty mount point: {$mountPoint}\n";
+                file_put_contents($logFile, $logMessage, FILE_APPEND);
             }
         }
+        
+        $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | SUCCESS | Unmounted: {$mountPoint}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
         return ['success' => true];
     }
     
+    // Пробуем принудительное размонтирование
     $result2 = execCmd("nsenter -t 1 -m umount -l " . escapeshellarg($mountPoint), true, 10);
     if (empty($result2)) {
         if ($wasCreatedByMount && is_dir($mountPoint)) {
@@ -1181,11 +1378,18 @@ function umountLV($mountPoint) {
             
             if ($isEmpty) {
                 execCmd("rmdir " . escapeshellarg($mountPoint) . " 2>/dev/null", true, 3);
+                $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | Removed empty mount point: {$mountPoint}\n";
+                file_put_contents($logFile, $logMessage, FILE_APPEND);
             }
         }
-        return ['success' => true, 'message' => 'Force unmounted'];
+        
+        $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | SUCCESS | Lazy umount: {$mountPoint}\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        return ['success' => true, 'message' => $lang2110];
     }
     
+    $logMessage = date('Y-m-d H:i:s') . " | UMOUNT | ERROR | Failed: {$result}\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND);
     return ['success' => false, 'error' => $result];
 }
 
@@ -1294,6 +1498,7 @@ function getAllSnapshots() {
 }
 
 function createSnapshot($vgName, $originLvName, $snapshotName, $size) {
+	global $lang2111, $lang2112, $lang2113, $lang2114;
     $checkCmd = "lvs --noheadings -o lv_name " . escapeshellarg($vgName . '/' . $snapshotName) . " 2>/dev/null";
     $check = execCmd($checkCmd, true, 5);
     
@@ -1311,13 +1516,13 @@ function createSnapshot($vgName, $originLvName, $snapshotName, $size) {
 
     $originCheck = execCmd("lvs --noheadings -o lv_name " . escapeshellarg($vgName . '/' . $originLvName) . " 2>/dev/null", true, 5);
     if (empty(trim($originCheck))) {
-        return ['success' => false, 'error' => 'Original LV ' . $originLvName . ' not found'];
+        return ['success' => false, 'error' => $lang2111 . $originLvName . $lang2112];
     }
     
 
     $originAttr = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($vgName . '/' . $originLvName) . " 2>/dev/null", true, 5);
     if (strpos($originAttr, 's') !== false || strpos($originAttr, 'S') !== false) {
-        return ['success' => false, 'error' => 'Cannot create snapshot of a snapshot'];
+        return ['success' => false, 'error' => $lang2113];
     }
     
 
@@ -1343,19 +1548,20 @@ function createSnapshot($vgName, $originLvName, $snapshotName, $size) {
         strpos($result, 'Snapshot') !== false) {
         
         sleep(1);
-        return ['success' => true, 'message' => 'Snapshot created successfully', 'snapshot_name' => $finalName];
+        return ['success' => true, 'message' => $lang2114, 'snapshot_name' => $finalName];
     }
     
     return ['success' => false, 'error' => $result];
 }
 
 function restoreSnapshot($vgName, $snapshotName, $originLvName = null) {
+	global $lang2115, $lang2116, $lang2117;
 
     if (!$originLvName) {
         $originInfo = execCmd("lvs --noheadings -o origin " . escapeshellarg($vgName . '/' . $snapshotName) . " 2>/dev/null", true, 5);
         $originLvName = trim($originInfo);
         if (empty($originLvName)) {
-            return ['success' => false, 'error' => 'Cannot determine origin LV for snapshot ' . $snapshotName];
+            return ['success' => false, 'error' => $lang2115 . $snapshotName];
         }
     }
     
@@ -1382,7 +1588,7 @@ function restoreSnapshot($vgName, $snapshotName, $originLvName = null) {
         
         execCmd("vgchange -ay " . escapeshellarg($vgName) . " 2>/dev/null", true, 10);
         
-        return ['success' => true, 'message' => 'Restore started. Merge in progress...'];
+        return ['success' => true, 'message' => $lang2116];
     }
     
     if (strpos($result, 'Cannot merge') !== false) {
@@ -1390,7 +1596,7 @@ function restoreSnapshot($vgName, $snapshotName, $originLvName = null) {
         $ddResult = execCmd($ddCmd, true, 600);
         
         if (strpos($ddResult, 'bytes') !== false || strpos($ddResult, 'records') !== false) {
-            return ['success' => true, 'message' => 'Restore completed via dd'];
+            return ['success' => true, 'message' => $lang2117];
         }
         return ['success' => false, 'error' => $ddResult];
     }
@@ -1468,8 +1674,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     $input = $_GET;
 }
-
-$response = ['success' => false, 'error' => 'Unknown action'];
+global $lang2118;
+$response = ['success' => false, 'error' => $lang2118];
 
 switch ($action) {
     case 'get_all_lvm':
@@ -1491,179 +1697,199 @@ switch ($action) {
         break;
         
     case 'get_pvs_in_vg':
+		global $lang2119;
         $vgName = $input['vg_name'] ?? '';
         if (empty($vgName)) {
-            $response = ['success' => false, 'error' => 'VG name required'];
+            $response = ['success' => false, 'error' => $lang2119];
         } else {
             $response = ['success' => true, 'pvs' => getPVsInVG($vgName)];
         }
         break;
         
     case 'get_partition_info':
+		global $lang2120;
         $partition = $input['partition'] ?? '';
         if (empty($partition)) {
-            $response = ['success' => false, 'error' => 'Partition name required'];
+            $response = ['success' => false, 'error' => $lang2120];
         } else {
             $response = ['success' => true, 'info' => getPartitionInfo($partition)];
         }
         break;
         
     case 'disk_info':
+		global $lang2121;
         $disk = $input['disk'] ?? '';
         if (empty($disk)) {
-            $response = ['success' => false, 'error' => 'Disk name required'];
+            $response = ['success' => false, 'error' => $lang2121];
         } else {
             $response = ['success' => true, 'info' => getDiskInfo($disk)];
         }
         break;
         
     case 'lvm_create_pv':
+		global $lang2122;
         $device = $input['device'] ?? '';
         if (empty($device)) {
-            $response = ['success' => false, 'error' => 'Device required'];
+            $response = ['success' => false, 'error' => $lang2122];
         } else {
             $response = createPV($device);
         }
         break;
         
     case 'lvm_delete_pv':
+		global $lang2123;
         $pvName = $input['pv_name'] ?? '';
         if (empty($pvName)) {
-            $response = ['success' => false, 'error' => 'PV name required'];
+            $response = ['success' => false, 'error' => $lang2123];
         } else {
             $response = deletePV($pvName);
         }
         break;
         
     case 'lvm_create_vg':
+		global $lang2124;
         $vgName = $input['vg_name'] ?? '';
         $devices = $input['devices'] ?? [];
         if (empty($vgName) || empty($devices)) {
-            $response = ['success' => false, 'error' => 'VG name and devices required'];
+            $response = ['success' => false, 'error' => $lang2124];
         } else {
             $response = createVG($vgName, $devices);
         }
         break;
         
     case 'lvm_delete_vg':
+		global $lang2125;
         $vgName = $input['vg_name'] ?? '';
         if (empty($vgName)) {
-            $response = ['success' => false, 'error' => 'VG name required'];
+            $response = ['success' => false, 'error' => $lang2125];
         } else {
             $response = deleteVG($vgName);
         }
         break;
         
     case 'lvm_extend_vg':
+		global $lang2126;
         $vgName = $input['vg_name'] ?? '';
         $devices = $input['devices'] ?? [];
         if (empty($vgName) || empty($devices)) {
-            $response = ['success' => false, 'error' => 'VG name and devices required'];
+            $response = ['success' => false, 'error' => $lang2126];
         } else {
             $response = extendVG($vgName, $devices);
         }
         break;
         
     case 'lvm_reduce_vg':
+		global $lang2127;
         $vgName = $input['vg_name'] ?? '';
         $devices = $input['devices'] ?? [];
         if (empty($vgName) || empty($devices)) {
-            $response = ['success' => false, 'error' => 'VG name and devices required'];
+            $response = ['success' => false, 'error' => $lang2127];
         } else {
             $response = reduceVG($vgName, $devices);
         }
         break;
         
     case 'lvm_rename_vg':
+		global $lang2128;
         $oldName = $input['old_name'] ?? '';
         $newName = $input['new_name'] ?? '';
         if (empty($oldName) || empty($newName)) {
-            $response = ['success' => false, 'error' => 'Old and new names required'];
+            $response = ['success' => false, 'error' => $lang2128];
         } else {
             $response = renameVG($oldName, $newName);
         }
         break;
         
     case 'lvm_create_lv':
+		global $lang2129;
         $vgName = $input['vg_name'] ?? '';
         $lvName = $input['lv_name'] ?? '';
         $size = $input['size'] ?? '';
         $format = $input['format'] ?? false;
         $fsType = $input['fs_type'] ?? 'ext4';
         if (empty($vgName) || empty($lvName) || empty($size)) {
-            $response = ['success' => false, 'error' => 'VG name, LV name and size required'];
+            $response = ['success' => false, 'error' => $lang2129];
         } else {
             $response = createLV($vgName, $lvName, $size, $format, $fsType);
         }
         break;
         
     case 'lvm_format_lv':
+		global $lang2130;
         $lvPath = $input['lv_path'] ?? '';
         $fsType = $input['fs_type'] ?? 'ext4';
         if (empty($lvPath)) {
-            $response = ['success' => false, 'error' => 'LV path required'];
+            $response = ['success' => false, 'error' => $lang2130];
         } else {
             $response = formatLV($lvPath, $fsType);
         }
         break;
         
     case 'lvm_delete_lv':
+		global $lang2131;
         $vgName = $input['vg_name'] ?? '';
         $lvName = $input['lv_name'] ?? '';
         if (empty($vgName) || empty($lvName)) {
-            $response = ['success' => false, 'error' => 'VG name and LV name required'];
+            $response = ['success' => false, 'error' => $lang2131];
         } else {
             $response = deleteLV($vgName, $lvName);
         }
         break;
         
     case 'lvm_extend_lv':
+		global $lang2132;
         $vgName = $input['vg_name'] ?? '';
         $lvName = $input['lv_name'] ?? '';
         $size = $input['size'] ?? '';
         if (empty($vgName) || empty($lvName) || empty($size)) {
-            $response = ['success' => false, 'error' => 'VG name, LV name and size required'];
+            $response = ['success' => false, 'error' => $lang2132];
         } else {
             $response = extendLV($vgName, $lvName, $size);
         }
         break;
         
     case 'lvm_rename_lv':
+		global $lang2133;
         $vgName = $input['vg_name'] ?? '';
         $oldName = $input['old_name'] ?? '';
         $newName = $input['new_name'] ?? '';
         if (empty($vgName) || empty($oldName) || empty($newName)) {
-            $response = ['success' => false, 'error' => 'VG name, old and new names required'];
+            $response = ['success' => false, 'error' => $lang2133];
         } else {
             $response = renameLV($vgName, $oldName, $newName);
         }
         break;
         
     case 'lvm_mount':
+		global $lang2134;
         $device = $input['device'] ?? '';
         $mountPoint = $input['mount_point'] ?? '';
         $fs = $input['fs'] ?? 'auto';
         $fstab = $input['fstab'] ?? false;
         if (empty($device) || empty($mountPoint)) {
-            $response = ['success' => false, 'error' => 'Device and mount point required'];
+            $response = ['success' => false, 'error' => $lang2134];
         } else {
             $response = mountLV($device, $mountPoint, $fs, $fstab);
         }
         break;
         
     case 'lvm_umount':
-        $mountPoint = $input['mount_point'] ?? '';
-        if (empty($mountPoint)) {
-            $response = ['success' => false, 'error' => 'Mount point required'];
-        } else {
-            $response = umountLV($mountPoint);
-        }
-        break;
+		global $lang2135;
+		$mountPoint = $input['mount_point'] ?? '';
+		$removeFromFstab = isset($input['remove_from_fstab']) ? filter_var($input['remove_from_fstab'], FILTER_VALIDATE_BOOLEAN) : false;
+		
+		if (empty($mountPoint)) {
+			$response = ['success' => false, 'error' => $lang2135];
+		} else {
+			$response = umountLV($mountPoint, $removeFromFstab);
+		}
+		break;
     
 	case 'lv_status':
+		global $lang2136;
 		$lvPath = $input['lv_path'] ?? '';
 		if (empty($lvPath)) {
-			$response = ['success' => false, 'error' => 'LV path required'];
+			$response = ['success' => false, 'error' => $lang2136];
 		} else {
 			$exists = execCmd("lvs " . escapeshellarg($lvPath) . " 2>/dev/null", true, 5);
 			$active = execCmd("lvs --noheadings -o lv_attr " . escapeshellarg($lvPath) . " 2>/dev/null", true, 5);
@@ -1680,15 +1906,16 @@ switch ($action) {
 		break;
     
 	case 'get_lv_info':
+		global $lang2137, $lang2138;
 		$lvPath = $input['lv_path'] ?? '';
 		if (empty($lvPath)) {
-			$response = ['success' => false, 'error' => 'LV path required'];
+			$response = ['success' => false, 'error' => $lang2137];
 		} else {
 			$info = getLVInfo($lvPath);
 			if ($info) {
 				$response = ['success' => true, 'info' => $info];
 			} else {
-				$response = ['success' => false, 'error' => 'LV not found'];
+				$response = ['success' => false, 'error' => $lang2138];
 			}
 		}
 		break;
@@ -1698,60 +1925,65 @@ switch ($action) {
 		break;
 		
 	case 'get_snapshot_info':
+		global $lang2139, $lang2140;
 		$vgName = $input['vg_name'] ?? '';
 		$snapshotName = $input['snapshot_name'] ?? '';
 		if (empty($vgName) || empty($snapshotName)) {
-			$response = ['success' => false, 'error' => 'VG name and snapshot name required'];
+			$response = ['success' => false, 'error' => $lang2139];
 		} else {
 			$info = getSnapshotInfo($vgName, $snapshotName);
 			if (!empty($info)) {
 				$response = ['success' => true, 'info' => $info];
 			} else {
-				$response = ['success' => false, 'error' => 'Snapshot not found'];
+				$response = ['success' => false, 'error' => $lang2140];
 			}
 		}
 		break;
 		
 	case 'create_snapshot':
+		global $lang2141;
 		$vgName = $input['vg_name'] ?? '';
 		$originLv = $input['origin_lv'] ?? '';
 		$snapshotName = $input['snapshot_name'] ?? '';
 		$size = $input['size'] ?? '10G';
 		
 		if (empty($vgName) || empty($originLv) || empty($snapshotName)) {
-			$response = ['success' => false, 'error' => 'VG name, origin LV and snapshot name required'];
+			$response = ['success' => false, 'error' => $lang2141];
 		} else {
 			$response = createSnapshot($vgName, $originLv, $snapshotName, $size);
 		}
 		break;
 		
 	case 'restore_snapshot':
+		global $lang2142;
 		$vgName = $input['vg_name'] ?? '';
 		$snapshotName = $input['snapshot_name'] ?? '';
 		$originLv = $input['origin_lv'] ?? null;
 		
 		if (empty($vgName) || empty($snapshotName)) {
-			$response = ['success' => false, 'error' => 'VG name and snapshot name required'];
+			$response = ['success' => false, 'error' => $lang2142];
 		} else {
 			$response = restoreSnapshot($vgName, $snapshotName, $originLv);
 		}
 		break;
 		
 	case 'delete_snapshot':
+		global $lang2143;
 		$vgName = $input['vg_name'] ?? '';
 		$snapshotName = $input['snapshot_name'] ?? '';
 		
 		if (empty($vgName) || empty($snapshotName)) {
-			$response = ['success' => false, 'error' => 'VG name and snapshot name required'];
+			$response = ['success' => false, 'error' => $lang2143];
 		} else {
 			$response = deleteSnapshot($vgName, $snapshotName);
 		}
 		break;
 	
 	case 'get_disk_usage':
+		global $lang2144, $lang2145, $lang2146;
 		$path = $input['path'] ?? '';
 		if (empty($path)) {
-			$response = ['success' => false, 'error' => 'Path required'];
+			$response = ['success' => false, 'error' => $lang2144];
 		} else {
 			$df = execCmd("df -B1 " . escapeshellarg($path) . " 2>/dev/null | tail -1", true, 5);
 			if (!empty($df)) {
@@ -1776,136 +2008,137 @@ switch ($action) {
 						]
 					];
 				} else {
-					$response = ['success' => false, 'error' => 'Cannot parse df output'];
+					$response = ['success' => false, 'error' => $lang2145];
 				}
 			} else {
-				$response = ['success' => false, 'error' => 'Path not mounted or invalid'];
+				$response = ['success' => false, 'error' => $lang2146];
 			}
 		}
 		break;
 	
 	case 'get_raw_devices_with_status':
-    $allPVs = getAllPVs();
-    $pvPaths = [];
-    foreach ($allPVs as $pv) {
-        $pvPaths[] = $pv['name'];
-    }
-    
-    $rootDisk = getRootDisk();
-    $devices = [];
-    
-    $lsblkJson = execCmd("lsblk -J -p -o NAME,TYPE,SIZE,MODEL,FSTYPE 2>/dev/null", true, 10);
-    
-    if (!empty($lsblkJson)) {
-        $data = json_decode($lsblkJson, true);
-        if ($data && isset($data['blockdevices'])) {
-            foreach ($data['blockdevices'] as $device) {
-                $name = $device['name'];
-                $type = $device['type'];
-                $size = $device['size'] ?? '0';
-                $model = $device['model'] ?? null;
-                $fstype = $device['fstype'] ?? null;
-                
-                if ($type === 'rom') continue;
-                if (strpos($name, 'loop') !== false) continue;
-                if (strpos($name, 'dm-') !== false) continue;
-                if (strpos($name, 'mapper') !== false) continue;
-                if (strpos($name, '--') !== false) continue;
-                
-                if (preg_match('/\/dev\/mapper\//', $name)) continue;
-                if (preg_match('/-cow$/', $name)) continue;
-                if (preg_match('/-real$/', $name)) continue;
-                if (preg_match('/snap_/', $name)) continue;
-                
-                $devicePath = $name;
-                $shortName = str_replace('/dev/', '', $name);
-                $isPV = in_array($devicePath, $pvPaths);
-                $isSystem = ($shortName === $rootDisk);
-                
-                $isPVDevice = $isPV || ($fstype === 'LVM2_member');
-                
-                $devices[] = [
-                    'name' => $shortName,
-                    'path' => $devicePath,
-                    'size_formatted' => $size,
-                    'type' => 'disk',
-                    'is_pv' => $isPVDevice,
-                    'is_system' => $isSystem,
-                    'fstype' => ($fstype && $fstype !== 'LVM2_member') ? $fstype : null,
-                    'model' => $model,
-                    'disabled_reason' => $isPVDevice ? 'already_pv' : ($isSystem ? 'system' : null)
-                ];
-                
-                if (isset($device['children']) && is_array($device['children'])) {
-                    foreach ($device['children'] as $part) {
-                        $partName = $part['name'];
-                        $partType = $part['type'];
-                        $partSize = $part['size'] ?? '0';
-                        $partFstype = $part['fstype'] ?? null;
-                        
-                        if (strpos($partName, 'mapper') !== false) continue;
-                        if (strpos($partName, 'dm-') !== false) continue;
-                        if (strpos($partName, '--') !== false) continue;
-                        
-                        if ($partType === 'extended') continue;
-                        
-                        $partPath = $partName;
-                        $partShortName = str_replace('/dev/', '', $partName);
-                        $partIsPV = in_array($partPath, $pvPaths);
-                        
-                        $isPVPart = $partIsPV || ($partFstype === 'LVM2_member');
-                        
-                        $devices[] = [
-                            'name' => $partShortName,
-                            'path' => $partPath,
-                            'size_formatted' => $partSize,
-                            'type' => 'partition',
-                            'is_pv' => $isPVPart,
-                            'is_system' => false,
-                            'fstype' => ($partFstype && $partFstype !== 'LVM2_member') ? $partFstype : null,
-                            'model' => null,
-                            'disabled_reason' => $isPVPart ? 'already_pv' : null,
-                            'parent_disk' => $shortName
-                        ];
-                    }
-                }
-            }
-        }
-    }
-    
-    foreach ($allPVs as $pv) {
-        $pvPath = $pv['name'];
-        $pvName = str_replace('/dev/', '', $pvPath);
-        
-        $exists = false;
-        foreach ($devices as $dev) {
-            if ($dev['path'] === $pvPath) {
-                $exists = true;
-                break;
-            }
-        }
-        
-        if (!$exists) {
-            $sizeInfo = execCmd("lsblk -p -n -o SIZE " . escapeshellarg($pvPath) . " 2>/dev/null | head -1", true, 5);
-            $devices[] = [
-                'name' => $pvName,
-                'path' => $pvPath,
-                'size_formatted' => trim($sizeInfo) ?: '0',
-                'type' => 'disk',
-                'is_pv' => true,
-                'is_system' => false,
-                'fstype' => null,
-                'model' => null,
-                'disabled_reason' => 'already_pv'
-            ];
-        }
-    }
-    
-    $response = ['success' => true, 'devices' => $devices];
-    break;
+		$allPVs = getAllPVs();
+		$pvPaths = [];
+		foreach ($allPVs as $pv) {
+			$pvPaths[] = $pv['name'];
+		}
+		
+		$rootDisk = getRootDisk();
+		$devices = [];
+		
+		$lsblkJson = execCmd("lsblk -J -p -o NAME,TYPE,SIZE,MODEL,FSTYPE 2>/dev/null", true, 10);
+		
+		if (!empty($lsblkJson)) {
+			$data = json_decode($lsblkJson, true);
+			if ($data && isset($data['blockdevices'])) {
+				foreach ($data['blockdevices'] as $device) {
+					$name = $device['name'];
+					$type = $device['type'];
+					$size = $device['size'] ?? '0';
+					$model = $device['model'] ?? null;
+					$fstype = $device['fstype'] ?? null;
+					
+					if ($type === 'rom') continue;
+					if (strpos($name, 'loop') !== false) continue;
+					if (strpos($name, 'dm-') !== false) continue;
+					if (strpos($name, 'mapper') !== false) continue;
+					if (strpos($name, '--') !== false) continue;
+					
+					if (preg_match('/\/dev\/mapper\//', $name)) continue;
+					if (preg_match('/-cow$/', $name)) continue;
+					if (preg_match('/-real$/', $name)) continue;
+					if (preg_match('/snap_/', $name)) continue;
+					
+					$devicePath = $name;
+					$shortName = str_replace('/dev/', '', $name);
+					$isPV = in_array($devicePath, $pvPaths);
+					$isSystem = ($shortName === $rootDisk);
+					
+					$isPVDevice = $isPV || ($fstype === 'LVM2_member');
+					
+					$devices[] = [
+						'name' => $shortName,
+						'path' => $devicePath,
+						'size_formatted' => $size,
+						'type' => 'disk',
+						'is_pv' => $isPVDevice,
+						'is_system' => $isSystem,
+						'fstype' => ($fstype && $fstype !== 'LVM2_member') ? $fstype : null,
+						'model' => $model,
+						'disabled_reason' => $isPVDevice ? 'already_pv' : ($isSystem ? 'system' : null)
+					];
+					
+					if (isset($device['children']) && is_array($device['children'])) {
+						foreach ($device['children'] as $part) {
+							$partName = $part['name'];
+							$partType = $part['type'];
+							$partSize = $part['size'] ?? '0';
+							$partFstype = $part['fstype'] ?? null;
+							
+							if (strpos($partName, 'mapper') !== false) continue;
+							if (strpos($partName, 'dm-') !== false) continue;
+							if (strpos($partName, '--') !== false) continue;
+							
+							if ($partType === 'extended') continue;
+							
+							$partPath = $partName;
+							$partShortName = str_replace('/dev/', '', $partName);
+							$partIsPV = in_array($partPath, $pvPaths);
+							
+							$isPVPart = $partIsPV || ($partFstype === 'LVM2_member');
+							
+							$devices[] = [
+								'name' => $partShortName,
+								'path' => $partPath,
+								'size_formatted' => $partSize,
+								'type' => 'partition',
+								'is_pv' => $isPVPart,
+								'is_system' => false,
+								'fstype' => ($partFstype && $partFstype !== 'LVM2_member') ? $partFstype : null,
+								'model' => null,
+								'disabled_reason' => $isPVPart ? 'already_pv' : null,
+								'parent_disk' => $shortName
+							];
+						}
+					}
+				}
+			}
+		}
+		
+		foreach ($allPVs as $pv) {
+			$pvPath = $pv['name'];
+			$pvName = str_replace('/dev/', '', $pvPath);
+			
+			$exists = false;
+			foreach ($devices as $dev) {
+				if ($dev['path'] === $pvPath) {
+					$exists = true;
+					break;
+				}
+			}
+			
+			if (!$exists) {
+				$sizeInfo = execCmd("lsblk -p -n -o SIZE " . escapeshellarg($pvPath) . " 2>/dev/null | head -1", true, 5);
+				$devices[] = [
+					'name' => $pvName,
+					'path' => $pvPath,
+					'size_formatted' => trim($sizeInfo) ?: '0',
+					'type' => 'disk',
+					'is_pv' => true,
+					'is_system' => false,
+					'fstype' => null,
+					'model' => null,
+					'disabled_reason' => 'already_pv'
+				];
+			}
+		}
+		
+		$response = ['success' => true, 'devices' => $devices];
+		break;
 	
     default:
-        $response = ['success' => false, 'error' => 'Unknown action: ' . $action];
+		global $lang2147;
+        $response = ['success' => false, 'error' => $lang2147 . $action];
 }
 
 echo json_encode($response, JSON_UNESCAPED_UNICODE);

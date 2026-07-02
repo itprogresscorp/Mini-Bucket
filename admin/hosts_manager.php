@@ -21,6 +21,7 @@
  */
 
 require_once 'config.php';
+require_once 'lang/loader.php';
 isAuthenticated();
 
 $db = getDB();
@@ -52,9 +53,23 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <link rel="stylesheet" href="css/loader.css">
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
 	<script src="lib/chart.js-4.5.1/package/dist/chart.umd.min.js"></script>
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <style>
-        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #e9eef3 100%);
             min-height: 100vh;
@@ -399,7 +414,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
 }
 
 .sidebar-tabs {
-    width: 80px;
+    width: 90px;
     flex-shrink: 0;
     position: sticky;
     top: 80px;
@@ -486,12 +501,14 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     </div>
     <div class="top-bar-right">
 	<text><i class="bi bi-server"></i> Host Manager</text>
+	<div class="language-selector" style="margin-left: 15px;">
+		</div>
 		<div class="trap-toggle-container me-3">
 			<div class="form-check form-switch">
 				<input class="form-check-input" type="checkbox" id="trapToggle" style="cursor: pointer; width: 48px; height: 24px;">
 				<label class="form-check-label ms-2" for="trapToggle" style="cursor: pointer;">
 					<i class="bi bi-shield-check"></i>
-					<span id="trapLabel">Loading...</span>
+					<span id="trapLabel"><?php echo $lang12; ?></span>
 				</label>
 			</div>
 		</div>
@@ -508,12 +525,12 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item text-warning" href="#" onclick="openAddServerModal()"><i class="bi bi-cloud-plus"></i> Add Master host</a></li>
-                <li><a class="dropdown-item text-success" href="#" onclick="openHostModal()"><i class="bi bi-plus-lg"></i> Add Slave host</a></li>
-                <li><a class="dropdown-item text-success" href="#" onclick="showHostInfo('1')"><i class="bi bi-info-circle"></i> Its Host Info</a></li>
+                <li><a class="dropdown-item text-warning" href="#" onclick="openAddServerModal()"><i class="bi bi-cloud-plus me-2"></i> <?php echo $lang288; ?></a></li>
+                <li><a class="dropdown-item text-success" href="#" onclick="openHostModal()"><i class="bi bi-plus-lg me-2"></i> <?php echo $lang289; ?></a></li>
+                <li><a class="dropdown-item text-success" href="#" onclick="showHostInfo('1')"><i class="bi bi-info-circle me-2"></i> <?php echo $lang290; ?></a></li>
 				<li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-info" href="#" onclick="openSpeedTestModal()"><i class="bi bi-speedometer2"></i> Speed Test</a></li>
-				<li><a class="dropdown-item text-danger" href="minib_settings.php#apiceycontent" onclick=""><i class="bi bi-code"></i> API Settings</a></li>
+                <li><a class="dropdown-item text-info" href="#" onclick="openSpeedTestModal()"><i class="bi bi-speedometer2 me-2"></i> <?php echo $lang291; ?></a></li>
+				<li><a class="dropdown-item text-danger" href="minib_settings.php#apiceycontent" onclick=""><i class="bi bi-code me-2"></i> <?php echo $lang292; ?></a></li>
             </ul>
         </div>
 	</div>
@@ -534,7 +551,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                         <div id="hostsContainer" class="row">
                             <div class="col-12 text-center py-5">
                                 <div class="spinner-border text-primary"></div>
-                                <p class="mt-2 text-muted">Loading hosts...</p>
+                                <p class="mt-2 text-muted"><?php echo $lang293; ?></p>
                             </div>
                         </div>
                     </div>
@@ -544,7 +561,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                         <div id="incomingContainer" class="row">
                             <div class="col-12 text-center py-5">
                                 <div class="spinner-border text-primary"></div>
-                                <p class="mt-2 text-muted">Loading requests...</p>
+                                <p class="mt-2 text-muted"><?php echo $lang294; ?></p>
                             </div>
                         </div>
                     </div>
@@ -556,12 +573,12 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                     <button class="nav-link active" id="hosts-tab" data-bs-toggle="pill" data-bs-target="#hostsContent" type="button" role="tab">
                         <i class="bi bi-hdd-stack-fill"></i>
-                        <span class="tab-label">Hosts</span>
+                        <span class="tab-label"><?php echo $lang295; ?></span>
                         <span id="hostsCount" class="badge">0</span>
                     </button>
                     <button class="nav-link" id="incoming-tab" data-bs-toggle="pill" data-bs-target="#incomingContent" type="button" role="tab">
                         <i class="bi bi-arrow-down-circle-fill"></i>
-                        <span class="tab-label">Incoming</span>
+                        <span class="tab-label"><?php echo $lang296; ?></span>
                         <span id="incomingCount" class="badge">0</span>
                     </button>
                 </div>
@@ -575,7 +592,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-server me-2"></i><span id="modalTitle">Add Host</span></h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-server me-2"></i><span id="modalTitle"><?php echo $lang297; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -583,51 +600,51 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                     <input type="hidden" id="idHost" name="idHost">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Host Name <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang298; ?> <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-apple" id="hostName" name="hostName" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">IP Address <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang299; ?> <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-apple" id="hostIp" name="hostIp" placeholder="192.168.1.100 or domain.com" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Protocol</label>
+                            <label class="form-label fw-semibold"><?php echo $lang300; ?></label>
                             <select class="form-select form-select-apple" id="hostProto" name="hostProto">
 								<option value="http">HTTP</option>
 								<option value="https">HTTPS</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Port</label>
+                            <label class="form-label fw-semibold"><?php echo $lang301; ?></label>
                             <input type="number" class="form-control form-control-apple" id="hostPort" name="hostPort" value="1488" placeholder="Optional" min="1" max="65535">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">API Path</label>
+                            <label class="form-label fw-semibold"><?php echo $lang302; ?></label>
                             <input type="text" class="form-control form-control-apple" id="hostApiPath" name="hostApiPath" value="/api">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">API Key <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang303; ?> <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-apple" id="hostApiKey" name="hostApiKey" required>
                         </div>
                         <div class="col-12">
-							<label class="form-label fw-semibold">Serial Number (SN)</label>
+							<label class="form-label fw-semibold"><?php echo $lang304; ?></label>
 							<input type="text" class="form-control form-control-apple" id="hostSn" name="hostSn" readonly disabled style="background: #e9ecef;" placeholder="Auto-detected from agent request">
-							<small class="text-muted">SN is auto-detected from remote host</small>
+							<small class="text-muted"><?php echo $lang305; ?></small>
 						</div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Comment</label>
+                            <label class="form-label fw-semibold"><?php echo $lang306; ?></label>
                             <textarea class="form-control form-control-apple" id="hostComment" name="hostComment" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="api-url-preview mt-3">
-                        <small class="text-muted"><i class="bi bi-eye"></i> API URL Preview:</small>
+                        <small class="text-muted"><i class="bi bi-eye"></i> <?php echo $lang307; ?></small>
                         <code id="apiUrlPreview" class="small">http://example.com/api</code>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-apple" onclick="saveHost()"><i class="bi bi-save"></i> Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn-apple" onclick="saveHost()"><i class="bi bi-save"></i> <?php echo $lang308; ?></button>
             </div>
         </div>
     </div>
@@ -638,12 +655,12 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-wifi"></i> Connection Test</h5>
+                <h5 class="modal-title"><i class="bi bi-wifi"></i> <?php echo $lang309; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="testResult">Testing...</div>
+            <div class="modal-body" id="testResult"><?php echo $lang310; ?></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang90; ?></button>
             </div>
         </div>
     </div>
@@ -654,33 +671,33 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-cloud-plus me-2"></i>Add Remote Server</h5>
+                <h5 class="modal-title"><i class="bi bi-cloud-plus me-2"></i><?php echo $lang311; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addServerForm">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Server IP <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang312; ?> <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-apple" id="serverIp" placeholder="192.168.1.100" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">PIN Code <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold"><?php echo $lang313; ?> <span class="text-danger">*</span></label>
                             <input type="password" class="form-control form-control-apple" id="serverPin" maxlength="4" pattern="[0-9]{4}" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Protocol</label>
+                            <label class="form-label fw-semibold"><?php echo $lang314; ?></label>
                             <select class="form-select form-select-apple" id="serverProto">
 								<option value="http">HTTP</option>
 								<option value="https">HTTPS</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Port</label>
+                            <label class="form-label fw-semibold"><?php echo $lang315; ?></label>
                             <input type="number" class="form-control form-control-apple" id="serverPort" value="1488" placeholder="Optional">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">API Path</label>
+                            <label class="form-label fw-semibold"><?php echo $lang316; ?></label>
                             <input type="text" class="form-control form-control-apple" id="serverApiPath" value="/api">
                         </div>
                     </div>
@@ -689,9 +706,9 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
 				
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
                 <button type="button" class="btn-apple" onclick="addRemoteServer()">
-                    <i class="bi bi-cloud-arrow-up"></i> Send Request
+                    <i class="bi bi-cloud-arrow-up"></i> <?php echo $lang317; ?>
                 </button>
             </div>
         </div>
@@ -703,28 +720,28 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-speedometer2 me-2"></i>Speed Test Between Hosts</h5>
+                <h5 class="modal-title"><i class="bi bi-speedometer2 me-2"></i><?php echo $lang318; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div id="speedTestSelection">
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Source Host</label>
+                            <label class="form-label fw-semibold"><?php echo $lang319; ?></label>
                             <select class="form-select" id="speedSourceHost">
-                                <option value="">Select source host...</option>
+                                <option value=""><?php echo $lang320; ?></option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Target Host</label>
+                            <label class="form-label fw-semibold"><?php echo $lang321; ?></label>
                             <select class="form-select" id="speedTargetHost">
-                                <option value="">Select target host...</option>
+                                <option value=""><?php echo $lang322; ?></option>
                             </select>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Test Size</label>
+                            <label class="form-label fw-semibold"><?php echo $lang323; ?></label>
                             <select class="form-select" id="speedTestSize">
                                 <option value="512">512 KB</option>
                                 <option value="1024" selected>1 MB</option>
@@ -735,7 +752,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                         <div class="col-md-6">
                             <div class="mt-4">
                                 <button class="btn-apple w-100" onclick="startSpeedTest()">
-                                    <i class="bi bi-play-fill"></i> Start Speed Test
+                                    <i class="bi bi-play-fill"></i> <?php echo $lang324; ?>
                                 </button>
                             </div>
                         </div>
@@ -745,7 +762,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 <div id="speedTestProgress" style="display: none;">
                     <div class="text-center mb-3">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2">Testing connection speed...</p>
+                        <p class="mt-2"><?php echo $lang325; ?></p>
                     </div>
                     <div class="progress mb-3">
                         <div id="speedProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
@@ -758,7 +775,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <i class="bi bi-arrow-down-circle fs-1 text-success"></i>
-                                    <h6 class="mt-2">Download Speed</h6>
+                                    <h6 class="mt-2"><?php echo $lang326; ?></h6>
                                     <h3 id="downloadSpeed" class="mb-0">-- Mbps</h3>
                                     <small id="downloadSpeedMB" class="text-muted">-- MB/s</small>
                                 </div>
@@ -768,7 +785,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <i class="bi bi-arrow-up-circle fs-1 text-primary"></i>
-                                    <h6 class="mt-2">Upload Speed</h6>
+                                    <h6 class="mt-2"><?php echo $lang327; ?></h6>
                                     <h3 id="uploadSpeed" class="mb-0">-- Mbps</h3>
                                     <small id="uploadSpeedMB" class="text-muted">-- MB/s</small>
                                 </div>
@@ -781,7 +798,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <i class="bi bi-clock-history fs-2 text-info"></i>
-                                    <h6>Ping (Latency)</h6>
+                                    <h6><?php echo $lang328; ?></h6>
                                     <h4 id="pingLatency" class="mb-0">-- ms</h4>
                                 </div>
                             </div>
@@ -790,7 +807,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <i class="bi bi-graph-up fs-2 text-warning"></i>
-                                    <h6>Jitter</h6>
+                                    <h6><?php echo $lang329; ?></h6>
                                     <h4 id="jitterValue" class="mb-0">-- ms</h4>
                                 </div>
                             </div>
@@ -799,7 +816,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <i class="bi bi-exclamation-triangle fs-2 text-danger"></i>
-                                    <h6>Packet Loss</h6>
+                                    <h6><?php echo $lang330; ?></h6>
                                     <h4 id="packetLoss" class="mb-0">-- %</h4>
                                 </div>
                             </div>
@@ -812,9 +829,9 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang90; ?></button>
                 <button type="button" class="btn-apple" onclick="resetSpeedTestModal()">
-					<i class="bi bi-arrow-repeat"></i> New Test
+					<i class="bi bi-arrow-repeat"></i> <?php echo $lang331; ?>
 				</button>
             </div>
         </div>
@@ -826,7 +843,7 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-semibold">
-                    <i class="bi bi-info-circle-fill me-2"></i>Host Information
+                    <i class="bi bi-info-circle-fill me-2"></i><?php echo $lang332; ?>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -834,16 +851,16 @@ if ($slaveIp === '127.0.0.1' || $slaveIp === '::1') {
                 <div id="hostInfoContent">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary"></div>
-                        <p class="mt-2">Loading...</p>
+                        <p class="mt-2"><?php echo $lang333; ?></p>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Close
+                    <i class="bi bi-x-circle"></i> <?php echo $lang90; ?>
                 </button>
                 <button type="button" class="btn-apple" onclick="copyHostInfoToClipboard()">
-                    <i class="bi bi-clipboard"></i> Copy to Clipboard
+                    <i class="bi bi-clipboard"></i> <?php echo $lang334; ?>
                 </button>
             </div>
         </div>
@@ -859,6 +876,7 @@ const API_URL = '../api/host_manager_api.php';
 let currentModal = null;
 
 // ========== UTILITIES ==========
+
 function showAlert(message, type = 'success') {
     const icons = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'info-circle', info: 'info-circle' };
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-2" role="alert">
@@ -937,7 +955,7 @@ async function loadHosts() {
         $('#hostsCount').text(hosts.length);
         
         if (hosts.length === 0) {
-            $('#hostsContainer').html(`<div class="col-12"><div class="empty-state"><i class="bi bi-server"></i><h5>No Hosts Configured</h5><p class="text-muted">Click "Add Host" to add your first server</p><button class="btn-apple" onclick="openHostModal()"><i class="bi bi-plus-lg"></i> Add Host</button></div></div>`);
+            $('#hostsContainer').html(`<div class="col-12"><div class="empty-state"><i class="bi bi-server"></i><h5><?php echo $lang335; ?></h5><p class="text-muted"><?php echo $lang336; ?></p><button class="btn-apple" onclick="openHostModal()"><i class="bi bi-plus-lg"></i> <?php echo $lang337; ?></button></div></div>`);
         } else {
             let html = '';
             
@@ -946,7 +964,7 @@ async function loadHosts() {
                 html += `<div class="col-12 mb-3 mt-2">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-star-fill text-warning fs-4 me-2"></i>
-                        <h3 class="mb-0 fw-semibold" style="font-size: 1.5rem;">Master Hosts</h3>
+                        <h3 class="mb-0 fw-semibold" style="font-size: 1.5rem;"><?php echo $lang338; ?></h3>
                         <span class="badge bg-warning ms-3">${masterHosts.length}</span>
                     </div>
                     <hr class="mt-2 mb-4" style="border-top: 2px solid #ffc107;">
@@ -965,12 +983,12 @@ async function loadHosts() {
                 html += `<div class="col-12 mb-3 mt-4">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-hdd-stack-fill text-secondary fs-4 me-2"></i>
-                        <h3 class="mb-0 fw-semibold" style="font-size: 1.5rem;">Slave Hosts</h3>
+                        <h3 class="mb-0 fw-semibold" style="font-size: 1.5rem;"><?php echo $lang339; ?></h3>
                         <span class="badge bg-secondary ms-3">${slaveHosts.length}</span>
                     </div>
                     <hr class="mt-2 mb-4" style="border-top: 2px solid #6c757d;">
                 </div>
-                <div class="row g-4 mb-5">`;  // Добавили g-4 для отступов между карточками и mb-5 для нижнего отступа
+                <div class="row g-4 mb-5">`;
                 
                 for (let host of slaveHosts) {
                     html += renderHostCard(host);
@@ -994,11 +1012,11 @@ function renderHostCard(host) {
     
     let statusBadge = '';
     if (host.hostLive === 'online') {
-        statusBadge = '<span class="status-badge status-online"><i class="bi bi-check-circle-fill"></i> Online</span>';
+        statusBadge = '<span class="status-badge status-online"><i class="bi bi-check-circle-fill"></i> <?php echo $lang340; ?></span>';
     } else if (host.hostLive === 'offline') {
-        statusBadge = '<span class="status-badge status-offline"><i class="bi bi-x-circle-fill"></i> Offline</span>';
+        statusBadge = '<span class="status-badge status-offline"><i class="bi bi-x-circle-fill"></i> <?php echo $lang341; ?></span>';
     } else {
-        statusBadge = '<span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>';
+        statusBadge = '<span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> <?php echo $lang342; ?></span>';
     }
     
     let isCurrentHost = (host.idHost == 1);
@@ -1010,30 +1028,30 @@ function renderHostCard(host) {
     let hostIpSafe = escapeHtml(host.hostIp);
     let hostCommentSafe = host.hostComment ? `<div class="host-comment mt-2 small text-muted">${escapeHtml(host.hostComment)}</div>` : '';
     let apiKeySafe = host.hostApiKey ? escapeHtml(host.hostApiKey.substring(0, 20)) : '';
-    let hostSnSafe = host.hostSn ? `<div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-upc-scan"></i> SN: <code>${escapeHtml(host.hostSn)}</code></div>` : '';
-    let hostVersionSafe = (host.hostVersion && host.hostVersion !== 'unknown') ? `<div class="small text-muted"><i class="bi bi-tag"></i> Version: ${escapeHtml(host.hostVersion)}</div>` : '';
-    let hostDateSafe = host.hostDateApiUpdtae ? `<div class="small text-muted"><i class="bi bi-clock"></i> Last seen: ${escapeHtml(host.hostDateApiUpdtae)}</div>` : '';
+    let hostSnSafe = host.hostSn ? `<div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-upc-scan"></i> <?php echo $lang343; ?>: <code>${escapeHtml(host.hostSn)}</code></div>` : '';
+    let hostVersionSafe = (host.hostVersion && host.hostVersion !== 'unknown') ? `<div class="small text-muted"><i class="bi bi-tag"></i> <?php echo $lang344; ?>: ${escapeHtml(host.hostVersion)}</div>` : '';
+    let hostDateSafe = host.hostDateApiUpdtae ? `<div class="small text-muted"><i class="bi bi-clock"></i> <?php echo $lang345; ?>: ${escapeHtml(host.hostDateApiUpdtae)}</div>` : '';
     
     let dropdownItems = `
-        <a onclick="testConnection('${host.idHost}')"><i class="bi bi-wifi"></i> Full Test (Ping + API)</a>
-        <a onclick="testHostApiOnly('${host.idHost}')"><i class="bi bi-cloud-check"></i> Test API Only</a>
-        <a onclick="quickSpeedTest('${host.idHost}')"><i class="bi bi-lightning-charge"></i> Test Speed</a>
-        <a onclick="getSnForHost('${host.idHost}')"><i class="bi bi-upc-scan"></i> Get SN from remote</a>
+        <a onclick="testConnection('${host.idHost}')"><i class="bi bi-wifi"></i> <?php echo $lang346; ?></a>
+        <a onclick="testHostApiOnly('${host.idHost}')"><i class="bi bi-cloud-check"></i> <?php echo $lang347; ?></a>
+        <a onclick="quickSpeedTest('${host.idHost}')"><i class="bi bi-lightning-charge"></i> <?php echo $lang348; ?></a>
+        <a onclick="getSnForHost('${host.idHost}')"><i class="bi bi-upc-scan"></i> <?php echo $lang349; ?></a>
     `;
     
     if (host.hostType !== 'master' || isCurrentHost) {
-        dropdownItems += `<a onclick="rotateHostKey('${host.idHost}')" style="color:#ff9f0a;"><i class="bi bi-arrow-repeat"></i> New API Key</a>`;
+        dropdownItems += `<a onclick="rotateHostKey('${host.idHost}')" style="color:#ff9f0a;"><i class="bi bi-arrow-repeat"></i> <?php echo $lang350; ?></a>`;
     }
     
-    dropdownItems += `<a onclick="showHostInfo('${host.idHost}')"><i class="bi bi-info-circle"></i> Info</a>
-        <a onclick="editHost('${host.idHost}')"><i class="bi bi-pencil"></i> Edit</a>`;
+    dropdownItems += `<a onclick="showHostInfo('${host.idHost}')"><i class="bi bi-info-circle"></i> <?php echo $lang351; ?></a>
+        <a onclick="editHost('${host.idHost}')"><i class="bi bi-pencil"></i> <?php echo $lang352; ?></a>`;
     
     if (!isCurrentHost) {
         dropdownItems += `<div class="dropdown-divider"></div>
-        <a onclick="deleteHost('${host.idHost}')" style="color: #ff3b30;"><i class="bi bi-trash3"></i> Delete</a>`;
+        <a onclick="deleteHost('${host.idHost}')" style="color: #ff3b30;"><i class="bi bi-trash3"></i> <?php echo $lang353; ?></a>`;
     }
     
-    let thisHostBadge = isCurrentHost ? '<span class="badge bg-primary ms-2"><i class="bi bi-check-circle-fill"></i> This Host</span>' : '';
+    let thisHostBadge = isCurrentHost ? '<span class="badge bg-primary ms-2"><i class="bi bi-check-circle-fill"></i> <?php echo $lang354; ?></span>' : '';
     
     return `<div class="col-md-6 col-lg-4" data-host-id="${host.idHost}">
         <div class="host-card ${statusClass} ${cardBorderClass}">
@@ -1058,13 +1076,13 @@ function renderHostCard(host) {
                 </div>
             </div>
             <div class="card-body-custom">
-                <div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-key"></i> API Key: <code>${apiKeySafe}…</code></div>
+                <div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-key"></i> <?php echo $lang355; ?>: <code>${apiKeySafe}…</code></div>
                 ${hostSnSafe}
                 ${hostVersionSafe}
                 ${hostDateSafe}
             </div>
             <div class="card-footer-custom">
-                <i class="bi bi-calendar-plus"></i> ID: ${host.idHost} | 
+                <i class="bi bi-calendar-plus"></i> <?php echo $lang356; ?>: ${host.idHost} | 
                 <span class="${host.hostType === 'master' ? 'text-warning' : 'text-secondary'}">
                     <i class="bi ${host.hostType === 'master' ? 'bi-star-fill' : 'bi-hdd-stack'}"></i>
                     ${host.hostType === 'master' ? 'Master' : 'Slave'}
@@ -1094,7 +1112,7 @@ async function editHost(idHost) {
         currentModal = new bootstrap.Modal(document.getElementById('hostModal'));
         currentModal.show();
     } else {
-        showAlert('Error loading host', 'danger');
+        showAlert('<?php echo $lang357; ?>', 'danger');
     }
 }
 
@@ -1124,7 +1142,7 @@ async function saveHost(forceSave = false) {
         let newIdHost = result.idHost || idHost;
         if (newIdHost && !result.warning && !idHost) {
             setTimeout(async () => {
-                if (confirm('Auto-test connection and retrieve SN?')) {
+                if (confirm('<?php echo $lang358; ?>')) {
                     await testConnection(newIdHost);
                 }
             }, 500);
@@ -1135,9 +1153,9 @@ async function saveHost(forceSave = false) {
         $('#hostSn').val('').prop('disabled', true);
     } else if (result.api_test && !result.success && result.can_force) {
         let forceSaveConfirm = confirm(
-            `⚠️ API Test Failed!\n\n` +
+            `⚠️ <?php echo $lang359; ?>\n\n` +
             `${result.message}\n\n` +
-            `Do you want to save anyway? The host might not work correctly.`
+            `<?php echo $lang360; ?>`
         );
         if (forceSaveConfirm) {
             await saveHost(true);
@@ -1148,7 +1166,7 @@ async function saveHost(forceSave = false) {
 }
 
 async function deleteHost(idHost) {
-    if (!confirm('Delete this host? This cannot be undone.')) return;
+    if (!confirm('<?php echo $lang361; ?>')) return;
     showLoading();
     let result = await apiCall('delete_host', 'GET', { idHost: idHost });
     hideLoading();
@@ -1162,7 +1180,7 @@ async function deleteHost(idHost) {
 
 async function testConnection(idHost) {
     showLoading();
-    $('#testResult').html('<div class="text-center"><div class="spinner-border text-primary"></div><br>Testing connection (Ping + API)...</div>');
+    $('#testResult').html('<div class="text-center"><div class="spinner-border text-primary"></div><br><?php echo $lang362; ?></div>');
     let testModal = new bootstrap.Modal(document.getElementById('testModal'));
     testModal.show();
     
@@ -1176,21 +1194,21 @@ async function testConnection(idHost) {
     if (result.success) {
         statusIcon = 'check-circle-fill';
         statusColor = '#34c759';
-        statusTitle = 'Host is Fully Online!';
+        statusTitle = '<?php echo $lang363; ?>';
     } else if (result.details && result.details.ping && result.details.ping.success) {
         statusIcon = 'exclamation-triangle-fill';
         statusColor = '#ff9f0a';
-        statusTitle = 'Host Reachable but API Issues';
+        statusTitle = '<?php echo $lang364; ?>';
     } else {
         statusIcon = 'x-circle-fill';
         statusColor = '#ff3b30';
-        statusTitle = 'Host is Offline';
+        statusTitle = '<?php echo $lang365; ?>';
     }
     
     let pingHtml = '';
     if (result.details && result.details.ping) {
         pingHtml = `<div class="mt-3 p-3 ${result.details.ping.success ? 'bg-success bg-opacity-10' : 'bg-danger bg-opacity-10'} rounded">
-            <strong><i class="bi bi-wifi"></i> Ping Test:</strong><br>
+            <strong><i class="bi bi-wifi"></i> <?php echo $lang366; ?>:</strong><br>
             <small>${escapeHtml(result.details.ping.message)}</small>
         </div>`;
     }
@@ -1198,9 +1216,9 @@ async function testConnection(idHost) {
     let apiHtml = '';
     if (result.details && result.details.api) {
         apiHtml = `<div class="mt-3 p-3 ${result.details.api.success ? 'bg-success bg-opacity-10' : 'bg-warning bg-opacity-10'} rounded">
-            <strong><i class="bi bi-cloud-check"></i> API Test:</strong><br>
+            <strong><i class="bi bi-cloud-check"></i> <?php echo $lang367; ?>:</strong><br>
             <small>${escapeHtml(result.details.api.message)}</small>
-            ${result.details.api.endpoint ? `<br><small><strong>Endpoint:</strong> ${escapeHtml(result.details.api.endpoint)}</small>` : ''}
+            ${result.details.api.endpoint ? `<br><small><strong><?php echo $lang368; ?>:</strong> ${escapeHtml(result.details.api.endpoint)}</small>` : ''}
         </div>`;
     }
     
@@ -1218,7 +1236,7 @@ async function testConnection(idHost) {
 async function getRemoteHostSn(idHost) {
     let hostResult = await apiCall('get_host', 'GET', { idHost: idHost });
     if (!hostResult.success || !hostResult.data) {
-        return { success: false, message: 'Host not found' };
+        return { success: false, message: '<?php echo $lang369; ?>' };
     }
     
     let host = hostResult.data;
@@ -1256,24 +1274,24 @@ async function getRemoteHostSn(idHost) {
                     sn: data.serial_number, 
                     name: data.name,
                     version: data.version,
-                    message: 'Host info retrieved and saved successfully' 
+                    message: '<?php echo $lang370; ?>' 
                 };
             } else {
-                return { success: false, message: 'Info retrieved but failed to save: ' + (saveResult.message || 'Unknown error') };
+                return { success: false, message: '<?php echo $lang371; ?>: ' + (saveResult.message || 'Unknown error') };
             }
         } else {
-            return { success: false, message: data.message || 'Failed to get host info from remote host' };
+            return { success: false, message: data.message || '<?php echo $lang372; ?>' };
         }
     } catch(e) {
         console.error('Error getting remote host info:', e);
-        return { success: false, message: 'Connection error: ' + e.message };
+        return { success: false, message: '<?php echo $lang373; ?>: ' + e.message };
     }
 }
 
 function openHostModal() {
     $('#hostForm')[0].reset();
     $('#idHost').val('');
-    $('#modalTitle').text('Add Host');
+    $('#modalTitle').text('<?php echo $lang374; ?>');
     $('#hostProto').val('http');
     $('#hostApiPath').val('/api');
     $('#hostSn').val('');
@@ -1289,7 +1307,7 @@ let refreshInterval = null;
 async function checkOutgoingRequestStatus(arId) {
     let result = await apiCall('check_outgoing_request', 'GET', { arId: arId });
     if (result.success && !result.exists) {
-        showAlert('Request has been processed by remote server!', 'info');
+        showAlert('<?php echo $lang375; ?>', 'info');
         await loadOutgoingRequests();
         await loadHosts();
         return false;
@@ -1304,7 +1322,7 @@ async function loadIncomingRequests() {
         let requests = result.data;
         $('#incomingCount').text(requests.length);
         if (requests.length === 0) {
-            $('#incomingContainer').html(`<div class="col-12"><div class="empty-state"><i class="bi bi-inbox"></i><h5>No Incoming Requests</h5><p class="text-muted">Waiting for connection requests from other servers</p></div></div>`);
+            $('#incomingContainer').html(`<div class="col-12"><div class="empty-state"><i class="bi bi-inbox"></i><h5><?php echo $lang376; ?></h5><p class="text-muted"><?php echo $lang377; ?></p></div></div>`);
         } else {
             let html = '';
             requests.forEach(req => {
@@ -1312,29 +1330,29 @@ async function loadIncomingRequests() {
                     <div class="request-card incoming">
                         <div class="card-header-custom">
                             <div>
-                                <div class="host-name"><span class="status-badge" style="background:#ff9f0a20;color:#c46e00;"><i class="bi bi-arrow-down-circle"></i> Incoming Request</span></div>
+                                <div class="host-name"><span class="status-badge" style="background:#ff9f0a20;color:#c46e00;"><i class="bi bi-arrow-down-circle"></i> <?php echo $lang378; ?></span></div>
                                 <div class="fw-semibold fs-6 mt-1"><i class="bi bi-display"></i> ${escapeHtml(req.arName || 'Unknown')}</div>
                                 <div class="host-ip mt-2"><i class="bi bi-hdd-stack"></i> IP: ${escapeHtml(req.arIp)}${req.arPort ? ':' + req.arPort : ''}</div>
-                                ${req.arPath ? `<div class="host-url mt-1"><i class="bi bi-link-45deg"></i> Path: ${escapeHtml(req.arPath)}</div>` : ''}
+                                ${req.arPath ? `<div class="host-url mt-1"><i class="bi bi-link-45deg"></i> <?php echo $lang379; ?>: ${escapeHtml(req.arPath)}</div>` : ''}
                             </div>
                             <div class="card-actions-dropdown">
                                 <button class="btn btn-sm btn-link text-secondary" onclick="toggleDropdown(this)"><i class="bi bi-three-dots-vertical"></i></button>
 								<div class="dropdown-menu-actions">
-									<a onclick="acceptIncomingRequest('${req.arId}')" style="color:#28a745;"><i class="bi bi-check-circle"></i> Accept & Add as Slave</a>
-									<a onclick="rejectIncomingRequest('${req.arId}')" style="color:#ff3b30;"><i class="bi bi-x-circle"></i> Reject Request</a>
+									<a onclick="acceptIncomingRequest('${req.arId}')" style="color:#28a745;"><i class="bi bi-check-circle"></i> <?php echo $lang380; ?></a>
+									<a onclick="rejectIncomingRequest('${req.arId}')" style="color:#ff3b30;"><i class="bi bi-x-circle"></i> <?php echo $lang381; ?></a>
 									<div class="dropdown-divider"></div>
-									<a onclick="deleteIncomingRequest('${req.arId}')" style="color:#6c757d;"><i class="bi bi-trash3"></i> Delete</a>
+									<a onclick="deleteIncomingRequest('${req.arId}')" style="color:#6c757d;"><i class="bi bi-trash3"></i> <?php echo $lang382; ?></a>
 								</div>
                             </div>
                         </div>
                         <div class="card-body-custom">
-                            <div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-key"></i> API Key: <code>${escapeHtml(req.arApiKey?.substring(0, 20))}…</code></div>
-                            ${req.arHostSn ? `<div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-upc-scan"></i> SN: <code>${escapeHtml(req.arHostSn)}</code></div>` : ''}
-                            ${req.arVersion ? `<div class="small text-muted"><i class="bi bi-tag"></i> Version: ${escapeHtml(req.arVersion)}</div>` : ''}
-                            ${req.arType ? `<div class="small text-muted"><i class="bi bi-diagram-3"></i> Type: ${escapeHtml(req.arType)}</div>` : ''}
-                            <div class="small text-muted"><i class="bi bi-calendar3"></i> Received: ${escapeHtml(req.arDate)}</div>
+                            <div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-key"></i> <?php echo $lang383; ?>: <code>${escapeHtml(req.arApiKey?.substring(0, 20))}…</code></div>
+                            ${req.arHostSn ? `<div class="api-key-preview bg-light p-2 rounded small mb-2"><i class="bi bi-upc-scan"></i> <?php echo $lang384; ?>: <code>${escapeHtml(req.arHostSn)}</code></div>` : ''}
+                            ${req.arVersion ? `<div class="small text-muted"><i class="bi bi-tag"></i> <?php echo $lang385; ?>: ${escapeHtml(req.arVersion)}</div>` : ''}
+                            ${req.arType ? `<div class="small text-muted"><i class="bi bi-diagram-3"></i> <?php echo $lang386; ?>: ${escapeHtml(req.arType)}</div>` : ''}
+                            <div class="small text-muted"><i class="bi bi-calendar3"></i> <?php echo $lang387; ?>: ${escapeHtml(req.arDate)}</div>
                         </div>
-                        <div class="card-footer-custom"><i class="bi bi-hash"></i> ID: ${req.arId}</div>
+                        <div class="card-footer-custom"><i class="bi bi-hash"></i> <?php echo $lang388; ?>: ${req.arId}</div>
                     </div>
                 </div>`;
             });
@@ -1344,7 +1362,7 @@ async function loadIncomingRequests() {
 }
 
 async function joinRequest(arId) {
-    if (!confirm('Join this host to Hosts table? All data will be transferred.')) return;
+    if (!confirm('<?php echo $lang389; ?>')) return;
     showLoading();
     let result = await apiCall('join_request', 'GET', { arId: arId });
     hideLoading();
@@ -1358,7 +1376,7 @@ async function joinRequest(arId) {
 }
 
 async function deleteIncomingRequest(arId) {
-    if (!confirm('Delete this request?')) return;
+    if (!confirm('<?php echo $lang390; ?>')) return;
     showLoading();
     let result = await apiCall('delete_incoming_request', 'GET', { arId: arId });
     hideLoading();
@@ -1397,7 +1415,7 @@ let isAddingServer = false;
 
 async function addRemoteServer() {
     if (isAddingServer) {
-        showAlert('Please wait, request is already being sent...', 'warning');
+        showAlert('<?php echo $lang391; ?>', 'warning');
         return;
     }
     
@@ -1408,8 +1426,8 @@ async function addRemoteServer() {
     let serverApiPath = $('#serverApiPath').val().trim();
 	let localIp = $('#slaveRealIp').val();
     
-    if (!serverIp) { showAlert('Server IP is required', 'danger'); return; }
-    if (!serverPin || serverPin.length !== 4) { showAlert('Valid 4-digit PIN is required', 'danger'); return; }
+    if (!serverIp) { showAlert('<?php echo $lang392; ?>', 'danger'); return; }
+    if (!serverPin || serverPin.length !== 4) { showAlert('<?php echo $lang393; ?>', 'danger'); return; }
     if (!serverApiPath) serverApiPath = '/api';
     if (!serverApiPath.startsWith('/')) serverApiPath = '/' + serverApiPath;
     
@@ -1417,7 +1435,7 @@ async function addRemoteServer() {
     showLoading();
     
     let localHostname = "<?php echo gethostname(); ?>";
-    let localVersion = "<?php echo isset($version) ? $version : '3.5.1'; ?>";
+    let localVersion = "<?php echo isset($version) ? $version : 'None'; ?>";
     
     let apiKeyResult = await apiCall('get_host_api_key');
     let localApiKey = '';
@@ -1426,7 +1444,7 @@ async function addRemoteServer() {
     } else {
         hideLoading();
         isAddingServer = false;
-        showAlert('Failed to get local API key', 'danger');
+        showAlert('<?php echo $lang394; ?>', 'danger');
         return;
     }
     
@@ -1449,7 +1467,7 @@ async function addRemoteServer() {
         if (existingRequest) {
             hideLoading();
             isAddingServer = false;
-            showAlert(`Active request to ${serverIp} already exists! Please wait for response or revoke it.`, 'warning');
+            showAlert(`<?php echo $lang395; ?> ${serverIp} <?php echo $lang396; ?>`, 'warning');
             return;
         }
     }
@@ -1469,7 +1487,7 @@ async function addRemoteServer() {
     if (!createResult.success) {
         hideLoading();
         isAddingServer = false;
-        showAlert('Failed to save outgoing request: ' + (createResult.message || 'Unknown error'), 'danger');
+        showAlert('<?php echo $lang397; ?>: ' + (createResult.message || 'Unknown error'), 'danger');
         return;
     }
     
@@ -1502,7 +1520,7 @@ async function addRemoteServer() {
         isAddingServer = false;
         
         if (data.success) {
-            showAlert('✅ Request sent successfully! Waiting for server approval...', 'success');
+            showAlert('✅ <?php echo $lang398; ?>', 'success');
             $('#addServerModal').modal('hide');
             $('#addServerForm')[0].reset();
             await loadOutgoingRequests();
@@ -1510,14 +1528,14 @@ async function addRemoteServer() {
             let requestId = createResult.request_id;
             startStatusCheck(requestId);
         } else {
-            showAlert('❌ Remote server error: ' + (data.message || 'Unknown error'), 'danger');
+            showAlert('❌ <?php echo $lang399; ?>: ' + (data.message || 'Unknown error'), 'danger');
             await loadOutgoingRequests();
         }
     } catch(e) {
         hideLoading();
         isAddingServer = false;
         console.error('Connection error:', e);
-        showAlert('⚠️ Request saved, but could not reach remote server. It will be retried automatically.', 'warning');
+        showAlert('⚠️ <?php echo $lang400; ?>', 'warning');
         $('#addServerModal').modal('hide');
         $('#addServerForm')[0].reset();
         await loadOutgoingRequests();
@@ -1537,20 +1555,20 @@ async function showHostInfo(idHost) {
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header bg-light fw-semibold">
-                            <i class="bi bi-hdd-stack-fill me-2"></i>Basic Information
+                            <i class="bi bi-hdd-stack-fill me-2"></i><?php echo $lang401; ?>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless">
                                 <tr>
-                                    <th style="width: 35%;">ID:</th>
+                                    <th style="width: 35%;"><?php echo $lang402; ?>:</th>
                                     <td><code>${escapeHtml(host.idHost ?? 'N/A')}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>Name:</th>
+                                    <th><?php echo $lang403; ?>:</th>
                                     <td><strong>${escapeHtml(host.hostName ?? 'N/A')}</strong></td>
                                 </tr>
                                 <tr>
-                                    <th>Type:</th>
+                                    <th><?php echo $lang404; ?>:</th>
                                     <td>
                                         <span class="badge ${(host.hostType ?? 'slave') === 'master' ? 'bg-warning' : 'bg-secondary'} fs-6 px-3 py-2">
                                             <i class="bi ${(host.hostType ?? 'slave') === 'master' ? 'bi-star-fill' : 'bi-hdd-stack'} me-1"></i>
@@ -1559,7 +1577,7 @@ async function showHostInfo(idHost) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>Status:</th>
+                                    <th><?php echo $lang405; ?>:</th>
                                     <td>
                                         <span class="badge ${(host.hostLive ?? 'unknown') === 'online' ? 'bg-success' : ((host.hostLive ?? 'unknown') === 'offline' ? 'bg-danger' : 'bg-secondary')} fs-6 px-3 py-2">
                                             <i class="bi ${(host.hostLive ?? 'unknown') === 'online' ? 'bi-check-circle-fill' : ((host.hostLive ?? 'unknown') === 'offline' ? 'bi-x-circle-fill' : 'bi-hourglass-split')} me-1"></i>
@@ -1568,11 +1586,11 @@ async function showHostInfo(idHost) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>Version:</th>
+                                    <th><?php echo $lang406; ?>:</th>
                                     <td><code>${escapeHtml(host.hostVersion ?? 'unknown')}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>SN:</th>
+                                    <th><?php echo $lang407; ?>:</th>
                                     <td><code class="user-select-all">${escapeHtml(host.hostSn ?? 'Not set')}</code></td>
                                 </tr>
                             </table>
@@ -1583,28 +1601,28 @@ async function showHostInfo(idHost) {
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header bg-light fw-semibold">
-                            <i class="bi bi-network-chart me-2"></i>Connection Settings
+                            <i class="bi bi-network-chart me-2"></i><?php echo $lang408; ?>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless">
                                 <tr>
-                                    <th style="width: 35%;">IP Address:</th>
+                                    <th style="width: 35%;"><?php echo $lang409; ?>:</th>
                                     <td><code class="user-select-all">${escapeHtml(host.hostIp ?? 'N/A')}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>Protocol:</th>
+                                    <th><?php echo $lang410; ?>:</th>
                                     <td><span class="badge bg-info">${escapeHtml(host.hostProto ?? 'http')}</span></td>
                                 </tr>
                                 <tr>
-                                    <th>Port:</th>
+                                    <th><?php echo $lang411; ?>:</th>
                                     <td>${escapeHtml(host.hostPort ?? 'Default (80/443)')}</td>
                                 </tr>
                                 <tr>
-                                    <th>API Path:</th>
+                                    <th><?php echo $lang412; ?>:</th>
                                     <td><code class="user-select-all">${escapeHtml(host.hostApiPath ?? '/api')}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>Full URL:</th>
+                                    <th><?php echo $lang413; ?>:</th>
                                     <td>
                                         <code class="user-select-all small" style="word-break: break-all;">
                                             ${escapeHtml(host.hostProto ?? 'http')}://${escapeHtml(host.hostIp ?? '')}${host.hostPort ? ':' + host.hostPort : ''}${escapeHtml(host.hostApiPath ?? '/api')}
@@ -1621,7 +1639,7 @@ async function showHostInfo(idHost) {
                 <div class="col-12">
                     <div class="card mb-3">
                         <div class="card-header bg-light fw-semibold">
-                            <i class="bi bi-key-fill me-2"></i>API Key
+                            <i class="bi bi-key-fill me-2"></i><?php echo $lang414; ?>
                         </div>
                         <div class="card-body">
                             <div class="input-group">
@@ -1633,7 +1651,7 @@ async function showHostInfo(idHost) {
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             </div>
-                            <small class="text-muted mt-2 d-block">API Key length: ${(host.hostApiKey ?? '').length} characters</small>
+                            <small class="text-muted mt-2 d-block"><?php echo $lang415; ?>: ${(host.hostApiKey ?? '').length} characters</small>
                         </div>
                     </div>
                 </div>
@@ -1643,16 +1661,16 @@ async function showHostInfo(idHost) {
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header bg-light fw-semibold">
-                            <i class="bi bi-calendar3 me-2"></i>Timestamps
+                            <i class="bi bi-calendar3 me-2"></i><?php echo $lang416; ?>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless">
                                 <tr>
-                                    <th style="width: 40%;">Last seen:</th>
+                                    <th style="width: 40%;"><?php echo $lang417; ?>:</th>
                                     <td><code>${escapeHtml(host.hostDateApiUpdtae ?? 'Never')}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>Added:</th>
+                                    <th><?php echo $lang418; ?>:</th>
                                     <td><code>${escapeHtml(host.hostAddedData ?? '-')}</code></td>
                                 </tr>
                             </table>
@@ -1663,7 +1681,7 @@ async function showHostInfo(idHost) {
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header bg-light fw-semibold">
-                            <i class="bi bi-chat-text me-2"></i>Comment
+                            <i class="bi bi-chat-text me-2"></i><?php echo $lang419; ?>
                         </div>
                         <div class="card-body">
                             <div class="p-2 bg-light rounded" style="min-height: 80px;">
@@ -1679,18 +1697,18 @@ async function showHostInfo(idHost) {
         let infoModal = new bootstrap.Modal(document.getElementById('hostInfoModal'));
         infoModal.show();
     } else {
-        showAlert(result.message || 'Failed to load host info', 'danger');
+        showAlert(result.message || '<?php echo $lang420; ?>', 'danger');
     }
 }
 
 function copyToClipboard(text) {
     if (!text) {
-        showAlert('Nothing to copy', 'warning');
+        showAlert('<?php echo $lang421; ?>', 'warning');
         return;
     }
     
     navigator.clipboard.writeText(text).then(() => {
-        showAlert('Copied to clipboard!', 'success');
+        showAlert('<?php echo $lang422; ?>', 'success');
     }).catch(() => {
         let textarea = document.createElement('textarea');
         textarea.value = text;
@@ -1698,7 +1716,7 @@ function copyToClipboard(text) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showAlert('Copied to clipboard!', 'success');
+        showAlert('<?php echo $lang423; ?>', 'success');
     });
 }
 
@@ -1734,21 +1752,21 @@ async function testHostApiOnly(idHost) {
     if (result.success) {
         modalHtml = `<div class="text-center">
             <i class="bi bi-check-circle-fill" style="font-size: 48px; color: #34c759;"></i>
-            <h4 class="mt-3">API Accessible!</h4>
+            <h4 class="mt-3"><?php echo $lang424; ?></h4>
             <p class="text-muted">${escapeHtml(result.message)}</p>
             <div class="mt-3 p-3 bg-light rounded text-start">
-                <small><strong>Endpoint:</strong> ${escapeHtml(result.endpoint)}</small><br>
-                <small><strong>HTTP Code:</strong> ${result.http_code}</small>
-                ${result.response ? `<br><small><strong>Response:</strong> <pre class="small mt-2">${JSON.stringify(result.response, null, 2)}</pre></small>` : ''}
+                <small><strong><?php echo $lang425; ?>:</strong> ${escapeHtml(result.endpoint)}</small><br>
+                <small><strong><?php echo $lang426; ?>:</strong> ${result.http_code}</small>
+                ${result.response ? `<br><small><strong><?php echo $lang427; ?>:</strong> <pre class="small mt-2">${JSON.stringify(result.response, null, 2)}</pre></small>` : ''}
             </div>
         </div>`;
     } else {
         modalHtml = `<div class="text-center">
             <i class="bi bi-x-circle-fill" style="font-size: 48px; color: #ff3b30;"></i>
-            <h4 class="mt-3">API Not Accessible</h4>
+            <h4 class="mt-3"><?php echo $lang428; ?></h4>
             <p class="text-muted">${escapeHtml(result.message)}</p>
             ${result.details ? `<div class="mt-3 p-3 bg-light rounded text-start">
-                <small>Attempts:</small>
+                <small><?php echo $lang429; ?>:</small>
                 <pre class="small mt-2">${JSON.stringify(result.details, null, 2)}</pre>
             </div>` : ''}
         </div>`;
@@ -1776,8 +1794,8 @@ async function loadHostsForSpeedTest() {
         let sourceSelect = $('#speedSourceHost');
         let targetSelect = $('#speedTargetHost');
         
-        sourceSelect.empty().append('<option value="">Select source host...</option>');
-        targetSelect.empty().append('<option value="">Select target host...</option>');
+        sourceSelect.empty().append('<option value=""><?php echo $lang430; ?></option>');
+        targetSelect.empty().append('<option value=""><?php echo $lang431; ?></option>');
         
         hosts.forEach(host => {
             let option = `<option value="${host.idHost}">${escapeHtml(host.hostName)} (${host.hostIp}) - ${host.hostType === 'master' ? 'Master' : 'Slave'}</option>`;
@@ -1829,7 +1847,7 @@ async function quickSpeedTest(hostId) {
         checkCount++;
         if (checkCount > 30) { // 30 попыток * 200ms = 6 секунд максимум
             clearInterval(checkInterval);
-            showAlert('Failed to load hosts for speed test', 'warning');
+            showAlert('<?php echo $lang432; ?>', 'warning');
         }
     }, 200);
 }
@@ -1868,11 +1886,11 @@ async function startSpeedTest() {
     let testSize = $('#speedTestSize').val();
     
     if (!sourceId || !targetId) {
-        showAlert('Please select both source and target hosts', 'danger');
+        showAlert('<?php echo $lang433; ?>', 'danger');
         return;    }
     
     if (sourceId === targetId) {
-        showAlert('Cannot test speed with the same host', 'danger');
+        showAlert('<?php echo $lang434; ?>', 'danger');
         return;
     }
     
@@ -1931,7 +1949,7 @@ async function startSpeedTest() {
         clearInterval(progressInterval);
         $('#speedTestProgress').hide();
         $('#speedTestSelection').show();
-        showAlert('Speed test failed: ' + (result.message || 'Unknown error'), 'danger');
+        showAlert('<?php echo $lang435; ?>: ' + (result.message || 'Unknown error'), 'danger');
     }
 }
 
@@ -1950,7 +1968,7 @@ function initSpeedChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Download Speed (Mbps)',
+                    label: '<?php echo $lang436; ?> (Mbps)',
                     data: [],
                     borderColor: '#34c759',
                     backgroundColor: 'rgba(52, 199, 89, 0.05)',
@@ -1963,7 +1981,7 @@ function initSpeedChart() {
                     spanGaps: true
                 },
                 {
-                    label: 'Upload Speed (Mbps)',
+                    label: '<?php echo $lang437; ?> (Mbps)',
                     data: [],
                     borderColor: '#007aff',
                     backgroundColor: 'rgba(0, 122, 255, 0.05)',
@@ -2000,7 +2018,7 @@ function initSpeedChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Speed (Mbps)',
+                        text: '<?php echo $lang438; ?>',
                         font: {
                             weight: 'bold'
                         }
@@ -2017,7 +2035,7 @@ function initSpeedChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Time (seconds)',
+                        text: '<?php echo $lang439; ?>',
                         font: {
                             weight: 'bold'
                         }
@@ -2205,30 +2223,30 @@ function displaySpeedResults(result) {
     }
     
     let detailsHtml = `
-        <strong>Test Details:</strong><br>
+        <strong><?php echo $lang440; ?>:</strong><br>
         Source: ${escapeHtml(result.from_host.hostName)} (${result.from_host.hostIp})<br>
         Target: ${escapeHtml(result.to_host.hostName)} (${result.to_host.hostIp})<br>
         Test Size: ${results.test_size_kb || 1024} KB
     `;
     
     if (results.download_speed) {
-        detailsHtml += `<br>Download Time: ${results.download_speed.time_seconds} seconds`;
-        detailsHtml += `<br>Download Data: ${results.download_speed.data_size_kb} KB`;
-        detailsHtml += `<br>Download Speed: ${results.download_speed.speed_mbps} Mbps (${results.download_speed.speed_mb_s} MB/s)`;
+        detailsHtml += `<br><?php echo $lang441; ?>: ${results.download_speed.time_seconds} seconds`;
+        detailsHtml += `<br><?php echo $lang442; ?>: ${results.download_speed.data_size_kb} KB`;
+        detailsHtml += `<br><?php echo $lang443; ?>: ${results.download_speed.speed_mbps} Mbps (${results.download_speed.speed_mb_s} MB/s)`;
     }
     
     if (results.upload_speed) {
-        detailsHtml += `<br>Upload Time: ${results.upload_speed.time_seconds} seconds`;
-        detailsHtml += `<br>Upload Data: ${results.upload_speed.data_size_kb} KB`;
-        detailsHtml += `<br>Upload Speed: ${results.upload_speed.speed_mbps} Mbps (${results.upload_speed.speed_mb_s} MB/s)`;
+        detailsHtml += `<br><?php echo $lang444; ?>: ${results.upload_speed.time_seconds} seconds`;
+        detailsHtml += `<br><?php echo $lang445; ?>: ${results.upload_speed.data_size_kb} KB`;
+        detailsHtml += `<br><?php echo $lang446; ?>: ${results.upload_speed.speed_mbps} Mbps (${results.upload_speed.speed_mb_s} MB/s)`;
     }
     
     if (results.speed_samples && results.speed_samples.length > 0) {
-        detailsHtml += `<br><span class="text-info"><i class="bi bi-graph-up"></i> Collected ${results.speed_samples.length} speed samples for chart</span>`;
+        detailsHtml += `<br><span class="text-info"><i class="bi bi-graph-up"></i> <?php echo $lang447; ?> ${results.speed_samples.length} <?php echo $lang448; ?></span>`;
     }
     
     if (result.proxy_mode) {
-        detailsHtml += `<br><span class="text-warning"><i class="bi bi-info-circle"></i> Proxy mode: Test performed through this server</span>`;
+        detailsHtml += `<br><span class="text-warning"><i class="bi bi-info-circle"></i> <?php echo $lang449; ?></span>`;
     }
     
     $('#testDetails').html(detailsHtml);
@@ -2248,24 +2266,24 @@ function startStatusCheck(requestId) {
         if (result.success && !result.exists) {
             clearInterval(refreshInterval);
             refreshInterval = null;
-            showAlert('✨ Request has been approved by remote server! Host added to your list.', 'success');
+            showAlert('✨ <?php echo $lang450; ?>', 'success');
             await loadOutgoingRequests();
             await loadHosts();
         } else if (checkCount >= 60) {
             clearInterval(refreshInterval);
             refreshInterval = null;
-            showAlert('Request is still pending. You can check status manually or revoke it.', 'info');
+            showAlert('<?php echo $lang451; ?>', 'info');
         }
     }, 5000);
 }
 
 async function acceptIncomingRequest(arId) {
-    if (!confirm('Accept this request? Host will be added as SLAVE to your list.')) return;
+    if (!confirm('<?php echo $lang452; ?>')) return;
     showLoading();
     let result = await apiCall('join_request', 'GET', { arId: arId });
     hideLoading();
     if (result.success) {
-        showAlert('✅ Request accepted! Host added as Slave.', 'success');
+        showAlert('✅ <?php echo $lang453; ?>', 'success');
         loadIncomingRequests();
         loadHosts();
     } else {
@@ -2274,12 +2292,12 @@ async function acceptIncomingRequest(arId) {
 }
 
 async function rejectIncomingRequest(arId) {
-    if (!confirm('Reject this request? It will be permanently deleted.')) return;
+    if (!confirm('<?php echo $lang454; ?>')) return;
     showLoading();
     let result = await apiCall('delete_incoming_request', 'GET', { arId: arId });
     hideLoading();
     if (result.success) {
-        showAlert('Request rejected and removed', 'info');
+        showAlert('<?php echo $lang455; ?>', 'info');
         loadIncomingRequests();
     } else {
         showAlert(result.message, 'danger');
@@ -2292,15 +2310,15 @@ async function getSnForHost(idHost) {
     hideLoading();
     
     if (result.success) {
-        showAlert(`✅ SN retrieved: ${result.sn}`, 'success');
+        showAlert(`✅ <?php echo $lang456; ?>: ${result.sn}`, 'success');
         loadHosts();
     } else {
-        showAlert(`❌ Failed to get SN: ${result.message}`, 'danger');
+        showAlert(`❌ <?php echo $lang457; ?>: ${result.message}`, 'danger');
     }
 }
 
 async function regeneratePin() {
-    if (!confirm('Generate new PIN? The old PIN will be replaced.')) return;
+    if (!confirm('<?php echo $lang458; ?>')) return;
     showLoading();
     let result = await apiCall('regenerate_pin');
     hideLoading();
@@ -2308,9 +2326,12 @@ async function regeneratePin() {
         let newPin = result.pin;
         let displayPin = '•'.repeat(newPin.length);
         $('#pinValue').attr('data-pin', newPin).text(displayPin);
-        showAlert('PIN regenerated successfully', 'success');
+        showAlert('<?php echo $lang459; ?>', 'success');
+		setTimeout(() => {
+			location.reload();
+		}, 3000);
     } else {
-        showAlert(result.message || 'Failed to regenerate PIN', 'danger');
+        showAlert(result.message || '<?php echo $lang460; ?>', 'danger');
     }
 }
 
@@ -2326,11 +2347,11 @@ async function loadTrapStatus() {
         toggle.prop('checked', result.enabled);
         
         if (result.enabled) {
-            label.text('Trap ON');
+            label.text('<?php echo $lang461; ?>');
             icon.removeClass('bi-shield-exclamation').addClass('bi-shield-check');
             icon.css('color', '#34c759');
         } else {
-            label.text('Trap OFF');
+            label.text('<?php echo $lang462; ?>');
             icon.removeClass('bi-shield-check').addClass('bi-shield-exclamation');
             icon.css('color', '#ff3b30');
         }
@@ -2352,7 +2373,7 @@ async function setTrapStatus(enabled) {
 }
 
 async function rotateHostKey(idHost) {
-    if (!confirm(`⚠️ WARNING: This will generate a NEW API key for this host!\n\nThe old key will remain active until the host confirms the new one.\n\nContinue?`)) {
+    if (!confirm(`⚠️ <?php echo $lang463; ?>`)) {
         return;
     }
     
@@ -2362,7 +2383,7 @@ async function rotateHostKey(idHost) {
     
     if (!hostResult.success || !hostResult.data) {
         hideLoading();
-        showAlert('Failed to get host information', 'danger');
+        showAlert('<?php echo $lang464; ?>', 'danger');
         return;
     }
     
@@ -2370,13 +2391,13 @@ async function rotateHostKey(idHost) {
     
     if (!host.hostSn) {
         hideLoading();
-        showAlert('This host has no Serial Number (SN)', 'warning');
+        showAlert('<?php echo $lang465; ?>', 'warning');
         return;
     }
     
     if (!host.hostApiKey) {
         hideLoading();
-        showAlert('This host has no API key', 'danger');
+        showAlert('<?php echo $lang466; ?>', 'danger');
         return;
     }
     
@@ -2409,31 +2430,31 @@ async function rotateHostKey(idHost) {
         hideLoading();
         
         if (result.status === 'success') {
-            let message = `✅ Key rotation started!\n\nTask ID: ${result.task_id}\nNew Key: ${result.new_api_key}\n`;
+            let message = `✅ <?php echo $lang467; ?>: ${result.task_id}<?php echo $lang468; ?>: ${result.new_api_key}\n`;
             
             if (host.hostType !== 'master') {
-                message += `\n📡 The slave will notify ${result.masters_count || 'all'} masters.`;
+                message += `\n📡 <?php echo $lang469; ?> ${result.masters_count || 'all'} <?php echo $lang470; ?>`;
             } else {
-                message += `\n📡 The master will notify all slaves.`;
+                message += `\n📡 <?php echo $lang471; ?>`;
             }
             
             showAlert(message, 'success');
             
-            if (confirm('Copy new API key to clipboard?')) {
+            if (confirm('<?php echo $lang472; ?>')) {
                 navigator.clipboard.writeText(result.new_api_key);
-                showAlert('New API key copied!', 'info');
+                showAlert('<?php echo $lang473; ?>', 'info');
             }
             
             if (confirm('View task status?')) {
                 checkRotationStatus(result.task_id, idHost);
             }
         } else {
-            showAlert('❌ Failed: ' + (result.error || 'Unknown error'), 'danger');
+            showAlert('❌ <?php echo $lang474; ?>: ' + (result.error || 'Unknown error'), 'danger');
         }
     } catch(e) {
         hideLoading();
         console.error('Rotation error:', e);
-        showAlert(`❌ Connection error to ${host.hostName} (${host.hostIp}): ${e.message}`, 'danger');
+        showAlert(`❌ <?php echo $lang475; ?> ${host.hostName} (${host.hostIp}): ${e.message}`, 'danger');
     }
 }
 
@@ -2445,14 +2466,14 @@ async function checkRotationStatus(taskId, hostId) {
     let apiKeyResult = await apiCall('get_host_api_key');
     if (!apiKeyResult.success || !apiKeyResult.api_key) {
         hideLoading();
-        showAlert('Failed to get local API key', 'danger');
+        showAlert('<?php echo $lang476; ?>', 'danger');
         return;
     }
     
     let hostResult = await apiCall('get_host', 'GET', { idHost: hostId });
     if (!hostResult.success || !hostResult.data) {
         hideLoading();
-        showAlert('Failed to get host info', 'danger');
+        showAlert('<?php echo $lang477; ?>', 'danger');
         return;
     }
     
@@ -2480,27 +2501,27 @@ async function checkRotationStatus(taskId, hostId) {
             
             switch(task.status) {
                 case 'pending':
-                    statusText = 'Pending - Waiting for scheduler';
+                    statusText = '<?php echo $lang478; ?>';
                     statusClass = 'text-warning';
                     statusIcon = '⏳';
                     break;
                 case 'in_progress':
-                    statusText = 'In Progress - Sending to host...';
+                    statusText = '<?php echo $lang479; ?>';
                     statusClass = 'text-info';
                     statusIcon = '🔄';
                     break;
                 case 'awaiting_confirmation':
-                    statusText = 'Awaiting Confirmation - Host needs to confirm new key';
+                    statusText = '<?php echo $lang480; ?>';
                     statusClass = 'text-primary';
                     statusIcon = '⏰';
                     break;
                 case 'completed':
-                    statusText = 'Completed - Key rotation successful!';
+                    statusText = '<?php echo $lang481; ?>';
                     statusClass = 'text-success';
                     statusIcon = '✅';
                     break;
                 case 'failed':
-                    statusText = 'Failed - ' + (task.lastError || 'Unknown error');
+                    statusText = '<?php echo $lang482; ?> ' + (task.lastError || 'Unknown error');
                     statusClass = 'text-danger';
                     statusIcon = '❌';
                     break;
@@ -2509,24 +2530,24 @@ async function checkRotationStatus(taskId, hostId) {
             let modalHtml = `
                 <div class="text-center">
                     <div style="font-size: 48px;">${statusIcon}</div>
-                    <h5 class="mt-2">Key Rotation Task #${task.taskId}</h5>
+                    <h5 class="mt-2"><?php echo $lang483; ?> #${task.taskId}</h5>
                     <div class="mt-3 p-3 bg-light rounded">
-                        <p><strong>Target SN:</strong> <code>${escapeHtml(task.targetSn)}</code></p>
-                        <p><strong>Status:</strong> <span class="${statusClass} fw-bold">${statusText}</span></p>
-                        <p><strong>Created:</strong> ${escapeHtml(task.initiationDate)}</p>
-                        ${task.completedDate ? `<p><strong>Completed:</strong> ${escapeHtml(task.completedDate)}</p>` : ''}
-                        ${task.lastError ? `<p><strong>Error:</strong> <span class="text-danger">${escapeHtml(task.lastError)}</span></p>` : ''}
+                        <p><strong><?php echo $lang484; ?>:</strong> <code>${escapeHtml(task.targetSn)}</code></p>
+                        <p><strong><?php echo $lang485; ?>:</strong> <span class="${statusClass} fw-bold">${statusText}</span></p>
+                        <p><strong><?php echo $lang486; ?>:</strong> ${escapeHtml(task.initiationDate)}</p>
+                        ${task.completedDate ? `<p><strong><?php echo $lang487; ?>:</strong> ${escapeHtml(task.completedDate)}</p>` : ''}
+                        ${task.lastError ? `<p><strong><?php echo $lang488; ?>:</strong> <span class="text-danger">${escapeHtml(task.lastError)}</span></p>` : ''}
                     </div>
                     ${task.newApiKey && task.status !== 'completed' ? `
                         <div class="alert alert-secondary mt-3">
-                            <strong>New API Key:</strong><br>
+                            <strong><?php echo $lang489; ?>:</strong><br>
                             <code class="user-select-all small">${escapeHtml(task.newApiKey)}</code>
                             <button class="btn btn-sm btn-outline-primary mt-2 d-block w-100" onclick="copyToClipboard('${escapeHtml(task.newApiKey)}')">
-                                <i class="bi bi-clipboard"></i> Copy New Key
+                                <i class="bi bi-clipboard"></i> <?php echo $lang490; ?>
                             </button>
                         </div>
                     ` : ''}
-                    <button class="btn btn-secondary mt-3" onclick="$('#testModal').modal('hide')">Close</button>
+                    <button class="btn btn-secondary mt-3" onclick="$('#testModal').modal('hide')"><?php echo $lang491; ?></button>
                 </div>
             `;
             
@@ -2538,12 +2559,12 @@ async function checkRotationStatus(taskId, hostId) {
                 setTimeout(() => loadHosts(), 2000);
             }
         } else {
-            showAlert('Task not found', 'warning');
+            showAlert('<?php echo $lang492; ?>', 'warning');
         }
     } catch(e) {
         hideLoading();
         console.error('Status check error:', e);
-        showAlert('Failed to get status: ' + e.message, 'danger');
+        showAlert('<?php echo $lang493; ?>: ' + e.message, 'danger');
     }
 	
 }

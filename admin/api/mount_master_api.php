@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 error_reporting(E_ERROR);
 ini_set('display_errors', 0);
 set_time_limit(0);
@@ -100,8 +102,14 @@ function writeError($message, $context = []) {
     file_put_contents(LOG_FILE, "[{$timestamp}] [ERROR] {$message}{$contextStr}" . PHP_EOL, FILE_APPEND);
 }
 
-function execCmd($cmd, $sudo = true, $timeout = 60) {
-    $fullCmd = $sudo ? "sudo " . $cmd : $cmd;
+function execCmd($cmd, $sudo = true, $timeout = 60, $useNsenter = false) {
+    $fullCmd = $cmd;
+    if ($useNsenter) {
+        $fullCmd = "nsenter -t 1 -m " . $cmd;
+    }
+    if ($sudo) {
+        $fullCmd = "sudo " . $fullCmd;
+    }
     $fullCmd .= " 2>&1";
     
     $process = proc_open($fullCmd, [
@@ -170,87 +178,120 @@ function getAvailableDevices() {
     $devices = [];
     
     $lsblkJson = execCmd("lsblk -J -o NAME,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT 2>/dev/null", true, 10);
-    if (!empty($lsblkJson)) {
-        $data = json_decode($lsblkJson, true);
-        if ($data && isset($data['blockdevices'])) {
-            foreach ($data['blockdevices'] as $disk) {
-                if ($disk['type'] === 'disk') {
-                    if (isset($disk['children']) && count($disk['children']) > 0) {
-                        foreach ($disk['children'] as $part) {
-                            if ($part['type'] === 'part' && empty($part['mountpoint'])) {
-                                $devices[] = [
-                                    'name' => $part['name'],
-                                    'path' => '/dev/' . $part['name'],
-                                    'size' => $part['size'] ?? 'Unknown',
-                                    'fstype' => $part['fstype'] ?? null,
-                                    'label' => $part['label'] ?? null,
-                                    'uuid' => $part['uuid'] ?? null,
-                                    'type' => 'partition',
-                                    'source_type' => 'partition',
-                                    'is_whole_disk' => false
-                                ];
-                            }
-                        }
-                    } 
-                    elseif (!empty($disk['fstype']) && empty($disk['mountpoint'])) {
-                        $devices[] = [
-                            'name' => $disk['name'],
-                            'path' => '/dev/' . $disk['name'],
-                            'size' => $disk['size'] ?? 'Unknown',
-                            'fstype' => $disk['fstype'],
-                            'label' => $disk['label'] ?? null,
-                            'uuid' => $disk['uuid'] ?? null,
-                            'type' => 'disk',
-                            'source_type' => 'whole_disk',
-                            'is_whole_disk' => true
-                        ];
-                        writeLog("Detected whole-disk filesystem on /dev/{$disk['name']} with fstype {$disk['fstype']}");
-                    }
-                }
-            }
-        }
-    }
+	if (!empty($lsblkJson)) {
+		$data = json_decode($lsblkJson, true);
+		if ($data && isset($data['blockdevices'])) {
+			foreach ($data['blockdevices'] as $disk) {
+				if ($disk['type'] === 'disk') {
+					if (isset($disk['children']) && count($disk['children']) > 0) {
+						foreach ($disk['children'] as $part) {
+							if ($part['type'] !== 'part' || 
+								!empty($part['mountpoint']) ||
+								empty($part['fstype']) ||
+								$part['size'] === '1K' || 
+								$part['size'] === '0' ||
+								$part['size'] === '1M' ||
+								in_array($part['mountpoint'] ?? '', ['/', '/boot', '/boot/efi', '/swap'])) {
+								writeLog("Skipping partition: {$part['name']} (Type: {$part['type']}, FS: {$part['fstype']}, Size: {$part['size']}, Mount: {$part['mountpoint']})");
+								continue;
+							}
+							
+							$devices[] = [
+								'name' => $part['name'],
+								'path' => '/dev/' . $part['name'],
+								'size' => $part['size'] ?? 'Unknown',
+								'fstype' => $part['fstype'] ?? null,
+								'label' => $part['label'] ?? null,
+								'uuid' => $part['uuid'] ?? null,
+								'type' => 'partition',
+								'source_type' => 'partition',
+								'is_whole_disk' => false
+							];
+							writeLog("Added partition: /dev/{$part['name']} ({$part['size']}) - {$part['fstype']}");
+						}
+					} 
+					elseif (!empty($disk['fstype']) && empty($disk['mountpoint']) && 
+							$disk['size'] !== '1K' && $disk['size'] !== '0') {
+						$devices[] = [
+							'name' => $disk['name'],
+							'path' => '/dev/' . $disk['name'],
+							'size' => $disk['size'] ?? 'Unknown',
+							'fstype' => $disk['fstype'],
+							'label' => $disk['label'] ?? null,
+							'uuid' => $disk['uuid'] ?? null,
+							'type' => 'disk',
+							'source_type' => 'whole_disk',
+							'is_whole_disk' => true
+						];
+						writeLog("Detected whole-disk filesystem on /dev/{$disk['name']} with fstype {$disk['fstype']}");
+					}
+				}
+			}
+		}
+	}
     
     // RAID устройства (md*)
     $mdOutput = execCmd("lsblk -J -o NAME,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT /dev/md* 2>/dev/null", true, 10);
-    if (!empty($mdOutput)) {
-        $mdData = json_decode($mdOutput, true);
-        if ($mdData && isset($mdData['blockdevices'])) {
-            foreach ($mdData['blockdevices'] as $raid) {
-                if (empty($raid['mountpoint'])) {
-                    $devices[] = [
-                        'name' => $raid['name'],
-                        'path' => '/dev/' . $raid['name'],
-                        'size' => $raid['size'] ?? 'Unknown',
-                        'fstype' => $raid['fstype'] ?? null,
-                        'label' => $raid['label'] ?? null,
-                        'uuid' => $raid['uuid'] ?? null,
-                        'type' => 'raid',
-                        'source_type' => 'raid',
-                        'is_whole_disk' => false
-                    ];
-                }
-                
-                if (isset($raid['children'])) {
-                    foreach ($raid['children'] as $part) {
-                        if (empty($part['mountpoint'])) {
-                            $devices[] = [
-                                'name' => $part['name'],
-                                'path' => '/dev/' . $part['name'],
-                                'size' => $part['size'] ?? 'Unknown',
-                                'fstype' => $part['fstype'] ?? null,
-                                'label' => $part['label'] ?? null,
-                                'uuid' => $part['uuid'] ?? null,
-                                'type' => 'raid_partition',
-                                'source_type' => 'raid_partition',
-                                'is_whole_disk' => false
-                            ];
-                        }
-                    }
-                }
-            }
-        }
-    }
+		if (!empty($mdOutput)) {
+			$mdData = json_decode($mdOutput, true);
+			if ($mdData && isset($mdData['blockdevices'])) {
+				foreach ($mdData['blockdevices'] as $raid) {
+					if (!empty($raid['mountpoint'])) {
+						writeLog("Skipping mounted RAID: /dev/{$raid['name']} -> {$raid['mountpoint']}");
+						continue;
+					}
+					
+					if (empty($raid['fstype']) || 
+						$raid['fstype'] === 'LVM2_member' ||
+						in_array($raid['size'], ['1K', '0', '1M'])) {
+						writeLog("Skipping RAID without FS or LVM2: /dev/{$raid['name']} ({$raid['fstype']})");
+						continue;
+					}
+					
+					$devices[] = [
+						'name' => $raid['name'],
+						'path' => '/dev/' . $raid['name'],
+						'size' => $raid['size'] ?? 'Unknown',
+						'fstype' => $raid['fstype'] ?? null,
+						'label' => $raid['label'] ?? null,
+						'uuid' => $raid['uuid'] ?? null,
+						'type' => 'raid',
+						'source_type' => 'raid',
+						'is_whole_disk' => false
+					];
+					writeLog("Added RAID: /dev/{$raid['name']} ({$raid['size']}) - {$raid['fstype']}");
+					
+					if (isset($raid['children'])) {
+						foreach ($raid['children'] as $part) {
+							if (!empty($part['mountpoint'])) {
+								writeLog("Skipping mounted RAID partition: /dev/{$part['name']} -> {$part['mountpoint']}");
+								continue;
+							}
+							
+							if (empty($part['fstype']) || 
+								$part['fstype'] === 'LVM2_member' ||
+								in_array($part['size'], ['1K', '0', '1M'])) {
+								writeLog("Skipping RAID partition without FS: /dev/{$part['name']} ({$part['fstype']})");
+								continue;
+							}
+							
+							$devices[] = [
+								'name' => $part['name'],
+								'path' => '/dev/' . $part['name'],
+								'size' => $part['size'] ?? 'Unknown',
+								'fstype' => $part['fstype'] ?? null,
+								'label' => $part['label'] ?? null,
+								'uuid' => $part['uuid'] ?? null,
+								'type' => 'raid_partition',
+								'source_type' => 'raid_partition',
+								'is_whole_disk' => false
+							];
+							writeLog("Added RAID partition: /dev/{$part['name']} ({$part['size']}) - {$part['fstype']}");
+						}
+					}
+				}
+			}
+		}
     
     // LVM Logical Volumes
     $lvsOutput = execCmd("lvs --noheadings -o lv_name,vg_name,lv_size,lv_path,lv_attr 2>/dev/null", true, 10);
@@ -289,35 +330,98 @@ function getAvailableDevices() {
 function getMountEntries() {
     $entries = [];
     
-    $mountOutput = execCmd("mount | grep '^/dev/' | grep -v 'loop'", true, 10);
+    $fstabContent = @file_get_contents('/etc/fstab');
+    $fstabMountPoints = [];
+    if ($fstabContent !== false) {
+        $lines = explode("\n", $fstabContent);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || $line[0] === '#') continue;
+            
+            $parts = preg_split('/\s+/', $line);
+            if (count($parts) >= 2) {
+                $mountPoint = $parts[1];
+                $mountPoint = str_replace('\\040', ' ', $mountPoint);
+                $fstabMountPoints[] = $mountPoint;
+            }
+        }
+    }
+    
+    // Получаем все монтирования включая CIFS
+    $mountOutput = execCmd("mount | grep -E '^/dev/|^//|^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:|^[a-zA-Z0-9.-]+:' | grep -v 'loop'", true, 10);
     if (!empty($mountOutput)) {
         $lines = explode("\n", trim($mountOutput));
         foreach ($lines as $line) {
+            if (empty(trim($line))) continue;
+            
+            // Обработка CIFS
+            if (preg_match('/^\/\/(\S+)\/(\S+)\s+on\s+(\S+)\s+type\s+cifs/', $line, $matches)) {
+                $server = $matches[1];
+                $share = $matches[2];
+                $mountPoint = $matches[3];
+                
+                // Извлекаем опции
+                preg_match('/\((.+)\)$/', $line, $optMatches);
+                $options = $optMatches[1] ?? '';
+                
+                $inFstab = in_array($mountPoint, $fstabMountPoints);
+                
+                $entries[] = [
+                    'device' => "//{$server}/{$share}",
+                    'device_path' => "//{$server}/{$share}",
+                    'mount_point' => $mountPoint,
+                    'fstype' => 'cifs',
+                    'options' => $options,
+                    'in_fstab' => $inFstab,
+                    'fstab_entry' => null,
+                    'is_managed' => false,
+                    'is_network' => true,
+                    'network_type' => 'cifs',
+                    'is_system' => false
+                ];
+                continue;
+            }
+            
+            // Обработка NFS
+            if (preg_match('/^(\S+):(\S+)\s+on\s+(\S+)\s+type\s+nfs/', $line, $matches)) {
+                $server = $matches[1];
+                $export = $matches[2];
+                $mountPoint = $matches[3];
+                
+                preg_match('/\((.+)\)$/', $line, $optMatches);
+                $options = $optMatches[1] ?? '';
+                
+                $inFstab = in_array($mountPoint, $fstabMountPoints);
+                
+                $entries[] = [
+                    'device' => "{$server}:{$export}",
+                    'device_path' => "{$server}:{$export}",
+                    'mount_point' => $mountPoint,
+                    'fstype' => 'nfs',
+                    'options' => $options,
+                    'in_fstab' => $inFstab,
+                    'fstab_entry' => null,
+                    'is_managed' => false,
+                    'is_network' => true,
+                    'network_type' => 'nfs',
+                    'is_system' => false
+                ];
+                continue;
+            }
+            
+            // Обработка локальных устройств
             if (preg_match('/^\/dev\/(\S+)\s+on\s+(\S+)\s+type\s+(\S+)\s+\((.+)\)/', $line, $matches)) {
                 $device = $matches[1];
                 $mountPoint = $matches[2];
                 $fstype = $matches[3];
                 $options = $matches[4];
                 
-                $isManaged = false;
-                $markerFile = $mountPoint . '/.mount_created_by_mount_master';
-                if (file_exists($markerFile)) {
-                    $isManaged = true;
+                $systemMounts = ['/tmp', '/var/tmp', '/run', '/proc', '/sys', '/dev', '/dev/shm', '/run/lock'];
+                if (in_array($mountPoint, $systemMounts) || $fstype === 'tmpfs') {
+                    continue;
                 }
                 
-                $inFstab = false;
-                $fstabEntry = null;
-                $fstab = file_get_contents('/etc/fstab');
-                if ($fstab && strpos($fstab, $mountPoint) !== false) {
-                    $inFstab = true;
-                    $lines2 = explode("\n", $fstab);
-                    foreach ($lines2 as $l) {
-                        if (strpos($l, $mountPoint) !== false && strpos($l, '#') !== 0) {
-                            $fstabEntry = trim($l);
-                            break;
-                        }
-                    }
-                }
+                $inFstab = in_array($mountPoint, $fstabMountPoints);
                 
                 $entries[] = [
                     'device' => $device,
@@ -326,51 +430,11 @@ function getMountEntries() {
                     'fstype' => $fstype,
                     'options' => $options,
                     'in_fstab' => $inFstab,
-                    'fstab_entry' => $fstabEntry,
-                    'is_managed' => $isManaged
-                ];
-            }
-        }
-    }
-    
-    // NFS и CIFS монтирования
-    $networkOutput = execCmd("mount -t nfs,nfs4,cifs 2>/dev/null", true, 10);
-    if (!empty($networkOutput)) {
-        $lines = explode("\n", trim($networkOutput));
-        foreach ($lines as $line) {
-            if (empty(trim($line))) continue;
-            
-            if (preg_match('/^\/\/(\S+)\/(\S+)\s+on\s+(\S+)\s+type\s+cifs/', $line, $matches)) {
-                $server = $matches[1];
-                $share = $matches[2];
-                $mountPoint = $matches[3];
-                
-                $entries[] = [
-                    'device' => "//{$server}/{$share}",
-                    'device_path' => "//{$server}/{$share}",
-                    'mount_point' => $mountPoint,
-                    'fstype' => 'cifs',
-                    'options' => '',
-                    'in_fstab' => false,
+                    'fstab_entry' => null,
                     'is_managed' => false,
-                    'is_network' => true,
-                    'network_type' => 'cifs'
-                ];
-            } elseif (preg_match('/^(\S+):(\S+)\s+on\s+(\S+)\s+type\s+nfs/', $line, $matches)) {
-                $server = $matches[1];
-                $export = $matches[2];
-                $mountPoint = $matches[3];
-                
-                $entries[] = [
-                    'device' => "{$server}:{$export}",
-                    'device_path' => "{$server}:{$export}",
-                    'mount_point' => $mountPoint,
-                    'fstype' => 'nfs',
-                    'options' => '',
-                    'in_fstab' => false,
-                    'is_managed' => false,
-                    'is_network' => true,
-                    'network_type' => 'nfs'
+                    'is_network' => false,
+                    'network_type' => null,
+                    'is_system' => false
                 ];
             }
         }
@@ -417,26 +481,35 @@ function getFstabEntries() {
 }
 
 function addToFstab($device, $mountPoint, $fstype, $options = 'defaults', $dump = 0, $pass = 2) {
+    global $lang267, $lang4539, $lang4540;
     writeLog("Adding to fstab: {$device} -> {$mountPoint}");
+    
+    $uuid = getDeviceUUID($device);
+    $deviceToUse = $uuid ? "UUID={$uuid}" : $device;
     
     $escapedMountPoint = str_replace(' ', '\\040', $mountPoint);
     
-    $fstabLine = "{$device} {$escapedMountPoint} {$fstype} {$options} {$dump} {$pass}\n";
+    $fstabLine = "{$deviceToUse} {$escapedMountPoint} {$fstype} {$options} {$dump} {$pass}\n";
     
     $currentFstab = @file_get_contents('/etc/fstab');
     if ($currentFstab !== false) {
-        if (strpos($currentFstab, $mountPoint) !== false || strpos($currentFstab, $device) !== false) {
+        if (strpos($currentFstab, $escapedMountPoint) !== false) {
             writeLog("Entry for {$mountPoint} already exists in fstab");
-            return ['success' => true, 'message' => 'Entry already exists'];
+            return ['success' => true, 'message' => $lang4539];
+        }
+        
+        if (strpos($currentFstab, $deviceToUse) !== false) {
+            writeLog("Entry for {$deviceToUse} already exists in fstab");
+            return ['success' => true, 'message' => $lang4539];
         }
     }
     
     $result = file_put_contents('/etc/fstab', $fstabLine, FILE_APPEND);
     if ($result !== false) {
         writeLog("Added to fstab: {$fstabLine}");
-        return ['success' => true];
+        return ['success' => true, 'message' => $lang267];
     } else {
-        $error = "Failed to write to /etc/fstab";
+        $error = $lang4540;
         writeError($error);
         return ['success' => false, 'error' => $error];
     }
@@ -476,40 +549,173 @@ function removeFromFstab($mountPoint) {
     if ($found) {
         $newContent = implode("\n", $newLines);
         $newContent = preg_replace('/\n{3,}/', "\n\n", $newContent);
-        return file_put_contents('/etc/fstab', $newContent) !== false;
+        $result = file_put_contents('/etc/fstab', $newContent);
+        if ($result !== false) {
+            writeLog("Entry removed from fstab for mount point: {$mountPoint}");
+            return true;
+        } else {
+            writeError("Failed to write /etc/fstab");
+            return false;
+        }
+    } else {
+        writeLog("No entry found in fstab for mount point: {$mountPoint}");
+        return true;
+    }
+}
+
+function getDeviceUUID($device) {
+    if (strpos($device, 'UUID=') === 0) {
+        return substr($device, 5);
     }
     
-    return true;
+    $realPath = realpath($device);
+    if (!$realPath) {
+        return null;
+    }
+    
+    $output = execCmd("blkid -s UUID -o value {$realPath} 2>/dev/null", true, 5);
+    if (!empty($output)) {
+        $uuid = trim($output);
+        if (!empty($uuid)) {
+            return $uuid;
+        }
+    }
+    
+    return null;
+}
+
+function isInFstab($mountPoint) {
+    $fstab = @file_get_contents('/etc/fstab');
+    if ($fstab === false) {
+        return false;
+    }
+    
+    $escapedMountPoint = str_replace(' ', '\\040', $mountPoint);
+    
+    $lines = explode("\n", $fstab);
+    foreach ($lines as $line) {
+        $lineTrimmed = trim($line);
+        if (empty($lineTrimmed) || $lineTrimmed[0] === '#') {
+            continue;
+        }
+        
+        if (strpos($line, $mountPoint) !== false || strpos($line, $escapedMountPoint) !== false) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = false) {
+    global $lang4541, $lang4542, $lang4543, $lang4544, $lang4545;
     writeLog("Mounting local device: {$device} -> {$mountPoint}");
     
     $devicePath = $device;
-    if (strpos($device, '/dev/') !== 0) {
-        $devicePath = '/dev/' . $device;
+    
+    $isLvm = false;
+    if (strpos($device, '/dev/mapper/') === 0) {
+        $isLvm = true;
+        writeLog("LVM mapper device detected: {$devicePath}");
+    } elseif (strpos($device, '/dev/') === 0 && strpos($device, '/dev/mapper/') !== 0) {
+        $pathParts = explode('/', $device);
+        if (count($pathParts) >= 4 && $pathParts[1] === 'dev' && 
+            (strpos($pathParts[2], 'vg_') === 0 || strpos($pathParts[2], 'vg-') === 0)) {
+            $vgName = $pathParts[2];
+            $lvName = $pathParts[3];
+            $devicePath = "/dev/mapper/{$vgName}-{$lvName}";
+            $isLvm = true;
+            writeLog("Converted LVM path: {$device} -> {$devicePath}");
+        }
+    } elseif (strpos($device, 'vg_') === 0 || strpos($device, 'vg-') === 0) {
+        $lvName = $device;
+        $lvmInfo = execCmd("lvs --noheadings -o vg_name,lv_name,lv_path 2>/dev/null | grep -E '\\s+{$lvName}\\s+'", true, 5);
+        if (!empty($lvmInfo)) {
+            $parts = preg_split('/\s+/', trim($lvmInfo));
+            if (count($parts) >= 3) {
+                $vgName = $parts[0];
+                $devicePath = "/dev/mapper/{$vgName}-{$lvName}";
+                $isLvm = true;
+                writeLog("Found LVM device: {$device} -> {$devicePath}");
+            }
+        }
+    } else {
+        if (strpos($device, '/dev/') !== 0) {
+            $devicePath = '/dev/' . $device;
+        }
     }
+    
+    writeLog("Final device path: {$devicePath}, isLvm: " . ($isLvm ? 'yes' : 'no'));
     
     if (!file_exists($devicePath)) {
-        return ['success' => false, 'error' => "Device {$devicePath} does not exist"];
+        if ($isLvm) {
+            $altPath = str_replace('/dev/mapper/', '/dev/', $devicePath);
+            $altPath = str_replace('-', '/', $altPath);
+            if (file_exists($altPath)) {
+                writeLog("Using alternative LVM path: {$altPath}");
+                $devicePath = $altPath;
+            } else {
+                $lvCheck = execCmd("lvs --noheadings -o lv_path | grep -E '{$devicePath}|" . str_replace('/dev/mapper/', '', $devicePath) . "' 2>/dev/null", true, 5);
+                if (empty($lvCheck)) {
+                    $error = $lang4541 . $devicePath . $lang4542 . " (LVM device not found)";
+                    writeError($error);
+                    return ['success' => false, 'error' => $error];
+                }
+            }
+        } else {
+            $error = $lang4541 . $devicePath . $lang4542;
+            writeError($error);
+            return ['success' => false, 'error' => $error];
+        }
     }
     
-    $mountCheck = execCmd("mount | grep '{$devicePath} '", true, 5);
+    $isMounted = false;
+    $mountCheck = execCmd("mount | grep -E '{$devicePath} |" . str_replace('/dev/mapper/', '/dev/', $devicePath) . " '", true, 5);
     if (!empty($mountCheck)) {
-        return ['success' => false, 'error' => "Device already mounted"];
+        $isMounted = true;
+        writeLog("Device is already mounted: {$mountCheck}");
+    }
+    
+    if (!$isMounted && $isLvm) {
+        $altPath = str_replace('/dev/mapper/', '/dev/', $devicePath);
+        $altPath = str_replace('-', '/', $altPath);
+        $mountCheckAlt = execCmd("mount | grep '{$altPath} '", true, 5);
+        if (!empty($mountCheckAlt)) {
+            $isMounted = true;
+            writeLog("Device is already mounted via alternative path: {$mountCheckAlt}");
+        }
+    }
+    
+    if ($isMounted) {
+        $error = $lang4543 . " (device: {$devicePath})";
+        writeLog($error);
+        return ['success' => false, 'error' => $error];
     }
     
     $fstype = $options['fstype'] ?? 'auto';
+    writeLog("Requested fstype: {$fstype}");
+    
     if ($fstype === 'auto') {
         $fstype = trim(execCmd("blkid -s TYPE -o value {$devicePath} 2>/dev/null", true, 5));
+        writeLog("blkid result: " . ($fstype ?: 'empty'));
+        
+        if (empty($fstype) && $isLvm) {
+            $altPath = str_replace('/dev/mapper/', '/dev/', $devicePath);
+            $altPath = str_replace('-', '/', $altPath);
+            $fstype = trim(execCmd("blkid -s TYPE -o value {$altPath} 2>/dev/null", true, 5));
+            writeLog("blkid on alt path result: " . ($fstype ?: 'empty'));
+        }
+        
         if (empty($fstype)) {
             $fstype = trim(execCmd("lsblk -n -o FSTYPE {$devicePath} 2>/dev/null", true, 5));
+            writeLog("lsblk result: " . ($fstype ?: 'empty'));
         }
+        
         if (empty($fstype)) {
             $fstype = 'auto';
         }
     }
-    writeLog("Detected filesystem: {$fstype}");
+    writeLog("Final filesystem type: {$fstype}");
     
     $mountPointCreated = false;
     if (!is_dir($mountPoint)) {
@@ -520,13 +726,19 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         
         $result = execCmd("mkdir -p \"{$mountPoint}\"", true, 5);
         if (!empty($result) && strpos($result, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Failed to create mount point: {$result}"];
+            $error = $lang4544 . $result;
+            writeError($error);
+            return ['success' => false, 'error' => $error];
         }
         $mountPointCreated = true;
+        writeLog("Mount point created: {$mountPoint}");
+    } else {
+        writeLog("Mount point already exists: {$mountPoint}");
     }
     
     $uid = $options['uid'] ?? 'www-data';
     $gid = $options['gid'] ?? 'www-data';
+    writeLog("UID: {$uid}, GID: {$gid}");
     
     if (is_numeric($uid)) {
         $uidNum = $uid;
@@ -534,6 +746,7 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         $uidNum = trim(execCmd("id -u {$uid} 2>/dev/null", false, 3));
         if (empty($uidNum)) $uidNum = 33;
     }
+    writeLog("UID number: {$uidNum}");
     
     if (is_numeric($gid)) {
         $gidNum = $gid;
@@ -541,6 +754,7 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         $gidNum = trim(execCmd("id -g {$gid} 2>/dev/null", false, 3));
         if (empty($gidNum)) $gidNum = 33;
     }
+    writeLog("GID number: {$gidNum}");
     
     if ($fstype === 'ntfs' || $fstype === 'ntfs-3g') {
         $mountOptions = "uid={$uidNum},gid={$gidNum},umask=000,fmask=000,dmask=000,big_writes";
@@ -560,34 +774,78 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
     
     writeLog("Mount options: {$mountOptions}");
     
-    $cmd = "mount -t {$fstype} -o {$mountOptions} {$devicePath} \"{$mountPoint}\" 2>&1";
+    if ($fstype === 'auto') {
+        $cmd = "mount -o {$mountOptions} {$devicePath} \"{$mountPoint}\" 2>&1";
+    } else {
+        $cmd = "mount -t {$fstype} -o {$mountOptions} {$devicePath} \"{$mountPoint}\" 2>&1";
+		$output = execCmd($cmd, true, 30, true);
+    }
+    
     writeLog("Executing: {$cmd}");
     $output = execCmd($cmd, true, 30);
+    writeLog("Command output: " . ($output ?: 'empty'));
     
-    sleep(1);
-    $checkMount = execCmd("mount | grep '{$devicePath} '", true, 5);
+    sleep(2);
+    
+    $checkMount = execCmd("cat /proc/mounts | grep -E '{$devicePath} |" . str_replace('/dev/mapper/', '/dev/', $devicePath) . " '", true, 5, true);
+    if (empty($checkMount) && $isLvm) {
+        $altPath = str_replace('/dev/mapper/', '/dev/', $devicePath);
+        $altPath = str_replace('-', '/', $altPath);
+        $checkMount = execCmd("mount | grep '{$altPath} '", true, 5);
+    }
+    writeLog("Mount check result: " . ($checkMount ?: 'not mounted'));
     
     if (empty($checkMount)) {
         if ($mountPointCreated) {
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
+            writeLog("Removed empty mount point");
         }
-        writeError("Mount failed: {$output}");
-        return ['success' => false, 'error' => "Mount failed: " . ($output ?: 'Unknown error')];
+        
+        $errorMsg = $output ?: 'Unknown error';
+        
+        if (strpos($output, 'mount point') !== false) {
+            $errorMsg = "Mount point error: " . $output;
+        } elseif (strpos($output, 'no such device') !== false) {
+            $errorMsg = "Device not found: " . $output;
+        } elseif (strpos($output, 'not a valid block device') !== false) {
+            $errorMsg = "Not a valid block device: " . $output;
+        } elseif (strpos($output, 'unknown filesystem type') !== false) {
+            $errorMsg = "Unknown filesystem type '{$fstype}': " . $output;
+        } elseif (strpos($output, 'permission denied') !== false) {
+            $errorMsg = "Permission denied: " . $output;
+        } elseif (strpos($output, 'already mounted') !== false) {
+            $errorMsg = "Device already mounted: " . $output;
+        }
+        
+        writeError("Mount failed: {$errorMsg}");
+        return ['success' => false, 'error' => $lang4545 . $errorMsg];
     }
     
+    writeLog("Device successfully mounted");
+    
     if ($fstype === 'ext4' || $fstype === 'ext3' || $fstype === 'ext2') {
+        writeLog("Setting permissions for ext filesystem");
         execCmd("chown {$uidNum}:{$gidNum} \"{$mountPoint}\"", true, 3);
         execCmd("chmod 755 \"{$mountPoint}\"", true, 3);
     }
     
     execCmd("touch \"{$mountPoint}/.mount_created_by_mount_master\"", true, 3);
+    writeLog("Created mount marker");
     
     if ($addToFstab) {
+        writeLog("Adding to fstab");
         $uuid = trim(execCmd("blkid -s UUID -o value {$devicePath} 2>/dev/null", true, 5));
+        if (empty($uuid) && $isLvm) {
+            $altPath = str_replace('/dev/mapper/', '/dev/', $devicePath);
+            $altPath = str_replace('-', '/', $altPath);
+            $uuid = trim(execCmd("blkid -s UUID -o value {$altPath} 2>/dev/null", true, 5));
+        }
         if (!empty($uuid)) {
             $fstabDevice = "UUID={$uuid}";
+            writeLog("Using UUID: {$uuid}");
         } else {
             $fstabDevice = $devicePath;
+            writeLog("Using device path: {$devicePath}");
         }
         $fstabOptions = "defaults,noatime";
         addToFstab($fstabDevice, $mountPoint, $fstype, $fstabOptions);
@@ -599,17 +857,33 @@ function mountLocalDevice($device, $mountPoint, $options = [], $addToFstab = fal
         'success' => true,
         'mount_point' => $mountPoint,
         'mount_point_created' => $mountPointCreated,
-        'fstype' => $fstype
+        'fstype' => $fstype,
+        'device_path' => $devicePath
     ];
 }
+
 function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab = false) {
+    global $lang4546, $lang4547, $lang4548;
     writeLog("Mounting CIFS share: //{$server}/{$share} -> {$mountPoint}");
     
     $source = "//{$server}/{$share}";
     
     $mountCheck = execCmd("mount | grep '{$source} '", true, 5);
     if (!empty($mountCheck)) {
-        return ['success' => false, 'error' => "Share already mounted"];
+        writeLog("Share already mounted, trying to unmount first: {$mountPoint}");
+        execCmd("umount -l \"{$mountPoint}\" 2>/dev/null", true, 5);
+        sleep(1);
+        
+        $mountCheck = execCmd("mount | grep '{$source} '", true, 5);
+        if (!empty($mountCheck)) {
+            return ['success' => false, 'error' => $lang4546 . " (device busy)"];
+        }
+    }
+    
+    if (is_dir($mountPoint) && !empty(execCmd("mount | grep ' {$mountPoint} '", true, 5))) {
+        writeLog("Mount point is already used, trying to unmount: {$mountPoint}");
+        execCmd("umount -l \"{$mountPoint}\" 2>/dev/null", true, 5);
+        sleep(1);
     }
     
     $mountPointCreated = false;
@@ -621,7 +895,7 @@ function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab
         
         $result = execCmd("mkdir -p \"{$mountPoint}\"", true, 5);
         if (!empty($result) && strpos($result, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Failed to create mount point: {$result}"];
+            return ['success' => false, 'error' => $lang4547 . $result];
         }
         $mountPointCreated = true;
     }
@@ -643,10 +917,25 @@ function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab
         if (empty($gidNum)) $gidNum = 33;
     }
     
+    $credFile = null;
+    if (!empty($options['username']) && !empty($options['password'])) {
+        $credFile = createCifsCredentialsFile(
+            $server, 
+            $share, 
+            $options['username'], 
+            $options['password'], 
+            $options['domain'] ?? ''
+        );
+    }
+    
     $mountOptions = "uid={$uidNum},gid={$gidNum},file_mode=0777,dir_mode=0777,noperm";
     
-    if (!empty($options['username']) && !empty($options['password'])) {
+    if ($credFile && file_exists($credFile)) {
+        $mountOptions .= ",credentials={$credFile}";
+        writeLog("Using credentials file for mount: {$credFile}");
+    } elseif (!empty($options['username']) && !empty($options['password'])) {
         $mountOptions .= ",username={$options['username']},password={$options['password']}";
+        writeLog("Using direct credentials for mount");
     }
     
     if (!empty($options['domain'])) {
@@ -663,27 +952,76 @@ function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab
         $mountOptions .= ",iocharset={$options['iocharset']}";
     }
     
-    $cmd = "mount -t cifs -o {$mountOptions} \"{$source}\" \"{$mountPoint}\" 2>&1";
-    $output = execCmd($cmd, true, 30);
+    $mountOptions .= ",nounix,sec=ntlmssp";
     
-    sleep(1);
-    $checkMount = execCmd("mount | grep '{$source} '", true, 5);
+    $maxRetries = 3;
+    $retryCount = 0;
+    $mounted = false;
+    $output = '';
     
-    if (empty($checkMount)) {
+    while ($retryCount < $maxRetries && !$mounted) {
+        if ($retryCount > 0) {
+            writeLog("Retry mount attempt {$retryCount}/{$maxRetries}");
+            sleep(2);
+            execCmd("umount -l \"{$mountPoint}\" 2>/dev/null", true, 5);
+            sleep(1);
+        }
+        
+        $cmd = "mount -t cifs -o {$mountOptions} \"{$source}\" \"{$mountPoint}\" 2>&1";
+        writeLog("Executing: {$cmd}");
+        $output = execCmd($cmd, true, 30);
+        writeLog("Mount output: " . ($output ?: 'empty'));
+        
+        sleep(2);
+        $checkMount = execCmd("mount | grep '{$source} '", true, 5);
+        writeLog("Mount check: " . ($checkMount ?: 'not mounted'));
+        
+        if (!empty($checkMount)) {
+            $mounted = true;
+            break;
+        }
+        
+        $retryCount++;
+    }
+    
+    if (!$mounted) {
         if ($mountPointCreated) {
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
         }
-        return ['success' => false, 'error' => "Mount failed: " . ($output ?: 'Unknown error')];
+        writeError("CIFS mount failed after {$maxRetries} attempts: {$output}");
+        return ['success' => false, 'error' => $lang4548 . ($output ?: 'Unknown error')];
     }
     
     execCmd("touch \"{$mountPoint}/.mount_created_by_mount_master\"", true, 3);
     
     if ($addToFstab) {
-        $fstabOptions = "_netdev,uid={$uidNum},gid={$gidNum},file_mode=0777,dir_mode=0777";
-        if (!empty($options['username'])) {
-            $fstabOptions .= ",username={$options['username']}";
+        writeLog("Adding CIFS share to fstab: {$source} -> {$mountPoint}");
+        
+        $fstabOptions = "_netdev,x-systemd.automount,x-systemd.mount-timeout=30,x-systemd.requires=network-online.target,uid={$uidNum},gid={$gidNum},file_mode=0777,dir_mode=0777,noperm,nounix,sec=ntlmssp";
+        
+        if ($credFile && file_exists($credFile)) {
+            $fstabOptions .= ",credentials={$credFile}";
+            writeLog("Using credentials file in fstab: {$credFile}");
+        } elseif (!empty($options['username']) && !empty($options['password'])) {
+            $fstabOptions .= ",username={$options['username']},password={$options['password']}";
         }
-        addToFstab($source, $mountPoint, 'cifs', $fstabOptions);
+        
+        if (!empty($options['domain'])) {
+            $fstabOptions .= ",domain={$options['domain']}";
+        }
+        
+        if (!empty($options['vers'])) {
+            $fstabOptions .= ",vers={$options['vers']}";
+        }
+        
+        if (!empty($options['iocharset'])) {
+            $fstabOptions .= ",iocharset={$options['iocharset']}";
+        }
+        
+        addToFstab($source, $mountPoint, 'cifs', $fstabOptions, 0, 0);
+        writeLog("Added to fstab with options: {$fstabOptions}");
+        
+        execCmd("systemctl daemon-reload", true, 5);
     }
     
     writeLog("CIFS share mounted successfully at {$mountPoint}");
@@ -691,18 +1029,56 @@ function mountCifsShare($server, $share, $mountPoint, $options = [], $addToFstab
     return [
         'success' => true,
         'mount_point' => $mountPoint,
-        'mount_point_created' => $mountPointCreated
+        'mount_point_created' => $mountPointCreated,
+        'mount_options' => $mountOptions,
+        'credentials_file' => $credFile
     ];
 }
 
+function createCifsCredentialsFile($server, $share, $username, $password, $domain = '') {
+    $credDir = '/var/www/minib/creds';
+    
+    if (!is_dir($credDir)) {
+        mkdir($credDir, 0755, true);
+    }
+    
+    $credFile = $credDir . '/credentials.' . md5($server . $share . $username);
+    
+    $credContent = "username={$username}\n";
+    $credContent .= "password={$password}\n";
+    if (!empty($domain)) {
+        $credContent .= "domain={$domain}\n";
+    }
+    
+    file_put_contents($credFile, $credContent);
+    
+    chmod($credFile, 0600);
+    @chown($credFile, 'root');
+    @chgrp($credFile, 'root');
+    
+    writeLog("Created CIFS credentials file: {$credFile}");
+    return $credFile;
+}
+
+function removeCifsCredentialsFile($server, $share, $username) {
+    $credFile = '/var/www/minib/creds/credentials.' . md5($server . $share . $username);
+    if (file_exists($credFile)) {
+        unlink($credFile);
+        writeLog("Removed CIFS credentials file: {$credFile}");
+        return true;
+    }
+    return false;
+}
+
 function mountNfsShare($server, $export, $mountPoint, $options = [], $addToFstab = false) {
+	global $lang4549, $lang4550, $lang4551;
     writeLog("Mounting NFS share: {$server}:{$export} -> {$mountPoint}");
     
     $source = "{$server}:{$export}";
     
     $mountCheck = execCmd("mount | grep '{$source} '", true, 5);
     if (!empty($mountCheck)) {
-        return ['success' => false, 'error' => "Share already mounted"];
+        return ['success' => false, 'error' => $lang4549];
     }
     
     $mountPointCreated = false;
@@ -714,7 +1090,7 @@ function mountNfsShare($server, $export, $mountPoint, $options = [], $addToFstab
         
         $result = execCmd("mkdir -p \"{$mountPoint}\"", true, 5);
         if (!empty($result) && strpos($result, 'cannot create') !== false) {
-            return ['success' => false, 'error' => "Failed to create mount point: {$result}"];
+            return ['success' => false, 'error' => $lang4550 . $result];
         }
         $mountPointCreated = true;
     }
@@ -755,7 +1131,7 @@ function mountNfsShare($server, $export, $mountPoint, $options = [], $addToFstab
         if ($mountPointCreated) {
             execCmd("rmdir \"{$mountPoint}\" 2>/dev/null", true, 3);
         }
-        return ['success' => false, 'error' => "Mount failed: " . ($output ?: 'Unknown error')];
+        return ['success' => false, 'error' => $lang4551 . ($output ?: 'Unknown error')];
     }
     
     execCmd("touch \"{$mountPoint}/.mount_created_by_mount_master\"", true, 3);
@@ -774,11 +1150,12 @@ function mountNfsShare($server, $export, $mountPoint, $options = [], $addToFstab
 }
 
 function unmountPoint($mountPoint, $force = false, $removeFromFstab = false) {
+	global $lang4552, $lang4553, $lang4554, $lang4555;
     writeLog("Unmounting: {$mountPoint}, force: " . ($force ? 'true' : 'false'));
     
-    $mountCheck = execCmd("mount | grep ' {$mountPoint} '", true, 5);
+    $mountCheck = execCmd("cat /proc/mounts | grep ' {$mountPoint} '", true, 5, true);
     if (empty($mountCheck)) {
-        return ['success' => false, 'error' => "Nothing mounted at {$mountPoint}"];
+        return ['success' => false, 'error' => $lang4552 . $mountPoint];
     }
     
     if (preg_match('/^(\S+)\s+on\s+(\S+)\s+type/', $mountCheck, $matches)) {
@@ -796,7 +1173,8 @@ function unmountPoint($mountPoint, $force = false, $removeFromFstab = false) {
     if ($force) {
         $output = execCmd("umount -l \"{$mountPoint}\" 2>&1", true, 10);
     } else {
-        $output = execCmd("umount \"{$mountPoint}\" 2>&1", true, 10);
+        $output = execCmd("umount \"{$mountPoint}\" 2>&1", true, 10, true);
+
     }
     
     sleep(1);
@@ -811,10 +1189,10 @@ function unmountPoint($mountPoint, $force = false, $removeFromFstab = false) {
             $stillMounted = execCmd("mount | grep ' {$mountPoint} '", true, 5);
             
             if (!empty($stillMounted)) {
-                return ['success' => false, 'error' => "Failed to unmount: " . ($output ?: 'Unknown error')];
+                return ['success' => false, 'error' => $lang4553 . ($output ?: 'Unknown error')];
             }
         } else {
-            return ['success' => false, 'error' => "Failed to unmount: " . ($output ?: 'Unknown error')];
+            return ['success' => false, 'error' => $lang4554 . ($output ?: 'Unknown error')];
         }
     }
     
@@ -840,10 +1218,11 @@ function unmountPoint($mountPoint, $force = false, $removeFromFstab = false) {
     
     writeLog("Successfully unmounted {$mountPoint}");
     
-    return ['success' => true, 'message' => "Successfully unmounted", 'was_managed' => $wasManaged];
+    return ['success' => true, 'message' => $lang4555, 'was_managed' => $wasManaged];
 }
 
 function browseDirectory($path) {
+	global $lang4556, $lang4557, $lang4558, $lang4559;
     if (empty($path) || $path === '' || $path === '/') {
         $path = '/';
     }
@@ -877,11 +1256,11 @@ function browseDirectory($path) {
     }
     
     if (!is_dir($realPath)) {
-        return ['success' => false, 'error' => 'Not a directory: ' . $realPath];
+        return ['success' => false, 'error' => $lang4556 . $realPath];
     }
     
     if (!is_readable($realPath)) {
-        return ['success' => false, 'error' => 'Directory not readable: ' . $realPath];
+        return ['success' => false, 'error' => $lang4557 . $realPath];
     }
     
     $items = [];
@@ -889,7 +1268,7 @@ function browseDirectory($path) {
     try {
         $dirs = scandir($realPath);
         if ($dirs === false) {
-            return ['success' => false, 'error' => 'Cannot read directory: ' . $realPath];
+            return ['success' => false, 'error' => $lang4558 . $realPath];
         }
         
         foreach ($dirs as $item) {
@@ -913,7 +1292,7 @@ function browseDirectory($path) {
         });
         
     } catch (Exception $e) {
-        return ['success' => false, 'error' => 'Error reading directory: ' . $e->getMessage()];
+        return ['success' => false, 'error' => $lang4559 . $e->getMessage()];
     }
     
     $parentPath = '/';
@@ -971,10 +1350,11 @@ function getRootDirectories() {
 }
 
 function createDirectory($path, $name) {
+	global $lang4560, $lang4561;
     $newPath = rtrim($path, '/') . '/' . $name;
     
     if (file_exists($newPath)) {
-        return ['success' => false, 'error' => 'Directory already exists'];
+        return ['success' => false, 'error' => $lang4560];
     }
     
     $result = mkdir($newPath, 0777, true);
@@ -982,7 +1362,7 @@ function createDirectory($path, $name) {
         execCmd("chmod 777 \"{$newPath}\"", true, 3);
         return ['success' => true, 'path' => $newPath];
     } else {
-        return ['success' => false, 'error' => 'Failed to create directory'];
+        return ['success' => false, 'error' => $lang4561];
     }
 }
 
@@ -1055,12 +1435,13 @@ try {
             break;
             
         case 'mount_local':
+			global $lang4562;
             $device = $input['device'] ?? '';
             $mountPoint = $input['mount_point'] ?? '';
             $addToFstab = filter_var($input['add_to_fstab'] ?? false, FILTER_VALIDATE_BOOLEAN);
             
             if (empty($device) || empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Device and mount point required'];
+                $response = ['success' => false, 'error' => $lang4562];
                 break;
             }
             
@@ -1075,13 +1456,14 @@ try {
             break;
             
         case 'mount_cifs':
+			global $lang4563;
             $server = $input['server'] ?? '';
             $share = $input['share'] ?? '';
             $mountPoint = $input['mount_point'] ?? '';
             $addToFstab = filter_var($input['add_to_fstab'] ?? false, FILTER_VALIDATE_BOOLEAN);
             
             if (empty($server) || empty($share) || empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Server, share and mount point required'];
+                $response = ['success' => false, 'error' => $lang4563];
                 break;
             }
             
@@ -1099,13 +1481,14 @@ try {
             break;
             
         case 'mount_nfs':
+			global $lang4564;
             $server = $input['server'] ?? '';
             $export = $input['export'] ?? '';
             $mountPoint = $input['mount_point'] ?? '';
             $addToFstab = filter_var($input['add_to_fstab'] ?? false, FILTER_VALIDATE_BOOLEAN);
             
             if (empty($server) || empty($export) || empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Server, export and mount point required'];
+                $response = ['success' => false, 'error' => $lang4564];
                 break;
             }
             
@@ -1123,12 +1506,13 @@ try {
             break;
             
         case 'unmount':
+			global $lang4565;
             $mountPoint = $input['mount_point'] ?? '';
             $force = filter_var($input['force'] ?? false, FILTER_VALIDATE_BOOLEAN);
             $removeFromFstab = filter_var($input['remove_from_fstab'] ?? false, FILTER_VALIDATE_BOOLEAN);
             
             if (empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Mount point required'];
+                $response = ['success' => false, 'error' => $lang4565];
                 break;
             }
             
@@ -1136,13 +1520,14 @@ try {
             break;
             
         case 'add_to_fstab':
+			global $lang4566;
             $device = $input['device'] ?? '';
             $mountPoint = $input['mount_point'] ?? '';
             $fstype = $input['fstype'] ?? 'ext4';
             $options = $input['options'] ?? 'defaults';
             
             if (empty($device) || empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Device and mount point required'];
+                $response = ['success' => false, 'error' => $lang4566];
                 break;
             }
             
@@ -1150,10 +1535,11 @@ try {
             break;
             
         case 'remove_from_fstab':
+			global $lang4567;
             $mountPoint = $input['mount_point'] ?? '';
             
             if (empty($mountPoint)) {
-                $response = ['success' => false, 'error' => 'Mount point required'];
+                $response = ['success' => false, 'error' => $lang4567];
                 break;
             }
             
@@ -1161,18 +1547,19 @@ try {
             break;
             
         case 'change_mount_point':
+			global $lang4568, $lang4569, $lang4570, $lang4571;
             $oldMountPoint = $input['old_mount_point'] ?? '';
             $newMountPoint = $input['new_mount_point'] ?? '';
             $updateFstab = filter_var($input['update_fstab'] ?? false, FILTER_VALIDATE_BOOLEAN);
             
             if (empty($oldMountPoint) || empty($newMountPoint)) {
-                $response = ['success' => false, 'error' => 'Old and new mount point required'];
+                $response = ['success' => false, 'error' => $lang4568];
                 break;
             }
             
-            $mountCheck = execCmd("mount | grep ' {$oldMountPoint} '", true, 5);
+            $mountCheck = execCmd("cat /proc/mounts | grep ' {$oldMountPoint} '", true, 5, true);
             if (empty($mountCheck)) {
-                $response = ['success' => false, 'error' => "Nothing mounted at {$oldMountPoint}"];
+                $response = ['success' => false, 'error' => $lang4569 . $oldMountPoint];
                 break;
             }
             
@@ -1206,7 +1593,7 @@ try {
             $output = execCmd($remountCmd, true, 10);
             
             if (strpos($output, 'Error') !== false || strpos($output, 'error') !== false) {
-                $response = ['success' => false, 'error' => "Failed to remount: {$output}"];
+                $response = ['success' => false, 'error' => $lang4570 . $output];
                 break;
             }
             
@@ -1230,22 +1617,23 @@ try {
                 addToFstab($device, $newMountPoint, $fstype, $options);
             }
             
-            $response = ['success' => true, 'message' => 'Mount point changed successfully'];
+            $response = ['success' => true, 'message' => $lang4571];
             break;
             
         case 'browse':
-    $path = $input['path'] ?? $_GET['path'] ?? '/';
-    $path = urldecode($path);
-    $path = '/' . ltrim($path, '/');
-    $response = browseDirectory($path);
-    break;
+			$path = $input['path'] ?? $_GET['path'] ?? '/';
+			$path = urldecode($path);
+			$path = '/' . ltrim($path, '/');
+			$response = browseDirectory($path);
+			break;
             
         case 'create_folder':
+			global $lang4572;
             $path = $input['path'] ?? '';
             $name = $input['name'] ?? '';
             
             if (empty($path) || empty($name)) {
-                $response = ['success' => false, 'error' => 'Path and name required'];
+                $response = ['success' => false, 'error' => $lang4572];
                 break;
             }
             
@@ -1275,4 +1663,3 @@ try {
 
 writeLog("Response for action {$action}: " . json_encode(['success' => $response['success'] ?? false]));
 echo json_encode($response, JSON_UNESCAPED_UNICODE);
-?>

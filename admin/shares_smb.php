@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -84,8 +85,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
 .status-group {
@@ -570,7 +587,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -580,33 +597,33 @@ $menu = require_once 'menu.php';
     <div class="top-bar-right">
         <div class="status-group" id="statusGroup">
             <span class="status-badge" id="smbRunningBadge">
-                <i class="fas fa-play-circle"></i> SMB: Loading...
+                <i class="fas fa-play-circle"></i> <?php echo $lang2148; ?>
             </span>
             <span class="status-badge" id="smbEnabledBadge">
-                <i class="fas fa-check-circle"></i> Auto: Loading...
+                <i class="fas fa-check-circle"></i> <?php echo $lang2149; ?>
             </span>
             <span class="status-badge" id="smbPidBadge" style="background:#e9ecef; color:#495057; display:none;">
-                <i class="fas fa-microchip"></i> PID: <span id="smbPid">-</span>
+                <i class="fas fa-microchip"></i> <?php echo $lang2150; ?> <span id="smbPid">-</span>
             </span>
             <span class="status-badge" id="smbVersionBadge" style="background:#e9ecef; color:#495057;">
-                <i class="fas fa-code-branch"></i> v<span id="smbVersion">-</span>
+                <i class="fas fa-code-branch"></i> <?php echo $lang2151; ?><span id="smbVersion">-</span>
             </span>
         </div>
         <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div class="dropdown">
             <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-power-off"></i> Management
+                <i class="fas fa-power-off"></i> <?php echo $lang2152; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success"></i> Start</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger"></i> Stop</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning"></i> Restart</button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success me-2"></i> <?php echo $lang2153; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger me-2"></i> <?php echo $lang2154; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning me-2"></i> <?php echo $lang2155; ?></button></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info"></i> Enable autostart</button></li>
+                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info me-2"></i> <?php echo $lang2156; ?></button></li>
             </ul>
         </div>
         
@@ -627,19 +644,19 @@ $menu = require_once 'menu.php';
             <div class="col-md-8">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-share-alt text-primary"></i> Shared Folders (SMB Shares)</h3>
+                        <h3><i class="fas fa-share-alt text-primary"></i> <?php echo $lang2157; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSmbModal">
-                            <i class="fas fa-plus"></i> Create Share
+                            <i class="fas fa-plus"></i> <?php echo $lang2158; ?>
                         </button>
                     </div>
                     <div class="widget-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-share mb-0">
                                 <thead>
-                                    <tr><th>Name</th><th>Path</th><th>Access</th><th>Permissions</th><th>Actions</th></tr>
+                                    <tr><th><?php echo $lang2159; ?></th><th><?php echo $lang2160; ?></th><th><?php echo $lang2161; ?></th><th><?php echo $lang2162; ?></th><th><?php echo $lang2163; ?></th></tr>
                                 </thead>
                                 <tbody id="sharesTableBody">
-                                    <tr><td colspan="5" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> Loading......</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2164; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -650,43 +667,43 @@ $menu = require_once 'menu.php';
             <div class="col-md-4">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-hdd text-primary"></i> Disk Partitions</h3>
+                        <h3><i class="fas fa-hdd text-primary"></i> <?php echo $lang2165; ?></h3>
                         <a class="btn btn-primary btn-sm" href="disk_manager.php"><i class="fas fa-tools"></i></a>
                     </div>
                     <div class="widget-body" id="storagesContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2166; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-users text-primary"></i> SMB Users</h3>
+                        <h3><i class="fas fa-users text-primary"></i> <?php echo $lang2167; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                     <div class="widget-body" id="usersContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2168; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-users-viewfinder text-primary"></i> Active Sessions</h3>
+                        <h3><i class="fas fa-users-viewfinder text-primary"></i> <?php echo $lang2169; ?></h3>
                         <i class="fas fa-sync-alt refresh-btn text-muted" onclick="loadSessions()" style="font-size:12px"></i>
                     </div>
                     <div class="widget-body p-0" id="sessionsContainer">
-                        <div class="p-3 text-muted text-center"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="p-3 text-muted text-center"><div class="loading-spinner-sm"></div> <?php echo $lang2170; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-file-alt text-primary"></i> Open Files</h3>
+                        <h3><i class="fas fa-file-alt text-primary"></i> <?php echo $lang2171; ?></h3>
                         <i class="fas fa-sync-alt refresh-btn text-muted" onclick="loadSessions()" style="font-size:12px"></i>
                     </div>
                     <div class="widget-body p-0" id="filesContainer">
-                        <div class="p-3 text-muted text-center"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="p-3 text-muted text-center"><div class="loading-spinner-sm"></div> <?php echo $lang2172; ?></div>
                     </div>
                 </div>
             </div>
@@ -699,26 +716,26 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Global SMB Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> <?php echo $lang2173; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="globalConfigForm">
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Workgroup</label><input type="text" name="workgroup" id="config_workgroup" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label">Server Name</label><input type="text" name="server_string" id="config_server_string" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label">Security</label><select name="security" id="config_security" class="form-select"><option value="user">user</option><option value="share">share</option><option value="domain">domain</option></select></div>
-                        <div class="col-md-4"><label class="form-label">Map to guest</label><select name="map_to_guest" id="config_map_to_guest" class="form-select"><option value="Bad User">Bad User</option><option value="Bad Password">Bad Password</option><option value="Never">Never</option></select></div>
-                        <div class="col-md-4"><label class="form-label">Guest Account</label><input type="text" name="guest_account" id="config_guest_account" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label">Log Level</label><input type="number" name="log_level" id="config_log_level" class="form-control" min="0" max="10"></div>
-                        <div class="col-md-3"><label class="form-label">Max Log Size (KB)</label><input type="number" name="max_log_size" id="config_max_log_size" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label">Deadtime (minutes)</label><input type="number" name="deadtime" id="config_deadtime" class="form-control"></div>
-                        <div class="col-md-3"><label class="form-label">Use sendfile</label><select name="use_sendfile" id="config_use_sendfile" class="form-select"><option value="yes">Yes</option><option value="no">No</option></select></div>
+                        <div class="col-md-6"><label class="form-label"><?php echo $lang2174; ?></label><input type="text" name="workgroup" id="config_workgroup" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label"><?php echo $lang2175; ?></label><input type="text" name="server_string" id="config_server_string" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label"><?php echo $lang2176; ?></label><select name="security" id="config_security" class="form-select"><option value="user"><?php echo $lang2177; ?></option><option value="share"><?php echo $lang2178; ?></option><option value="domain"><?php echo $lang2179; ?></option></select></div>
+                        <div class="col-md-4"><label class="form-label"><?php echo $lang2180; ?></label><select name="map_to_guest" id="config_map_to_guest" class="form-select"><option value="Bad User"><?php echo $lang2181; ?></option><option value="Bad Password"><?php echo $lang2182; ?></option><option value="Never"><?php echo $lang2183; ?></option></select></div>
+                        <div class="col-md-4"><label class="form-label"><?php echo $lang2184; ?></label><input type="text" name="guest_account" id="config_guest_account" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label"><?php echo $lang2185; ?></label><input type="number" name="log_level" id="config_log_level" class="form-control" min="0" max="10"></div>
+                        <div class="col-md-3"><label class="form-label"><?php echo $lang2186; ?></label><input type="number" name="max_log_size" id="config_max_log_size" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label"><?php echo $lang2187; ?></label><input type="number" name="deadtime" id="config_deadtime" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label"><?php echo $lang2188; ?></label><select name="use_sendfile" id="config_use_sendfile" class="form-select"><option value="yes"><?php echo $lang2189; ?></option><option value="no"><?php echo $lang2190; ?></option></select></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2191; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2192; ?></button>
                 </div>
             </form>
         </div>
@@ -729,17 +746,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add SMB User</h5>
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> <?php echo $lang2193; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addUserForm">
                 <div class="modal-body">
-                    <div class="mb-3"><label class="form-label">Username</label><input type="text" name="username" class="form-control" pattern="[a-z_][a-z0-9_-]*" required><small class="text-muted">Only Latin letters, numbers, _ and -</small></div>
-                    <div class="mb-3"><label class="form-label">Password</label><input type="password" name="password" class="form-control" required minlength="4"></div>
-                    <div class="mb-3"><label class="form-label">Repeat password</label><input type="password" name="password2" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label"><?php echo $lang2194; ?></label><input type="text" name="username" class="form-control" pattern="[a-z_][a-z0-9_-]*" required><small class="text-muted"><?php echo $lang2195; ?></small></div>
+                    <div class="mb-3"><label class="form-label"><?php echo $lang2196; ?></label><input type="password" name="password" class="form-control" required minlength="4"></div>
+                    <div class="mb-3"><label class="form-label"><?php echo $lang2197; ?></label><input type="password" name="password2" class="form-control" required></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2198; ?></button>
                 </div>
             </form>
         </div>
@@ -749,14 +766,14 @@ $menu = require_once 'menu.php';
 <div class="modal fade" id="changePasswordModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning"><h5 class="modal-title"><i class="fas fa-key"></i> Change Password</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-warning"><h5 class="modal-title"><i class="fas fa-key"></i> <?php echo $lang2199; ?></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form id="changePasswordForm">
                 <div class="modal-body">
                     <input type="hidden" name="username" id="changePasswordUsername">
-                    <div class="mb-3"><label class="form-label">New Password</label><input type="password" name="password" class="form-control" required minlength="4"></div>
-                    <div class="mb-3"><label class="form-label">Repeat Password</label><input type="password" name="password2" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label"><?php echo $lang2200; ?></label><input type="password" name="password" class="form-control" required minlength="4"></div>
+                    <div class="mb-3"><label class="form-label"><?php echo $lang2201; ?></label><input type="password" name="password2" class="form-control" required></div>
                 </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-warning">Change</button></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-warning"><?php echo $lang2202; ?></button></div>
             </form>
         </div>
     </div>
@@ -765,28 +782,28 @@ $menu = require_once 'menu.php';
 <div class="modal fade" id="addSmbModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-plus-circle"></i> Create SMB Share</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-plus-circle"></i> <?php echo $lang2203; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <form id="addShareForm">
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Share Name *</label><input type="text" name="share_name" class="form-control" required placeholder="documents"><small class="text-muted">Latin letters, numbers, _</small></div>
-                        <div class="col-md-8"><label class="form-label">Folder Path *</label><div class="input-group"><input type="text" name="path" id="addSmbPath" class="form-control" readonly required><button type="button" class="btn btn-secondary" onclick="openFolderBrowser('addSmbPath')"><i class="fas fa-folder-open"></i> Browse</button></div></div>
-                        <div class="col-md-12"><label class="form-label">Description</label><input type="text" name="comment" class="form-control" placeholder="Optional description"></div>
+                        <div class="col-md-4"><label class="form-label"><?php echo $lang2204; ?> *</label><input type="text" name="share_name" class="form-control" required placeholder="documents"><small class="text-muted"><?php echo $lang2207; ?></small></div>
+                        <div class="col-md-8"><label class="form-label"><?php echo $lang2205; ?> *</label><div class="input-group"><input type="text" name="path" id="addSmbPath" class="form-control" readonly required><button type="button" class="btn btn-secondary" onclick="openFolderBrowser('addSmbPath')"><i class="fas fa-folder-open"></i> <?php echo $lang2208; ?></button></div></div>
+                        <div class="col-md-12"><label class="form-label"><?php echo $lang2206; ?></label><input type="text" name="comment" class="form-control" placeholder="<?php echo $lang2209; ?>"></div>
                         <div class="col-md-12">
-                            <div class="form-check form-check-inline"><input type="checkbox" name="writable" class="form-check-input" id="smb_writable" checked><label class="form-check-label" for="smb_writable"><i class="fas fa-pen"></i> Allow write</label></div>
-                            <div class="form-check form-check-inline"><input type="checkbox" name="public" class="form-check-input" id="smb_public"><label class="form-check-label" for="smb_public"><i class="fas fa-globe"></i> Public</label></div>
+                            <div class="form-check form-check-inline"><input type="checkbox" name="writable" class="form-check-input" id="smb_writable" checked><label class="form-check-label" for="smb_writable"><i class="fas fa-pen"></i> <?php echo $lang2210; ?></label></div>
+                            <div class="form-check form-check-inline"><input type="checkbox" name="public" class="form-check-input" id="smb_public"><label class="form-check-label" for="smb_public"><i class="fas fa-globe"></i> <?php echo $lang2211; ?></label></div>
                         </div>
                         <div class="col-md-12" id="smbPermissionsModal">
                             <div class="border rounded p-3 bg-light mt-2">
                                 <div class="row">
-                                    <div class="col-md-6"><strong><i class="fas fa-eye"></i> Read Only:</strong><div class="user-select-list mt-2" id="modalReadList"></div></div>
-                                    <div class="col-md-6"><strong><i class="fas fa-pen"></i> Read & Write:</strong><div class="user-select-list mt-2" id="modalWriteList"></div></div>
+                                    <div class="col-md-6"><strong><i class="fas fa-eye"></i> <?php echo $lang2212; ?></strong><div class="user-select-list mt-2" id="modalReadList"></div></div>
+                                    <div class="col-md-6"><strong><i class="fas fa-pen"></i> <?php echo $lang2213; ?></strong><div class="user-select-list mt-2" id="modalWriteList"></div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-success">Create Share</button></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><?php echo $lang2214; ?></button></div>
             </form>
         </div>
     </div>
@@ -795,22 +812,22 @@ $menu = require_once 'menu.php';
 <div class="modal fade" id="editSmbModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-edit"></i> Edit Share</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-edit"></i> <?php echo $lang2215; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <form id="editShareForm">
                 <div class="modal-body">
                     <input type="hidden" name="old_name" id="edit_old_name">
                     <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Share Name</label><input type="text" name="share_name" id="edit_share_name" class="form-control" required></div>
-                        <div class="col-md-8"><label class="form-label">Path</label><div class="input-group"><input type="text" name="path" id="edit_path" class="form-control" readonly required><button type="button" class="btn btn-secondary" onclick="openFolderBrowser('edit_path')"><i class="fas fa-folder-open"></i> Browse</button></div></div>
-                        <div class="col-md-12"><label class="form-label">Description</label><input type="text" name="comment" id="edit_comment" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label"><?php echo $lang2216; ?></label><input type="text" name="share_name" id="edit_share_name" class="form-control" required></div>
+                        <div class="col-md-8"><label class="form-label"><?php echo $lang2217; ?></label><div class="input-group"><input type="text" name="path" id="edit_path" class="form-control" readonly required><button type="button" class="btn btn-secondary" onclick="openFolderBrowser('edit_path')"><i class="fas fa-folder-open"></i> <?php echo $lang2218; ?></button></div></div>
+                        <div class="col-md-12"><label class="form-label"><?php echo $lang2219; ?></label><input type="text" name="comment" id="edit_comment" class="form-control"></div>
                         <div class="col-md-12">
-                            <div class="form-check form-check-inline"><input type="checkbox" name="writable" class="form-check-input" id="edit_writable"><label class="form-check-label" for="edit_writable"><i class="fas fa-pen"></i> Allow Write</label></div>
-                            <div class="form-check form-check-inline"><input type="checkbox" name="public" class="form-check-input" id="edit_public"><label class="form-check-label" for="edit_public"><i class="fas fa-globe"></i> Public</label></div>
+                            <div class="form-check form-check-inline"><input type="checkbox" name="writable" class="form-check-input" id="edit_writable"><label class="form-check-label" for="edit_writable"><i class="fas fa-pen"></i> <?php echo $lang2220; ?></label></div>
+                            <div class="form-check form-check-inline"><input type="checkbox" name="public" class="form-check-input" id="edit_public"><label class="form-check-label" for="edit_public"><i class="fas fa-globe"></i> <?php echo $lang2221; ?></label></div>
                         </div>
                         <div class="col-md-12" id="editPermissionsContainer"></div>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-primary">Save</button></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary"><?php echo $lang2222; ?></button></div>
             </form>
         </div>
     </div>
@@ -819,19 +836,19 @@ $menu = require_once 'menu.php';
 <div class="modal fade" id="browseFolderModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2223; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumb"></ol></nav>
-                <div class="input-group mb-3"><input type="text" id="currentPath" class="form-control" readonly><button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> Create Folder</button></div>
+                <div class="input-group mb-3"><input type="text" id="currentPath" class="form-control" readonly><button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> <?php echo $lang2224; ?></button></div>
                 <div class="folder-browser" id="folderBrowser"></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" onclick="selectCurrentFolder()">Select</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2225; ?></button><button type="button" class="btn btn-primary" onclick="selectCurrentFolder()"><?php echo $lang2226; ?></button></div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="createFolderDialog" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Создать папку</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Путь:</label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label">Имя папки</label><input type="text" id="newFolderName" class="form-control" placeholder="Новая папка"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-success" onclick="createNewFolder()">Создать</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2227; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2228; ?></label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2229; ?></label><input type="text" id="newFolderName" class="form-control" placeholder="<?php echo $lang2230; ?>"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2231; ?></button><button type="button" class="btn btn-success" onclick="createNewFolder()"><?php echo $lang2232; ?></button></div></div></div>
 </div>
 
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
@@ -884,9 +901,9 @@ async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
         let status = result.data;
-        $('#smbRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> SMB: ${status.running ? 'Running' : 'Stopped'}`);
+        $('#smbRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> <?php echo $lang2233; ?> ${status.running ? 'Running' : 'Stopped'}`);
         $('#smbRunningBadge').removeClass('status-running status-stopped').addClass(status.running ? 'status-running' : 'status-stopped');
-        $('#smbEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> Auto: ${status.enabled ? 'On' : 'Off'}`);
+        $('#smbEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> <?php echo $lang2234; ?> ${status.enabled ? 'On' : 'Off'}`);
         $('#smbEnabledBadge').removeClass('status-enabled status-disabled').addClass(status.enabled ? 'status-enabled' : 'status-disabled');
         if (status.pid) { $('#smbPidBadge').show(); $('#smbPid').text(status.pid); } else { $('#smbPidBadge').hide(); }
         $('#smbVersion').text(status.version || 'unknown');
@@ -898,8 +915,8 @@ async function loadStatus() {
 
 async function serviceAction(action) {
     let result = await apiCall('service_action', 'POST', { service_action: action });
-    if (result.success) { showAlert(`Служба ${action}ed`, 'success'); loadStatus(); loadSessions(); }
-    else showAlert(`Ошибка при ${action}`, 'danger');
+    if (result.success) { showAlert(`<?php echo $lang2235; ?> ${action} <?php echo $lang2236; ?>`, 'success'); loadStatus(); loadSessions(); }
+    else showAlert(`<?php echo $lang2237; ?> ${action}`, 'danger');
 }
 
 async function toggleAutostart() {
@@ -931,8 +948,8 @@ $('#globalConfigForm').on('submit', async function(e) {
     e.preventDefault();
     let data = $(this).serialize();
     let result = await apiCall('save_config', 'POST', data);
-    if (result.success) { showAlert('Configuration saved', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
-    else showAlert('Save error', 'danger');
+    if (result.success) { showAlert('<?php echo $lang2238; ?>', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
+    else showAlert('<?php echo $lang2239; ?>', 'danger');
 });
 
 // ========== Загрузка пользователей ==========
@@ -941,7 +958,7 @@ async function loadUsers() {
     if (result.success) {
         smbUsersList = result.data;
         if (smbUsersList.length === 0) {
-            $('#usersContainer').html('<div class="alert alert-info mb-0">No users. Create the first one.</div>');
+            $('#usersContainer').html('<div class="alert alert-info mb-0"><?php echo $lang2240; ?></div>');
         } else {
             let html = '<div class="d-flex flex-wrap">';
             smbUsersList.forEach(u => {
@@ -961,8 +978,8 @@ function updateUserCheckboxes() {
         writeHtml += `<div class="form-check"><input type="checkbox" name="write_list[]" value="${escapeHtml(u)}" class="form-check-input" id="modal_write_${escapeHtml(u)}"><label class="form-check-label" for="modal_write_${escapeHtml(u)}">${escapeHtml(u)}</label></div>`;
     });
     if (smbUsersList.length === 0) {
-        readHtml = '<span class="text-muted">No users. Create users first.</span>';
-        writeHtml = '<span class="text-muted">No users. Create users first.</span>';
+        readHtml = '<span class="text-muted"><?php echo $lang2241; ?></span>';
+        writeHtml = '<span class="text-muted"><?php echo $lang2242; ?></span>';
     }
     $('#modalReadList').html(readHtml);
     $('#modalWriteList').html(writeHtml);
@@ -990,7 +1007,7 @@ $('#changePasswordForm').on('submit', async function(e) {
 });
 
 async function deleteUser(username) {
-    if (!confirm(`Delete user ${username}?`)) return;
+    if (!confirm(`<?php echo $lang2243; ?> ${username}?`)) return;
     let result = await apiCall('delete_user', 'POST', { username: username });
     if (result.success) { showAlert(result.message, 'success'); loadUsers(); loadShares(); }
     else showAlert(result.message, 'danger');
@@ -1002,14 +1019,14 @@ async function loadShares() {
     if (result.success) {
         let shares = result.data;
         if (shares.length === 0) {
-            $('#sharesTableBody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i>No shares created</td></tr>');
+            $('#sharesTableBody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i><?php echo $lang2244; ?></td></tr>');
         } else {
             let html = '';
             shares.forEach(s => {
-                let accessBadge = s.public ? '<span class="badge bg-info"><i class="fas fa-globe"></i> Public</span>' : (s.writable ? '<span class="badge bg-success"><i class="fas fa-pen"></i> Read/Write</span>' : '<span class="badge bg-warning"><i class="fas fa-eye"></i> Read Only</span>');
+                let accessBadge = s.public ? '<span class="badge bg-info"><i class="fas fa-globe"></i> <?php echo $lang2245; ?></span>' : (s.writable ? '<span class="badge bg-success"><i class="fas fa-pen"></i> <?php echo $lang2246; ?></span>' : '<span class="badge bg-warning"><i class="fas fa-eye"></i> <?php echo $lang2247; ?></span>');
                 let rightsBadge = '';
-                if (s.read_list && s.read_list.length) rightsBadge += `<span class="badge bg-secondary me-1" title="Read only: ${s.read_list.join(', ')}"><i class="fas fa-eye"></i> ${s.read_list.length}</span>`;
-                if (s.write_list && s.write_list.length) rightsBadge += `<span class="badge bg-secondary" title="Write: ${s.write_list.join(', ')}"><i class="fas fa-pen"></i> ${s.write_list.length}</span>`;
+                if (s.read_list && s.read_list.length) rightsBadge += `<span class="badge bg-secondary me-1" title="<?php echo $lang2248; ?> ${s.read_list.join(', ')}"><i class="fas fa-eye"></i> ${s.read_list.length}</span>`;
+                if (s.write_list && s.write_list.length) rightsBadge += `<span class="badge bg-secondary" title="<?php echo $lang2249; ?> ${s.write_list.join(', ')}"><i class="fas fa-pen"></i> ${s.write_list.length}</span>`;
                 html += `<tr><td><strong>${escapeHtml(s.name)}</strong></td><td><code class="table-share-path">${escapeHtml(s.path)}</code></td><td>${accessBadge}</td><td>${rightsBadge || '-'}</td><td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" onclick="editShare('${escapeHtml(s.name)}')"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="deleteShare('${escapeHtml(s.name)}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
             });
             $('#sharesTableBody').html(html);
@@ -1037,16 +1054,16 @@ function editShare(name) {
                 $('#edit_writable').prop('checked', share.writable);
                 $('#edit_public').prop('checked', share.public);
                 
-                let html = '<div class="border rounded p-3 bg-light mt-2"><div class="row"><div class="col-md-6"><strong><i class="fas fa-eye"></i> Read Only:</strong><div class="user-select-list mt-2">';
+                let html = '<div class="border rounded p-3 bg-light mt-2"><div class="row"><div class="col-md-6"><strong><i class="fas fa-eye"></i> <?php echo $lang2250; ?></strong><div class="user-select-list mt-2">';
                 smbUsersList.forEach(u => {
                     html += `<div class="form-check"><input type="checkbox" name="read_list[]" value="${escapeHtml(u)}" class="form-check-input" id="edit_read_${escapeHtml(u)}" ${share.read_list && share.read_list.includes(u) ? 'checked' : ''}><label class="form-check-label" for="edit_read_${escapeHtml(u)}">${escapeHtml(u)}</label></div>`;
                 });
-                if (smbUsersList.length === 0) html += '<span class="text-muted">No users</span>';
-                html += '</div></div><div class="col-md-6"><strong><i class="fas fa-pen"></i> Read & Write:</strong><div class="user-select-list mt-2">';
+                if (smbUsersList.length === 0) html += '<span class="text-muted"><?php echo $lang2251; ?></span>';
+                html += '</div></div><div class="col-md-6"><strong><i class="fas fa-pen"></i> <?php echo $lang2252; ?></strong><div class="user-select-list mt-2">';
                 smbUsersList.forEach(u => {
                     html += `<div class="form-check"><input type="checkbox" name="write_list[]" value="${escapeHtml(u)}" class="form-check-input" id="edit_write_${escapeHtml(u)}" ${share.write_list && share.write_list.includes(u) ? 'checked' : ''}><label class="form-check-label" for="edit_write_${escapeHtml(u)}">${escapeHtml(u)}</label></div>`;
                 });
-                if (smbUsersList.length === 0) html += '<span class="text-muted">No users</span>';
+                if (smbUsersList.length === 0) html += '<span class="text-muted"><?php echo $lang2253; ?></span>';
                 html += '</div></div></div></div>';
                 $('#editPermissionsContainer').html(html);
                 $('#editSmbModal').modal('show');
@@ -1064,7 +1081,7 @@ $('#editShareForm').on('submit', async function(e) {
 });
 
 async function deleteShare(name) {
-    if (!confirm(`Удалить шару "${name}"?`)) return;
+    if (!confirm(`<?php echo $lang2254; ?> "${name}"?`)) return;
     let result = await apiCall('delete_share', 'GET', { name: name });
     if (result.success) { showAlert(result.message, 'success'); loadShares(); loadStatus(); }
     else showAlert(result.error || 'Error', 'danger');
@@ -1076,12 +1093,12 @@ async function loadStorages() {
     if (result.success) {
         let storages = result.storages;
         if (storages.length === 0) {
-            $('#storagesContainer').html('<div class="alert alert-info">No available partitions. Connect disks.</div>');
+            $('#storagesContainer').html('<div class="alert alert-info"><?php echo $lang2255; ?></div>');
         } else {
             let html = '';
             storages.forEach(s => {
                 let fillColor = s.used_percent > 90 ? '#dc3545' : (s.used_percent > 70 ? '#ffc107' : '#28a745');
-                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> Used: ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> Used: ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> Free: ${s.available || '—'}</span></div></div>`;
+                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> <?php echo $lang2256; ?> ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> <?php echo $lang2257; ?> ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> <?php echo $lang2258; ?> ${s.available || '—'}</span></div></div>`;
             });
             $('#storagesContainer').html(html);
         }
@@ -1094,7 +1111,7 @@ async function loadSessions() {
     if (result.success) {
         let sessionsHtml = '<div class="session-list">';
         if (result.sessions.length === 0) {
-            sessionsHtml += '<div class="p-3 text-muted text-center">No active sessions</div>';
+            sessionsHtml += '<div class="p-3 text-muted text-center"><?php echo $lang2259; ?></div>';
         } else {
             let usersWithSessions = [...new Set(result.sessions.map(s => s.user))];
             
@@ -1102,16 +1119,16 @@ async function loadSessions() {
                 let userSessions = result.sessions.filter(s => s.user === user);
                 sessionsHtml += `<div class="session-item border-bottom mb-2 pb-2">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div><i class="fas fa-user-circle"></i> <strong>${escapeHtml(user)}</strong> (${userSessions.length} sessions)</div>
-                        <button class="btn btn-sm btn-danger" onclick="killUserSessions('${escapeHtml(user)}')" title="Close all user sessions">
-                            <i class="fas fa-power-off"></i> Close all
+                        <div><i class="fas fa-user-circle"></i> <strong>${escapeHtml(user)}</strong> (${userSessions.length} <?php echo $lang2260; ?>)</div>
+                        <button class="btn btn-sm btn-danger" onclick="killUserSessions('${escapeHtml(user)}')" title="<?php echo $lang2261; ?>">
+                            <i class="fas fa-power-off"></i> <?php echo $lang2262; ?>
                         </button>
                     </div>`;
                 
                 userSessions.forEach(s => {
                     sessionsHtml += `<div class="ps-3 pt-1 d-flex justify-content-between align-items-center">
-                        <div><i class="fas fa-laptop"></i> <span class="session-ip">${escapeHtml(s.ip)}</span> <small class="text-muted">PID: ${s.pid}</small></div>
-                        <button class="btn btn-sm btn-outline-danger" onclick="killSession('${s.pid}')" title="End session">
+                        <div><i class="fas fa-laptop"></i> <span class="session-ip">${escapeHtml(s.ip)}</span> <small class="text-muted"><?php echo $lang2263; ?> ${s.pid}</small></div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="killSession('${s.pid}')" title="<?php echo $lang2264; ?>">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     </div>`;
@@ -1124,7 +1141,7 @@ async function loadSessions() {
         
         let filesHtml = '<div class="file-list">';
         if (result.files.length === 0) {
-            filesHtml += '<div class="p-3 text-muted text-center">No open files</div>';
+            filesHtml += '<div class="p-3 text-muted text-center"><?php echo $lang2265; ?></div>';
         } else {
             let usersWithFiles = [...new Set(result.files.map(f => f.user))];
             
@@ -1132,16 +1149,16 @@ async function loadSessions() {
                 let userFiles = result.files.filter(f => f.user === user);
                 filesHtml += `<div class="file-item border-bottom mb-2 pb-2">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div><i class="fas fa-user-circle"></i> <strong>${escapeHtml(user)}</strong> (${userFiles.length} files)</div>
-                        <button class="btn btn-sm btn-warning" onclick="closeUserFiles('${escapeHtml(user)}')" title="Close all user files">
-                            <i class="fas fa-file-alt"></i> Close all
+                        <div><i class="fas fa-user-circle"></i> <strong>${escapeHtml(user)}</strong> (${userFiles.length} <?php echo $lang2266; ?>)</div>
+                        <button class="btn btn-sm btn-warning" onclick="closeUserFiles('${escapeHtml(user)}')" title="<?php echo $lang2267; ?>">
+                            <i class="fas fa-file-alt"></i> <?php echo $lang2268; ?>
                         </button>
                     </div>`;
                 
                 userFiles.forEach(f => {
                     filesHtml += `<div class="ps-3 pt-1 d-flex justify-content-between align-items-center">
-                        <div><i class="fas fa-file"></i> <span class="file-path" title="${escapeHtml(f.full_path)}">${escapeHtml(f.name)}</span> <small class="text-muted">PID: ${f.pid}</small></div>
-                        <button class="btn btn-sm btn-outline-warning" onclick="closeFile('${f.pid}', '${escapeHtml(f.full_path).replace(/'/g, "\\'")}')" title="Close file">
+                        <div><i class="fas fa-file"></i> <span class="file-path" title="${escapeHtml(f.full_path)}">${escapeHtml(f.name)}</span> <small class="text-muted"><?php echo $lang2269; ?> ${f.pid}</small></div>
+                        <button class="btn btn-sm btn-outline-warning" onclick="closeFile('${f.pid}', '${escapeHtml(f.full_path).replace(/'/g, "\\'")}')" title="<?php echo $lang2270; ?>">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>`;
@@ -1155,50 +1172,50 @@ async function loadSessions() {
 }
 
 async function killSession(pid) {
-    if (!confirm(`End session with PID ${pid}? User will be disconnected.`)) return;
+    if (!confirm(`<?php echo $lang2271; ?> ${pid}? <?php echo $lang2272; ?>`)) return;
     
     let result = await apiCall('kill_session', 'POST', { pid: pid });
     if (result.success) {
         showAlert(result.message, 'success');
         loadSessions();
     } else {
-        showAlert(result.message || 'Error ending session', 'danger');
+        showAlert(result.message || '<?php echo $lang2273; ?>', 'danger');
     }
 }
 
 async function killUserSessions(username) {
-    if (!confirm(`Close ALL sessions for user ${username}? They will be disconnected from all shares.`)) return;
+    if (!confirm(`<?php echo $lang2274; ?> ${username}? <?php echo $lang2275; ?>`)) return;
     
     let result = await apiCall('kill_user_sessions', 'POST', { username: username });
     if (result.success) {
         showAlert(result.message, 'success');
         loadSessions();
     } else {
-        showAlert(result.message || 'Error closing sessions', 'danger');
+        showAlert(result.message || '<?php echo $lang2276; ?>', 'danger');
     }
 }
 
 async function closeFile(pid, filePath) {
-    if (!confirm(`Close file?\n${filePath}`)) return;
+    if (!confirm(`<?php echo $lang2277; ?>\n${filePath}`)) return;
     
     let result = await apiCall('close_file', 'POST', { pid: pid, file_path: filePath });
     if (result.success) {
         showAlert(result.message, 'success');
         loadSessions();
     } else {
-        showAlert(result.message || 'Error closing file', 'danger');
+        showAlert(result.message || '<?php echo $lang2278; ?>', 'danger');
     }
 }
 
 async function closeUserFiles(username) {
-    if (!confirm(`Close ALL open files for user ${username}?`)) return;
+    if (!confirm(`<?php echo $lang2279; ?> ${username}?`)) return;
     
     let result = await apiCall('close_user_files', 'POST', { username: username });
     if (result.success) {
         showAlert(result.message, 'success');
         loadSessions();
     } else {
-        showAlert(result.message || 'Error closing files', 'danger');
+        showAlert(result.message || '<?php echo $lang2280; ?>', 'danger');
     }
 }
 
@@ -1220,11 +1237,11 @@ async function loadFolder(path) {
         result.items.forEach(item => {
             listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="selectDirectory('${item.path}')"><i class="fas fa-folder"></i> ${escapeHtml(item.name)}</div>`;
         });
-        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted"><?php echo $lang2281; ?></div>';
         listHtml += '</div>';
         $('#folderBrowser').html(listHtml);
     } else {
-        showAlert('Error loading folders', 'danger');
+        showAlert('<?php echo $lang2282; ?>', 'danger');
     }
 }
 
@@ -1237,7 +1254,7 @@ function selectCurrentFolder() {
     if (currentTargetInput) {
         $(`#${currentTargetInput}`).val(currentBrowsePath);
         $('#browseFolderModal').modal('hide');
-        showAlert('Папка выбрана: ' + currentBrowsePath, 'success');
+        showAlert('<?php echo $lang2283; ?> ' + currentBrowsePath, 'success');
     }
 }
 
@@ -1257,12 +1274,12 @@ function showCreateFolderDialog() {
 async function createNewFolder() {
     let path = $('#createFolderPath').text();
     let name = $('#newFolderName').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2284; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialog').modal('hide');
         loadFolder(currentBrowsePath);
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2285; ?>"' + name + '"<?php echo $lang2286; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1294,7 +1311,7 @@ $('#addSmbModal').on('show.bs.modal', function() {
 // ========== Инициализация и обновление ==========
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadUsers(), loadShares(), loadStorages(), loadSessions()]);
-    showAlert('Data updated', 'success');
+    showAlert('<?php echo $lang2287; ?>', 'success');
 }
 
 setInterval(() => {

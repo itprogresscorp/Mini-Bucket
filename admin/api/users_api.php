@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 $db = getDB();
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -184,10 +186,10 @@ function getStats() {
 // ========== PANEL USER MANAGEMENT ==========
 function addPanelUser($username, $password, $email, $role) {
     global $db;
-    
+    global $lang2852, $lang2853;
     $check = $db->querySingle("SELECT id FROM users WHERE username = '$username'");
     if ($check) {
-        return ['success' => false, 'error' => 'Username already exists'];
+        return ['success' => false, 'error' => $lang2852];
     }
     
     $hashed = password_hash($password, PASSWORD_DEFAULT);
@@ -198,12 +200,12 @@ function addPanelUser($username, $password, $email, $role) {
     $stmt->bindValue(':role', $role, SQLITE3_TEXT);
     $stmt->execute();
     
-    return ['success' => true, 'message' => 'Panel user added successfully'];
+    return ['success' => true, 'message' => $lang2853];
 }
 
 function updatePanelUser($id, $username, $email, $role) {
     global $db;
-    
+    global $lang2854;
     $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, role = :role WHERE id = :id");
     $stmt->bindValue(':username', $username, SQLITE3_TEXT);
     $stmt->bindValue(':email', $email, SQLITE3_TEXT);
@@ -211,42 +213,43 @@ function updatePanelUser($id, $username, $email, $role) {
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
     
-    return ['success' => true, 'message' => 'Panel user updated'];
+    return ['success' => true, 'message' => $lang2854];
 }
 
 function changePanelPassword($id, $newPassword) {
     global $db;
-    
+    global $lang2855;
     $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
     $stmt = $db->prepare("UPDATE users SET password = :password WHERE id = :id");
     $stmt->bindValue(':password', $hashed, SQLITE3_TEXT);
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
     
-    return ['success' => true, 'message' => 'Password changed successfully'];
+    return ['success' => true, 'message' => $lang2855];
 }
 
 function deletePanelUser($id) {
     global $db;
-    
+    global $lang2856, $lang2857;
     $user = $db->querySingle("SELECT username FROM users WHERE id = $id", true);
     if ($user && $user['username'] == 'admin') {
-        return ['success' => false, 'error' => 'Cannot delete admin user'];
+        return ['success' => false, 'error' => $lang2856];
     }
     
     $db->exec("DELETE FROM users WHERE id = $id");
-    return ['success' => true, 'message' => 'Panel user deleted'];
+    return ['success' => true, 'message' => $lang2857];
 }
 
 // ========== SYSTEM USER MANAGEMENT ==========
 function addSystemUser($username, $password, $groups = []) {
+	global $lang2858, $lang2859, $lang2860;
     $check = shell_exec("id $username 2>/dev/null");
     if (!empty(trim($check))) {
-        return ['success' => false, 'error' => 'System user already exists'];
+        return ['success' => false, 'error' => $lang2858];
     }
     
     if (!preg_match('/^[a-z_][a-z0-9_-]*$/', $username)) {
-        return ['success' => false, 'error' => 'Invalid username format'];
+        return ['success' => false, 'error' => $lang2859];
     }
     
     $output = shell_exec("sudo useradd -m -s /bin/bash $username 2>&1");
@@ -259,10 +262,11 @@ function addSystemUser($username, $password, $groups = []) {
     
     shell_exec("(echo '$password'; echo '$password') | sudo smbpasswd -a $username -s 2>/dev/null");
     
-    return ['success' => true, 'message' => 'System user created successfully'];
+    return ['success' => true, 'message' => $lang2860];
 }
 
 function updateSystemUserGroups($username, $groups = []) {
+	global $lang2861;
     $userInfo = shell_exec("id $username 2>/dev/null");
     preg_match('/gid=\d+\(([^)]+)\)/', $userInfo, $primaryGroup);
     $primary = $primaryGroup[1] ?? '';
@@ -281,62 +285,68 @@ function updateSystemUserGroups($username, $groups = []) {
         shell_exec("sudo usermod -aG $grp $username 2>&1");
     }
     
-    return ['success' => true, 'message' => 'Groups updated successfully'];
+    return ['success' => true, 'message' => $lang2861];
 }
 
 function changeSystemPassword($username, $newPassword) {
+	global $lang2862, $lang2863;
     $output = shell_exec("echo '$username:$newPassword' | sudo chpasswd 2>&1");
     
     shell_exec("(echo '$newPassword'; echo '$newPassword') | sudo smbpasswd -s -a $username 2>/dev/null");
     
-    return ['success' => empty($output), 'message' => empty($output) ? 'Password changed' : 'Error changing password'];
+    return ['success' => empty($output), 'message' => empty($output) ? $lang2862 : $lang2863];
 }
 
 function setSmbPassword($username, $password) {
+	global $lang2864, $lang2865;
     $output = shell_exec("(echo '$password'; echo '$password') | sudo smbpasswd -s -a $username 2>&1");
     $success = strpos($output, 'Added user') !== false || strpos($output, 'Password changed') !== false;
     
-    return ['success' => $success, 'message' => $success ? 'SMB password set' : 'Error setting SMB password'];
+    return ['success' => $success, 'message' => $success ? $lang2864 : $lang2865];
 }
 
 function deleteSystemUser($username) {
+	global $lang2866, $lang2867, $lang2868;
     if ($username == 'root' || $username == $_SESSION['username'] ?? '') {
-        return ['success' => false, 'error' => 'Cannot delete this user'];
+        return ['success' => false, 'error' => $lang2866];
     }
     
     $output = shell_exec("sudo userdel -r $username 2>&1");
     shell_exec("sudo smbpasswd -x $username 2>/dev/null");
     
-    return ['success' => empty($output), 'message' => empty($output) ? 'System user deleted' : 'Error deleting user'];
+    return ['success' => empty($output), 'message' => empty($output) ? $lang2867 : $lang2868];
 }
 
 // ========== GROUP MANAGEMENT ==========
 function addSystemGroup($groupname) {
+	global $lang2869, $lang2870, $lang2871;
     $check = shell_exec("getent group $groupname 2>/dev/null");
     if (!empty(trim($check))) {
-        return ['success' => false, 'error' => 'Group already exists'];
+        return ['success' => false, 'error' => $lang2869];
     }
     
     $output = shell_exec("sudo groupadd $groupname 2>&1");
-    return ['success' => empty($output), 'message' => empty($output) ? 'Group created' : 'Error creating group'];
+    return ['success' => empty($output), 'message' => empty($output) ? $lang2870 : $lang2871];
 }
 
 function renameSystemGroup($oldname, $newname) {
+	global $lang2872, $lang2873, $lang2874;
     if ($oldname == 'sudo' || $oldname == 'root') {
-        return ['success' => false, 'error' => 'Cannot rename this group'];
+        return ['success' => false, 'error' => $lang2872];
     }
     
     $output = shell_exec("sudo groupmod -n $newname $oldname 2>&1");
-    return ['success' => empty($output), 'message' => empty($output) ? 'Group renamed' : 'Error renaming group'];
+    return ['success' => empty($output), 'message' => empty($output) ? $lang2873 : $lang2874];
 }
 
 function deleteSystemGroup($groupname) {
+	global $lang2875, $lang2876, $lang2877;
     if ($groupname == 'sudo' || $groupname == 'root') {
-        return ['success' => false, 'error' => 'Cannot delete this group'];
+        return ['success' => false, 'error' => $lang2875];
     }
     
     $output = shell_exec("sudo groupdel $groupname 2>&1");
-    return ['success' => empty($output), 'message' => empty($output) ? 'Group deleted' : 'Error deleting group'];
+    return ['success' => empty($output), 'message' => empty($output) ? $lang2876 : $lang2877];
 }
 
 // ========== API ОБРАБОТЧИК ==========
@@ -374,41 +384,45 @@ switch ($action) {
     
     // Panel User actions
     case 'add_panel_user':
+		global $lang2878, $lang2879;
+		
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         $email = trim($_POST['email'] ?? '');
         $role = $_POST['role'] ?? 'user';
         
         if (empty($username) || empty($password)) {
-            echo json_encode(['success' => false, 'error' => 'Username and password required']);
+            echo json_encode(['success' => false, 'error' => $lang2878]);
         } elseif (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Password must be at least 4 characters']);
+            echo json_encode(['success' => false, 'error' => $lang2879]);
         } else {
             echo json_encode(addPanelUser($username, $password, $email, $role));
         }
         break;
         
     case 'update_panel_user':
+		global $lang2880;
         $id = intval($_POST['user_id'] ?? 0);
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $role = $_POST['role'] ?? 'user';
         
         if ($id <= 0 || empty($username)) {
-            echo json_encode(['success' => false, 'error' => 'Invalid data']);
+            echo json_encode(['success' => false, 'error' => $lang2880]);
         } else {
             echo json_encode(updatePanelUser($id, $username, $email, $role));
         }
         break;
         
     case 'change_panel_password':
+		global $lang2881, $lang2882;
         $id = intval($_POST['user_id'] ?? 0);
         $newPassword = $_POST['new_password'] ?? '';
         
         if ($id <= 0 || empty($newPassword)) {
-            echo json_encode(['success' => false, 'error' => 'Invalid data']);
+            echo json_encode(['success' => false, 'error' => $lang2881]);
         } elseif (strlen($newPassword) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Password must be at least 4 characters']);
+            echo json_encode(['success' => false, 'error' => $lang2882]);
         } else {
             echo json_encode(changePanelPassword($id, $newPassword));
         }
@@ -421,51 +435,55 @@ switch ($action) {
     
     // System User actions
     case 'add_system_user':
+		global $lang2883, $lang2884, $lang2885;
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         $groups = $_POST['groups'] ?? [];
         
         if (empty($username) || empty($password)) {
-            echo json_encode(['success' => false, 'error' => 'Username and password required']);
+            echo json_encode(['success' => false, 'error' => $lang2883]);
         } elseif (!preg_match('/^[a-z_][a-z0-9_-]*$/', $username)) {
-            echo json_encode(['success' => false, 'error' => 'Invalid username format']);
+            echo json_encode(['success' => false, 'error' => $lang2884]);
         } elseif (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Password must be at least 4 characters']);
+            echo json_encode(['success' => false, 'error' => $lang2885]);
         } else {
             echo json_encode(addSystemUser($username, $password, $groups));
         }
         break;
         
     case 'update_system_groups':
+		global $lang2886;
         $username = trim($_POST['username'] ?? '');
         $groups = $_POST['groups'] ?? [];
         
         if (empty($username)) {
-            echo json_encode(['success' => false, 'error' => 'Username required']);
+            echo json_encode(['success' => false, 'error' => $lang2886]);
         } else {
             echo json_encode(updateSystemUserGroups($username, $groups));
         }
         break;
         
     case 'change_system_password':
+		global $lang2887, $lang2888;
         $username = trim($_POST['username'] ?? '');
         $newPassword = $_POST['password'] ?? '';
         
         if (empty($username) || empty($newPassword)) {
-            echo json_encode(['success' => false, 'error' => 'Username and password required']);
+            echo json_encode(['success' => false, 'error' => $lang2887]);
         } elseif (strlen($newPassword) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Password must be at least 4 characters']);
+            echo json_encode(['success' => false, 'error' => $lang2888]);
         } else {
             echo json_encode(changeSystemPassword($username, $newPassword));
         }
         break;
         
     case 'set_smb_password':
+		global $lang2889;
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         
         if (empty($username) || empty($password)) {
-            echo json_encode(['success' => false, 'error' => 'Username and password required']);
+            echo json_encode(['success' => false, 'error' => $lang2889]);
         } else {
             echo json_encode(setSmbPassword($username, $password));
         }
@@ -478,23 +496,25 @@ switch ($action) {
     
     // Group actions
     case 'add_system_group':
+		global $lang2890, $lang2891;
         $groupname = trim($_POST['groupname'] ?? '');
         
         if (empty($groupname)) {
-            echo json_encode(['success' => false, 'error' => 'Group name required']);
+            echo json_encode(['success' => false, 'error' => $lang2890]);
         } elseif (!preg_match('/^[a-z_][a-z0-9_-]*$/', $groupname)) {
-            echo json_encode(['success' => false, 'error' => 'Invalid group name format']);
+            echo json_encode(['success' => false, 'error' => $lang2891]);
         } else {
             echo json_encode(addSystemGroup($groupname));
         }
         break;
         
     case 'rename_system_group':
+		global $lang2892;
         $oldname = trim($_POST['oldname'] ?? '');
         $newname = trim($_POST['newname'] ?? '');
         
         if (empty($oldname) || empty($newname)) {
-            echo json_encode(['success' => false, 'error' => 'Group names required']);
+            echo json_encode(['success' => false, 'error' => $lang2892]);
         } else {
             echo json_encode(renameSystemGroup($oldname, $newname));
         }

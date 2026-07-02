@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -84,8 +85,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         .status-group {
@@ -507,7 +524,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -518,16 +535,16 @@ $menu = require_once 'menu.php';
         
         <div class="status-group" id="statusGroup">
             <span class="status-badge" id="nfsRunningBadge">
-                <i class="fas fa-play-circle"></i> NFS: Loading...
+                <i class="fas fa-play-circle"></i> <?php echo $lang2331; ?>
             </span>
             <span class="status-badge" id="nfsEnabledBadge">
-                <i class="fas fa-check-circle"></i> Auto: Loading...
+                <i class="fas fa-check-circle"></i> <?php echo $lang2332; ?>
             </span>
             <span class="status-badge" id="nfsPidBadge" style="background:#e9ecef; color:#495057; display:none;">
-                <i class="fas fa-microchip"></i> PID: <span id="nfsPid">-</span>
+                <i class="fas fa-microchip"></i> <?php echo $lang2333; ?> <span id="nfsPid">-</span>
             </span>
             <span class="status-badge" id="nfsVersionBadge" style="background:#e9ecef; color:#495057;">
-                <i class="fas fa-code-branch"></i> v<span id="nfsVersion">-</span>
+                <i class="fas fa-code-branch"></i> <?php echo $lang2334; ?><span id="nfsVersion">-</span>
             </span>
         </div>
         <div class="host-selector" style="margin-left: 20px;">
@@ -537,21 +554,21 @@ $menu = require_once 'menu.php';
         </div>
         <div class="dropdown">
             <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-power-off"></i> Management
+                <i class="fas fa-power-off"></i> <?php echo $lang2335; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success"></i> Start</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger"></i> Stop</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning"></i> Restart</button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success me-2"></i> <?php echo $lang2336; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger me-2"></i> <?php echo $lang2337; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning me-2"></i> <?php echo $lang2338; ?></button></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info"></i> Enable autostart</button></li>
+                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info me-2"></i> <?php echo $lang2339; ?></button></li>
             </ul>
         </div>
         
         <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i>
         </button>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang2340; ?>"></i>
     </div>
 </div>
 
@@ -564,30 +581,30 @@ $menu = require_once 'menu.php';
             <div class="col-md-8">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-share-alt text-primary"></i> NFS Exports</h3>
+                        <h3><i class="fas fa-share-alt text-primary"></i> <?php echo $lang2341; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExportModal">
-                            <i class="fas fa-plus"></i> Create Export
+                            <i class="fas fa-plus"></i> <?php echo $lang2342; ?>
                         </button>
                     </div>
                     <div class="widget-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-export mb-0">
                                 <thead>
-                                    <tr><th>Path</th><th>Client</th><th>Options</th><th>Actions</th></tr>
+                                    <tr><th><?php echo $lang2343; ?></th><th><?php echo $lang2344; ?></th><th><?php echo $lang2345; ?></th><th><?php echo $lang2346; ?></th></tr>
                                 </thead>
                                 <tbody id="exportsTableBody">
-                                    <tr><td colspan="4" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                                    <tr><td colspan="4" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2347; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="options-help">
-                            <strong><i class="fas fa-info-circle"></i> NFS Options:</strong>
+                            <strong><i class="fas fa-info-circle"></i> <?php echo $lang2348; ?></strong>
                             <ul>
-                                <li><code>rw</code> - read and write, <code>ro</code> - read only</li>
-                                <li><code>sync</code> - synchronous write, <code>async</code> - asynchronous (faster)</li>
-                                <li><code>no_subtree_check</code> - disable subtree checking</li>
-                                <li><code>root_squash</code> - map root to nobody, <code>no_root_squash</code> - allow root</li>
-                                <li><code>insecure</code> - allow connections from ports > 1024</li>
+                                <li><code>rw</code> - <?php echo $lang2349; ?> <code>ro</code> - <?php echo $lang2350; ?></li>
+                                <li><code>sync</code> - <?php echo $lang2351; ?>, <code>async</code> - <?php echo $lang2352; ?></li>
+                                <li><code>no_subtree_check</code> - <?php echo $lang2353; ?></li>
+                                <li><code>root_squash</code> - <?php echo $lang2354; ?>, <code>no_root_squash</code> - <?php echo $lang2355; ?></li>
+                                <li><code>insecure</code> - <?php echo $lang2356; ?></li>
                             </ul>
                         </div>
                     </div>
@@ -597,17 +614,17 @@ $menu = require_once 'menu.php';
             <div class="col-md-4">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-hdd text-primary"></i> Disk Partitions</h3>
+                        <h3><i class="fas fa-hdd text-primary"></i> <?php echo $lang2357; ?></h3>
                         <a class="btn btn-primary btn-sm" href="disk_manager.php"><i class="fas fa-tools"></i></a>
                     </div>
                     <div class="widget-body" id="storagesContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2358; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-chart-line text-primary"></i> NFS Statistics</h3>
+                        <h3><i class="fas fa-chart-line text-primary"></i> <?php echo $lang2359; ?></h3>
                         <i class="fas fa-sync-alt refresh-btn text-muted" onclick="loadStats()" style="font-size:12px"></i>
                     </div>
                     <div class="widget-body">
@@ -616,21 +633,21 @@ $menu = require_once 'menu.php';
                                 <div class="storage-card text-center" style="margin:0">
                                     <i class="fas fa-folder-open fa-2x text-primary mb-2 d-block"></i>
                                     <div class="storage-name" style="font-size:24px; font-weight:700" id="statExports">-</div>
-                                    <div class="storage-stats justify-content-center">Exports</div>
+                                    <div class="storage-stats justify-content-center"><?php echo $lang2360; ?></div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="storage-card text-center" style="margin:0">
                                     <i class="fas fa-network-wired fa-2x text-success mb-2 d-block"></i>
                                     <div class="storage-name" style="font-size:24px; font-weight:700" id="statClients">-</div>
-                                    <div class="storage-stats justify-content-center">Clients</div>
+                                    <div class="storage-stats justify-content-center"><?php echo $lang2361; ?></div>
                                 </div>
                             </div>
                         </div>
                         
-                        <h6><i class="fas fa-users"></i> Connected Clients</h6>
+                        <h6><i class="fas fa-users"></i> <?php echo $lang2362; ?></h6>
                         <div class="client-list border rounded" id="clientList">
-                            <div class="text-muted text-center p-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                            <div class="text-muted text-center p-3"><div class="loading-spinner-sm"></div> <?php echo $lang2363; ?></div>
                         </div>
                     </div>
                 </div>
@@ -644,56 +661,56 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Global NFS Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> <?php echo $lang2364; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="globalConfigForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Number of NFSD Threads</label>
+                            <label class="form-label"><?php echo $lang2365; ?></label>
                             <input type="number" name="threads" id="config_threads" class="form-control" min="1" max="128">
-                            <small class="text-muted">Number of NFS server cores</small>
+                            <small class="text-muted"><?php echo $lang2366; ?></small>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">NFSv4 Lease Time (sec)</label>
+                            <label class="form-label"><?php echo $lang2367; ?></label>
                             <input type="number" name="nfsv4_lease_time" id="config_lease_time" class="form-control" min="30" max="360">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">NFSv4 Grace Period (sec)</label>
+                            <label class="form-label"><?php echo $lang2368; ?></label>
                             <input type="number" name="nfsv4_grace_period" id="config_grace_period" class="form-control" min="30" max="360">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">mountd Port</label>
+                            <label class="form-label"><?php echo $lang2369; ?></label>
                             <input type="number" name="mountd_port" id="config_mountd_port" class="form-control" placeholder="Auto">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">statd Port</label>
+                            <label class="form-label"><?php echo $lang2370; ?></label>
                             <input type="number" name="statd_port" id="config_statd_port" class="form-control" placeholder="Auto">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">lockd Port</label>
+                            <label class="form-label"><?php echo $lang2371; ?></label>
                             <input type="number" name="lockd_port" id="config_lockd_port" class="form-control" placeholder="Auto">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="need_statd" class="form-check-input" id="config_need_statd">
-                                <label class="form-check-label" for="config_need_statd">Enable statd</label>
+                                <label class="form-check-label" for="config_need_statd"><?php echo $lang2372; ?></label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="need_idmapd" class="form-check-input" id="config_need_idmapd">
-                                <label class="form-check-label" for="config_need_idmapd">Enable idmapd</label>
+                                <label class="form-check-label" for="config_need_idmapd"><?php echo $lang2373; ?></label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="need_gssd" class="form-check-input" id="config_need_gssd">
-                                <label class="form-check-label" for="config_need_gssd">Enable GSS (Kerberos)</label>
+                                <label class="form-check-label" for="config_need_gssd"><?php echo $lang2374; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2375; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2376; ?></button>
                 </div>
             </form>
         </div>
@@ -704,33 +721,33 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Create NFS Export</h5>
+                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> <?php echo $lang2377; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addExportForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Path *</label>
+                        <label class="form-label"><?php echo $lang2378; ?> *</label>
                         <div class="input-group">
                             <input type="text" name="export_path" id="addExportPath" class="form-control" readonly required>
                             <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('addExportPath')">
-                                <i class="fas fa-folder-open"></i> Browse
+                                <i class="fas fa-folder-open"></i> <?php echo $lang2379; ?>
                             </button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Client *</label>
+                        <label class="form-label"><?php echo $lang2380; ?> *</label>
                         <input type="text" name="client" class="form-control" value="*" required>
                         <small class="text-muted">* - all, or IP: 192.168.1.0/24, or IP: 192.168.1.100</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Options *</label>
+                        <label class="form-label"><?php echo $lang2382; ?> *</label>
                         <input type="text" name="options" class="form-control" value="rw,sync,no_subtree_check" required>
                         <small class="text-muted">rw, ro, sync, async, no_subtree_check, root_squash, no_root_squash</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Create Export</button>
+                    <button type="submit" class="btn btn-success"><?php echo $lang2381; ?></button>
                 </div>
             </form>
         </div>
@@ -741,7 +758,7 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit NFS Export</h5>
+                <h5 class="modal-title"><i class="fas fa-edit"></i> <?php echo $lang2383; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="editExportForm">
@@ -749,25 +766,25 @@ $menu = require_once 'menu.php';
                     <input type="hidden" name="old_path" id="edit_old_path">
                     <input type="hidden" name="old_client" id="edit_old_client">
                     <div class="mb-3">
-                        <label class="form-label">Path *</label>
+                        <label class="form-label"><?php echo $lang2384; ?> *</label>
                         <div class="input-group">
                             <input type="text" name="export_path" id="editExportPath" class="form-control" readonly required>
                             <button type="button" class="btn btn-secondary" onclick="openFolderBrowserEdit()">
-                                <i class="fas fa-folder-open"></i> Browse
+                                <i class="fas fa-folder-open"></i> <?php echo $lang2385; ?>
                             </button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Client *</label>
+                        <label class="form-label"><?php echo $lang2386; ?> *</label>
                         <input type="text" name="client" id="editClient" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Options *</label>
+                        <label class="form-label"><?php echo $lang2387; ?> *</label>
                         <input type="text" name="options" id="editOptions" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2388; ?></button>
                 </div>
             </form>
         </div>
@@ -778,20 +795,20 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2389; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumb"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPath" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> <?php echo $lang2390; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowser"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2391; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()"><?php echo $lang2392; ?></button>
             </div>
         </div>
     </div>
@@ -801,31 +818,31 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2393; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumbEdit"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPathEdit" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> <?php echo $lang2394; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowserEdit"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2395; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()"><?php echo $lang2396; ?></button>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="createFolderDialog" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolder()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2397; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2398; ?></label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2399; ?></label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2400; ?></button><button type="button" class="btn btn-success" onclick="createNewFolder()"><?php echo $lang2401; ?></button></div></div></div>
 </div>
 
 <div class="modal fade" id="createFolderDialogEdit" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2402; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2403; ?></label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2404; ?></label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2405; ?></button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()"><?php echo $lang2406; ?></button></div></div></div>
 </div>
 
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
@@ -878,9 +895,9 @@ async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
         let status = result.data;
-        $('#nfsRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> NFS: ${status.running ? 'Running' : 'Stopped'}`);
+        $('#nfsRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> <?php echo $lang2407; ?> ${status.running ? 'Running' : 'Stopped'}`);
         $('#nfsRunningBadge').removeClass('status-running status-stopped').addClass(status.running ? 'status-running' : 'status-stopped');
-        $('#nfsEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> Auto: ${status.enabled ? 'On' : 'Off'}`);
+        $('#nfsEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> <?php echo $lang2408; ?> ${status.enabled ? 'On' : 'Off'}`);
         $('#nfsEnabledBadge').removeClass('status-enabled status-disabled').addClass(status.enabled ? 'status-enabled' : 'status-disabled');
         if (status.pid) { $('#nfsPidBadge').show(); $('#nfsPid').text(status.pid); } else { $('#nfsPidBadge').hide(); }
         $('#nfsVersion').text(status.version || 'unknown');
@@ -893,7 +910,7 @@ async function loadStatus() {
 async function serviceAction(action) {
     let result = await apiCall('service_action', 'POST', { service_action: action });
     if (result.success) { showAlert(`Service ${action}ed`, 'success'); loadStatus(); loadStats(); }
-    else showAlert(`Error during ${action}`, 'danger');
+    else showAlert(`<?php echo $lang2409; ?> ${action}`, 'danger');
 }
 
 async function toggleAutostart() {
@@ -925,8 +942,8 @@ $('#globalConfigForm').on('submit', async function(e) {
     e.preventDefault();
     let data = $(this).serialize();
     let result = await apiCall('save_config', 'POST', data);
-    if (result.success) { showAlert('Configuration saved', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
-    else showAlert('Save error', 'danger');
+    if (result.success) { showAlert('<?php echo $lang2410; ?>', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
+    else showAlert('<?php echo $lang2411; ?>', 'danger');
 });
 
 // ========== Загрузка экспортов ==========
@@ -935,7 +952,7 @@ async function loadExports() {
     if (result.success) {
         let exports = result.data;
         if (exports.length === 0) {
-            $('#exportsTableBody').html('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i>No NFS exports created</td></tr>');
+            $('#exportsTableBody').html('<tr><td colspan="4" class="text-center text-muted py-4"><i class="fas fa-folder-open fa-2x mb-2 d-block"></i><?php echo $lang2412; ?></td></tr>');
         } else {
             let html = '';
             exports.forEach((exp, idx) => {
@@ -982,7 +999,7 @@ $('#editExportForm').on('submit', async function(e) {
 });
 
 async function deleteExport(index) {
-    if (!confirm(`Delete NFS export?`)) return;
+    if (!confirm(`<?php echo $lang2413; ?>`)) return;
     let result = await apiCall('delete_export', 'POST', { index: index });
     if (result.success) { showAlert(result.message, 'success'); loadExports(); loadStats(); loadStatus(); }
     else showAlert(result.error || 'Error', 'danger');
@@ -994,12 +1011,12 @@ async function loadStorages() {
     if (result.success) {
         let storages = result.storages;
         if (storages.length === 0) {
-            $('#storagesContainer').html('<div class="alert alert-info">No available partitions. Connect disks.</div>');
+            $('#storagesContainer').html('<div class="alert alert-info"><?php echo $lang2414; ?></div>');
         } else {
             let html = '';
             storages.forEach(s => {
                 let fillColor = s.used_percent > 90 ? '#dc3545' : (s.used_percent > 70 ? '#ffc107' : '#28a745');
-                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> Used: ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> Used: ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> Free: ${s.available || '—'}</span></div></div>`;
+                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> <?php echo $lang2415; ?> ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> <?php echo $lang2416; ?> ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> <?php echo $lang2417; ?> ${s.available || '—'}</span></div></div>`;
             });
             $('#storagesContainer').html(html);
         }
@@ -1019,7 +1036,7 @@ async function loadStats() {
         let clients = clientsResult.data;
         let html = '';
         if (clients.length === 0) {
-            html = '<div class="text-muted text-center p-3">No connected clients</div>';
+            html = '<div class="text-muted text-center p-3"><?php echo $lang2418; ?></div>';
         } else {
             clients.forEach(client => {
                 html += `<div class="client-item">
@@ -1067,12 +1084,12 @@ async function loadFolder(path, container, breadcrumbContainer, currentPathInput
             </div>`;
         });
         if (result.items.length === 0 && result.path !== '/') {
-            listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+            listHtml += '<div class="list-group-item text-muted"><?php echo $lang2419; ?></div>';
         }
         listHtml += '</div>';
         $(container).html(listHtml);
     } else {
-        showAlert('Error loading folders', 'danger');
+        showAlert('<?php echo $lang2420; ?>', 'danger');
     }
 }
 
@@ -1091,7 +1108,7 @@ function selectCurrentFolder() {
     if (currentTargetInput) {
         $(`#${currentTargetInput}`).val(currentBrowsePath);
         $('#browseFolderModal').modal('hide');
-        showAlert('Папка выбрана: ' + currentBrowsePath, 'success');
+        showAlert('<?php echo $lang2421; ?>' + currentBrowsePath, 'success');
     }
 }
 
@@ -1128,12 +1145,12 @@ function showCreateFolderDialogEdit() {
 async function createNewFolder() {
     let path = $('#createFolderPath').text();
     let name = $('#newFolderName').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2422; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialog').modal('hide');
         loadFolder(currentBrowsePath, '#folderBrowser', '#folderBreadcrumb', '#currentPath');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2423; ?>"' + name + '"<?php echo $lang2424; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1142,12 +1159,12 @@ async function createNewFolder() {
 async function createNewFolderEdit() {
     let path = $('#createFolderPathEdit').text();
     let name = $('#newFolderNameEdit').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2425; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialogEdit').modal('hide');
         loadFolder(currentBrowsePathEdit, '#folderBrowserEdit', '#folderBreadcrumbEdit', '#currentPathEdit');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2426; ?>"' + name + '"<?php echo $lang2427; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1156,7 +1173,7 @@ async function createNewFolderEdit() {
 // ========== Инициализация и обновление ==========
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadExports(), loadStorages(), loadStats()]);
-    showAlert('Data updated', 'success');
+    showAlert('<?php echo $lang2428; ?>', 'success');
 }
 
 setInterval(() => {

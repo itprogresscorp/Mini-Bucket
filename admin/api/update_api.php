@@ -89,6 +89,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ ОБНОВЛЕНИЙ ==========
 
 function ensureUpdatesTable() {
@@ -262,6 +264,7 @@ function getUpdateServerStatus() {
 
 // Проверка обновлений на сервере
 function checkForUpdates($current_version, $type_pro, $system_info) {
+	global $lang4172;
     $update_server = 'https://update.mini-bucket.ru/minib/update.php';
     
     $post_data = [
@@ -307,7 +310,7 @@ function checkForUpdates($current_version, $type_pro, $system_info) {
     if (!$data) {
         return [
             'success' => false,
-            'error' => 'Invalid response from update server'
+            'error' => $lang4172
         ];
     }
     
@@ -316,6 +319,7 @@ function checkForUpdates($current_version, $type_pro, $system_info) {
 
 // Загрузка обновления
 function downloadUpdate($download_url, $version) {
+	global $lang4173, $lang4174, $lang4175, $lang4176, $lang4177;
     $update_dir = '/var/www/minib/updates';
     
     if (!is_dir($update_dir)) {
@@ -325,7 +329,7 @@ function downloadUpdate($download_url, $version) {
     if (!is_writable($update_dir)) {
         return [
             'success' => false,
-            'error' => 'Update directory is not writable: ' . $update_dir
+            'error' => $lang4173 . $update_dir
         ];
     }
     
@@ -338,7 +342,7 @@ function downloadUpdate($download_url, $version) {
     if (!$fp) {
         return [
             'success' => false,
-            'error' => 'Cannot create file: ' . $archive_path
+            'error' => $lang4174 . $archive_path
         ];
     }
     
@@ -390,14 +394,14 @@ function downloadUpdate($download_url, $version) {
     if (!file_exists($archive_path) || filesize($archive_path) === 0) {
         return [
             'success' => false,
-            'error' => 'Downloaded file is empty or does not exist'
+            'error' => $lang4175
         ];
     }
     
     if (!class_exists('ZipArchive')) {
         return [
             'success' => false,
-            'error' => 'ZipArchive class not available. Please install php-zip extension.'
+            'error' => $lang4176
         ];
     }
     
@@ -409,7 +413,7 @@ function downloadUpdate($download_url, $version) {
         
         return [
             'success' => false,
-            'error' => "Downloaded file is not a valid ZIP archive. MIME type: $mime_type"
+            'error' => $lang4177 . $mime_type
         ];
     }
     $zip->close();
@@ -423,6 +427,7 @@ function downloadUpdate($download_url, $version) {
 
 // Распаковка ZIP файла
 function extractUpdate($archive_path) {
+	global $lang4178, $lang4179, $lang4180;
     $update_dir = dirname($archive_path);
     $extract_dir = $update_dir . '/extracted';
     
@@ -442,7 +447,7 @@ function extractUpdate($archive_path) {
         } else {
             return [
                 'success' => false,
-                'error' => 'Extraction failed: unzip not available and ZipArchive failed'
+                'error' => $lang4178
             ];
         }
     }
@@ -450,7 +455,7 @@ function extractUpdate($archive_path) {
     if ($returnCode !== 0) {
         return [
             'success' => false,
-            'error' => 'Extraction failed: ' . implode("\n", $output)
+            'error' => $lang4179 . implode("\n", $output)
         ];
     }
     
@@ -459,7 +464,7 @@ function extractUpdate($archive_path) {
     if (!$update_script) {
         return [
             'success' => false,
-            'error' => 'update_minib.sh not found in archive'
+            'error' => $lang4180
         ];
     }
     
@@ -566,11 +571,12 @@ switch ($action) {
         break;
         
     case 'download_update':
+		global $lang4181;
         $download_url = $_POST['download_url'] ?? '';
         $version = $_POST['version'] ?? '';
         
         if (empty($download_url)) {
-            echo json_encode(['success' => false, 'error' => 'Download URL is required']);
+            echo json_encode(['success' => false, 'error' => $lang4181]);
             break;
         }
         
@@ -579,10 +585,11 @@ switch ($action) {
         break;
         
     case 'extract_update':
+		global $lang4182;
         $archive_path = $_POST['archive_path'] ?? '';
         
         if (empty($archive_path) || !file_exists($archive_path)) {
-            echo json_encode(['success' => false, 'error' => 'Archive file not found']);
+            echo json_encode(['success' => false, 'error' => $lang4182]);
             break;
         }
         
@@ -605,10 +612,11 @@ case 'check_versions':
     break;
     
     case 'run_update':
+		global $lang4183;
         $update_script = $_POST['update_script'] ?? '';
         
         if (empty($update_script) || !file_exists($update_script)) {
-            echo json_encode(['success' => false, 'error' => 'Update script not found']);
+            echo json_encode(['success' => false, 'error' => $lang4183]);
             break;
         }
         
@@ -637,11 +645,12 @@ case 'check_versions':
         break;
      
 case 'run_update_background':
+	global $lang4184;
     $update_script = $_POST['update_script'] ?? '';
     $extract_dir = $_POST['extract_dir'] ?? '';
     
     if (!$update_script || !file_exists($update_script)) {
-        echo json_encode(['success' => false, 'error' => 'Update script not found']);
+        echo json_encode(['success' => false, 'error' => $lang4184]);
         break;
     }
     
@@ -665,13 +674,14 @@ case 'run_update_background':
     break;
 
 case 'get_update_status':
-    $log_file = '/tmp/updatelog.txt';  // Тот же путь!
+	global $lang4185;
+    $log_file = '/tmp/updatelog.txt';
     $pid_file = '/tmp/update_process.pid';
     
     if (!file_exists($log_file)) {
         echo json_encode([
             'success' => true,
-            'output' => 'Waiting for update to start...',
+            'output' => $lang4185,
             'complete' => false
         ]);
         break;
@@ -725,7 +735,8 @@ case 'get_update_status':
             'complete' => $is_complete
         ]);
     } else {
-        echo json_encode(['success' => true, 'output' => 'Waiting for output...', 'complete' => false]);
+		global $lang4186;
+        echo json_encode(['success' => true, 'output' => $lang4186, 'complete' => false]);
     }
     break;
 	 

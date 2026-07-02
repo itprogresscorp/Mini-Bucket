@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('PLUGINS_DIR', ROOT_PATH . '/plugins');
 define('BACKEND_PLUGINS_DIR', '/var/www/minib/plugins');
@@ -440,6 +442,7 @@ function deletePlugin($pluginName) {
  * Удалить ZIP файл из репозитория
  */
 function deleteRepositoryZip($filename) {
+	global $lang4070, $lang4071, $lang4072;
     $filePath = PLUGINS_REPOS_DIR . '/' . $filename;
     
     $realPath = realpath($filePath);
@@ -452,23 +455,24 @@ function deleteRepositoryZip($filename) {
     if (file_exists($filePath) && is_file($filePath)) {
         if (unlink($filePath)) {
             clearstatcache(true, $filePath);
-            return ['success' => true, 'message' => 'ZIP file deleted successfully'];
+            return ['success' => true, 'message' => $lang4070];
         } else {
-            return ['success' => false, 'error' => 'Cannot delete file'];
+            return ['success' => false, 'error' => $lang4071];
         }
     }
     
-    return ['success' => false, 'error' => 'File not found'];
+    return ['success' => false, 'error' => $lang4072];
 }
 
 /**
  * Установить плагин из ZIP архива из репозитория
  */
 function installPluginFromRepository($filename, $deleteAfterInstall = false) {
+	global $lang4073;
     $zipPath = PLUGINS_REPOS_DIR . '/' . $filename;
     
     if (!file_exists($zipPath)) {
-        return ['success' => false, 'error' => 'ZIP file not found'];
+        return ['success' => false, 'error' => $lang4073];
     }
     
     $result = installPlugin($zipPath);
@@ -484,13 +488,14 @@ function installPluginFromRepository($filename, $deleteAfterInstall = false) {
  * Установить плагин из ZIP архива
  */
 function installPlugin($zipFile) {
+	global $lang4074, $lang4075, $lang4076, $lang4077;
     if (!extension_loaded('zip')) {
-        return ['success' => false, 'error' => 'ZIP extension not loaded'];
+        return ['success' => false, 'error' => $lang4074];
     }
     
     $zip = new ZipArchive();
     if ($zip->open($zipFile) !== true) {
-        return ['success' => false, 'error' => 'Cannot open ZIP archive'];
+        return ['success' => false, 'error' => $lang4075];
     }
     
     // Имя папки = имя ZIP файла
@@ -510,10 +515,10 @@ function installPlugin($zipFile) {
     exec("cd " . escapeshellarg($extractPath) . " && sudo bash install.sh 2>&1", $output, $returnCode);
     
     if ($returnCode !== 0) {
-        return ['success' => false, 'error' => 'Install script failed', 'output' => $output];
+        return ['success' => false, 'error' => $lang4076, 'output' => $output];
     }
     
-    return ['success' => true, 'message' => 'Plugin installed'];
+    return ['success' => true, 'message' => $lang4077];
 }
 
 /**
@@ -595,18 +600,19 @@ function getPluginInfo($pluginName) {
  * Загрузить ZIP файл плагина напрямую в PLUGINS_REPOS_DIR
  */
 function uploadPluginZip($file) {
+	global $lang4078, $lang4079, $lang4080, $lang4081, $lang4082, $lang4083, $lang4084, $lang4085, $lang4086, $lang4087, $lang4088, $lang4089;
     if ($file['error'] !== UPLOAD_ERR_OK) {
         $errors = [
-            UPLOAD_ERR_INI_SIZE => 'File too large (server limit)',
-            UPLOAD_ERR_FORM_SIZE => 'File too large (form limit)',
-            UPLOAD_ERR_PARTIAL => 'File only partially uploaded',
-            UPLOAD_ERR_NO_FILE => 'No file uploaded',
-            UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
-            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-            UPLOAD_ERR_EXTENSION => 'File upload stopped by extension'
+            UPLOAD_ERR_INI_SIZE => $lang4078,
+            UPLOAD_ERR_FORM_SIZE => $lang4079,
+            UPLOAD_ERR_PARTIAL => $lang4080,
+            UPLOAD_ERR_NO_FILE => $lang4081,
+            UPLOAD_ERR_NO_TMP_DIR => $lang4082,
+            UPLOAD_ERR_CANT_WRITE => $lang4083,
+            UPLOAD_ERR_EXTENSION => $lang4084
         ];
-        $errorMsg = $errors[$file['error']] ?? 'Unknown upload error';
-        return ['success' => false, 'error' => 'Upload error: ' . $errorMsg];
+        $errorMsg = $errors[$file['error']] ?? $lang4085;
+        return ['success' => false, 'error' => $lang4086 . $errorMsg];
     }
     
     // Проверяем MIME тип и расширение
@@ -618,7 +624,7 @@ function uploadPluginZip($file) {
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     
     if (!in_array($mimeType, $allowedMimes) && $ext !== 'zip') {
-        return ['success' => false, 'error' => 'Only ZIP files are allowed. MIME: ' . $mimeType];
+        return ['success' => false, 'error' => $lang4087 . $mimeType];
     }
     
     // Очищаем имя файла
@@ -634,7 +640,7 @@ function uploadPluginZip($file) {
     }
     
     if (!move_uploaded_file($file['tmp_name'], $targetFile)) {
-        return ['success' => false, 'error' => 'Cannot save uploaded file'];
+        return ['success' => false, 'error' => $lang4088];
     }
     
     // Устанавливаем права
@@ -643,7 +649,7 @@ function uploadPluginZip($file) {
     
     clearstatcache(true, $targetFile);
     
-    return ['success' => true, 'message' => 'Plugin ZIP uploaded successfully', 'filename' => basename($targetFile)];
+    return ['success' => true, 'message' => $lang4089, 'filename' => basename($targetFile)];
 }
 
 /**
@@ -671,9 +677,10 @@ switch ($action) {
         break;
         
     case 'get_plugin':
+		global $lang4090;
         $pluginName = $_GET['plugin'] ?? '';
         if (empty($pluginName)) {
-            echo json_encode(['success' => false, 'error' => 'Plugin name required']);
+            echo json_encode(['success' => false, 'error' => $lang4090]);
         } else {
             $plugin = getPluginInfo($pluginName);
             echo json_encode(['success' => true, 'data' => $plugin]);
@@ -681,40 +688,44 @@ switch ($action) {
         break;
         
     case 'enable_plugin':
+		global $lang4091, $lang4092, $lang4093;
         $pluginName = $_POST['plugin'] ?? '';
         if (empty($pluginName)) {
-            echo json_encode(['success' => false, 'error' => 'Plugin name required']);
+            echo json_encode(['success' => false, 'error' => $lang4091]);
         } else {
             $result = enablePlugin($pluginName);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Plugin enabled' : 'Failed to enable plugin']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang4092 : $lang4093]);
         }
         break;
         
     case 'disable_plugin':
+		global $lang4094, $lang4095, $lang4096;
         $pluginName = $_POST['plugin'] ?? '';
         if (empty($pluginName)) {
-            echo json_encode(['success' => false, 'error' => 'Plugin name required']);
+            echo json_encode(['success' => false, 'error' => $lang4094]);
         } else {
             $result = disablePlugin($pluginName);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Plugin disabled' : 'Failed to disable plugin']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang4095 : $lang4096]);
         }
         break;
         
     case 'delete_plugin':
+		global $lang4097, $lang4098, $lang4099;
         $pluginName = $_POST['plugin'] ?? '';
         if (empty($pluginName)) {
-            echo json_encode(['success' => false, 'error' => 'Plugin name required']);
+            echo json_encode(['success' => false, 'error' => $lang4097]);
         } else {
             $result = deletePlugin($pluginName);
             clearstatcache(true);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Plugin deleted' : 'Failed to delete plugin']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang4098 : $lang4099]);
         }
         break;
         
     case 'delete_repository_zip':
+		global $lang4100;
         $filename = $_POST['filename'] ?? '';
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4100]);
         } else {
             $result = deleteRepositoryZip($filename);
             echo json_encode($result);
@@ -722,10 +733,11 @@ switch ($action) {
         break;
         
     case 'install_from_repository':
+		global $lang4101;
         $filename = $_POST['filename'] ?? '';
         $deleteAfterInstall = isset($_POST['delete_after']) ? (bool)$_POST['delete_after'] : false;
         if (empty($filename)) {
-            echo json_encode(['success' => false, 'error' => 'Filename required']);
+            echo json_encode(['success' => false, 'error' => $lang4101]);
         } else {
             $result = installPluginFromRepository($filename, $deleteAfterInstall);
             clearstatcache(true);
@@ -734,8 +746,9 @@ switch ($action) {
         break;
         
     case 'upload_plugin':
+		global $lang4102;
         if (!isset($_FILES['plugin_file'])) {
-            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+            echo json_encode(['success' => false, 'error' => $lang4102]);
         } else {
             $result = uploadPluginZip($_FILES['plugin_file']);
             echo json_encode($result);
@@ -773,10 +786,11 @@ switch ($action) {
 		break;
     
 	case 'download_plugin_zip':
+		global $lang4103, $lang4104;
 		$filename = $_GET['filename'] ?? '';
 		if (empty($filename)) {
 			http_response_code(400);
-			echo json_encode(['error' => 'Filename required']);
+			echo json_encode(['error' => $lang4103]);
 			break;
 		}
 		
@@ -784,7 +798,7 @@ switch ($action) {
 		
 		if (!file_exists($filePath)) {
 			http_response_code(404);
-			echo json_encode(['error' => 'File not found']);
+			echo json_encode(['error' => $lang4104]);
 			break;
 		}
 		

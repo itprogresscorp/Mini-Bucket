@@ -55,6 +55,8 @@ if (!function_exists('str_starts_with')) {
     }
 }
 
+require_once '../lang/loader.php';
+
 /**
  * Получить все хосты
  */
@@ -82,9 +84,10 @@ function createMasterOnSlave($db, $slaveData) {
     $masterStmt = $db->prepare("SELECT hostSn, hostName, hostVersion, hostApiKey, hostPin FROM hosts WHERE idHost = 1");
     $masterResult = $masterStmt->execute();
     $master = $masterResult->fetchArray(SQLITE3_ASSOC);
+	global $lang494;
     
     if (!$master) {
-        return ['success' => false, 'message' => 'Master server not found in database'];
+        return ['success' => false, 'message' => $lang494];
     }
     
     // 2. Определяем реальный IP текущего сервера
@@ -113,6 +116,8 @@ function createMasterOnSlave($db, $slaveData) {
         $port = (int)$_SERVER['SERVER_PORT'];
     }
     
+	global $lang495;
+	
     // 4. Собираем данные Master для отправки
     $masterData = [
         'hostIp' => $serverIp,
@@ -123,7 +128,7 @@ function createMasterOnSlave($db, $slaveData) {
         'hostApiPath' => '/api',
         'hostSn' => $master['hostSn'],
         'hostType' => 'master',
-        'hostComment' => 'Automatically created from remote Master on ' . date('Y-m-d H:i:s')
+        'hostComment' => $lang495 . date('Y-m-d H:i:s')
     ];
     
     // 5. Строим URL для запроса к Slave
@@ -141,6 +146,8 @@ function createMasterOnSlave($db, $slaveData) {
         'master_data' => $masterData
     ];
     
+	global $lang496;
+	
     try {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -163,24 +170,28 @@ function createMasterOnSlave($db, $slaveData) {
         if ($curlError) {
             return [
                 'success' => false,
-                'message' => 'Slave host added, but failed to create master on slave: ' . $curlError,
+                'message' => $lang496 . $curlError,
                 'slave_created' => true
             ];
         }
         
         $responseData = json_decode($response, true);
         
+		global $lang497;
+		global $lang498;
+		global $lang499;
+		
         if ($httpCode === 200 && isset($responseData['success']) && $responseData['success']) {
             return [
                 'success' => true,
-                'message' => 'Slave host added and master created on slave successfully',
+                'message' => $lang497,
                 'slave_created' => true,
                 'master_created' => true
             ];
         } else {
             return [
                 'success' => false,
-                'message' => 'Slave added but master creation failed: ' . ($responseData['message'] ?? 'Unknown error'),
+                'message' => $lang498 . ($responseData['message'] ?? 'Unknown error'),
                 'slave_created' => true,
                 'master_created' => false
             ];
@@ -188,7 +199,7 @@ function createMasterOnSlave($db, $slaveData) {
     } catch (Exception $e) {
         return [
             'success' => false,
-            'message' => 'Slave added but error creating master: ' . $e->getMessage(),
+            'message' => $lang499 . $e->getMessage(),
             'slave_created' => true,
             'master_created' => false
         ];
@@ -223,13 +234,16 @@ function saveHost($db, $data) {
         }
     }
     
+	global $lang500;
+	global $lang501;
+	global $lang502;
     // Validation
     if (empty($hostIp) || empty($hostName) || empty($hostApiKey)) {
-        return ['success' => false, 'message' => 'IP, Name and API Key are required'];
+        return ['success' => false, 'message' => $lang500 ];
     }
     
     if (!empty($hostPort) && (!is_numeric($hostPort) || $hostPort < 1 || $hostPort > 65535)) {
-        return ['success' => false, 'message' => 'Port must be between 1 and 65535'];
+        return ['success' => false, 'message' => $lang501 ];
     }
     
     if (!empty($hostApiPath) && !str_starts_with($hostApiPath, '/')) {
@@ -251,7 +265,7 @@ function saveHost($db, $data) {
         if (!$apiTest['success']) {
             return [
                 'success' => false, 
-                'message' => 'API test failed: ' . $apiTest['message'],
+                'message' => $lang502 . $apiTest['message'],
                 'api_test' => $apiTest,
                 'can_force' => true
             ];
@@ -313,14 +327,16 @@ function saveHost($db, $data) {
                     }
                 }
                 
+				global $lang503;
+				global $lang504;
                 return [
                     'success' => true, 
-                    'message' => 'Host added successfully', 
+                    'message' => $lang503,
                     'idHost' => $newId,
                     'api_test' => $apiTest ?? null
                 ];
             }
-            return ['success' => false, 'message' => 'Failed to add host'];
+            return ['success' => false, 'message' => $lang504 ];
         } else {
             $currentSn = null;
             if (empty($hostSn)) {
@@ -349,20 +365,31 @@ function saveHost($db, $data) {
             $stmt->bindValue(':sn', $currentSn, SQLITE3_TEXT);
             $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
             
+			global $lang505;
+			global $lang506;
+			global $lang507;
             if ($stmt->execute()) {
-                return ['success' => true, 'message' => 'Host updated successfully', 'idHost' => $idHost];
+                return ['success' => true, 'message' => $lang505, 'idHost' => $idHost];
             }
-            return ['success' => false, 'message' => 'Failed to update host'];
+            return ['success' => false, 'message' => $lang506 ];
         }
     } catch (Exception $e) {
-        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        return ['success' => false, 'message' => $lang507 . $e->getMessage()];
     }
 }
 
 function createMasterHost($db, $masterData) {
     // Проверяем обязательные поля
+	global $lang508;
+	global $lang509;
+	global $lang510;
+	global $lang511;
+	global $lang512;
+	global $lang513;
+	global $lang514;
+	
     if (empty($masterData['hostIp']) || empty($masterData['hostName']) || empty($masterData['hostApiKey'])) {
-        return ['success' => false, 'message' => 'Missing required master data: IP, Name or API Key'];
+        return ['success' => false, 'message' => $lang508 ];
     }
     
     // Проверяем, не существует ли уже хост с таким IP
@@ -371,7 +398,7 @@ function createMasterHost($db, $masterData) {
     $checkResult = $checkStmt->execute();
     
     if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
-        return ['success' => false, 'message' => 'Master host with this IP already exists'];
+        return ['success' => false, 'message' => $lang509 ];
     }
     
     // Подготавливаем данные
@@ -383,11 +410,11 @@ function createMasterHost($db, $masterData) {
     $hostApiPath = trim($masterData['hostApiPath'] ?? '/api');
     $hostSn = trim($masterData['hostSn'] ?? '');
     $hostType = 'master';
-    $hostComment = trim($masterData['hostComment'] ?? 'Created by remote Master server');
+    $hostComment = trim($masterData['hostComment'] ?? $lang510 );
     
     // Валидация порта
     if (!empty($hostPort) && (!is_numeric($hostPort) || $hostPort < 1 || $hostPort > 65535)) {
-        return ['success' => false, 'message' => 'Port must be between 1 and 65535'];
+        return ['success' => false, 'message' => $lang511 ];
     }
     
     // Проверяем API путь
@@ -417,14 +444,14 @@ function createMasterHost($db, $masterData) {
             $newId = $db->lastInsertRowID();
             return [
                 'success' => true, 
-                'message' => 'Master host created successfully',
+                'message' => $lang512,
                 'idHost' => $newId
             ];
         }
         
-        return ['success' => false, 'message' => 'Failed to create master host'];
+        return ['success' => false, 'message' => $lang513 ];
     } catch (Exception $e) {
-        return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        return ['success' => false, 'message' => $lang514 . $e->getMessage()];
     }
 }
 
@@ -434,7 +461,10 @@ function createMasterHost($db, $masterData) {
 function deleteHost($db, $idHost) {
     $stmt = $db->prepare("DELETE FROM hosts WHERE idHost = :id");
     $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
-    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'Host deleted' : 'Delete failed'];
+	global $lang515;
+	global $lang516;
+	
+    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? $lang515 : $lang516 ];
 }
 
 function testHostApi($db, $hostData) {
@@ -475,22 +505,24 @@ function testHostApi($db, $hostData) {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curlError = curl_error($ch);
             curl_close($ch);
+			global $lang517;
             
             if ($curlError) {
                 $results[] = [
                     'endpoint' => $endpoint,
                     'success' => false,
-                    'message' => 'CURL error: ' . $curlError
+                    'message' => $lang517 . $curlError
                 ];
                 continue;
             }
             
+			global $lang518;
             if ($httpCode === 200) {
                 $data = json_decode($response, true);
                 if ($data && (isset($data['success']) || isset($data['test']))) {
                     return [
                         'success' => true,
-                        'message' => 'API is accessible',
+                        'message' => $lang518,
                         'endpoint' => $endpoint,
                         'http_code' => $httpCode,
                         'response' => $data
@@ -504,28 +536,36 @@ function testHostApi($db, $hostData) {
                 'http_code' => $httpCode,
                 'message' => 'HTTP ' . $httpCode
             ];
-            
+        global $lang519;    
         } catch (Exception $e) {
             $results[] = [
                 'endpoint' => $endpoint,
                 'success' => false,
-                'message' => 'Exception: ' . $e->getMessage()
+                'message' => $lang519 . $e->getMessage()
             ];
         }
     }
     
     // Если ни один endpoint не сработал
-    return [
+    global $lang520;
+	return [
         'success' => false,
-        'message' => 'API not accessible. Tried: ' . implode(', ', array_column($results, 'endpoint')),
+        'message' => $lang520 . implode(', ', array_column($results, 'endpoint')),
         'details' => $results
     ];
 }
 
 function fullTestHost($db, $idHost) {
-    $host = getHostById($db, $idHost);
+    global $lang521;
+	global $lang522;
+	global $lang523;
+	global $lang524;
+	global $lang525;
+	global $lang526;
+	
+	$host = getHostById($db, $idHost);
     if (!$host) {
-        return ['success' => false, 'message' => 'Host not found', 'status' => 'offline'];
+        return ['success' => false, 'message' => $lang521, 'status' => 'offline'];
     }
     
     $results = [
@@ -543,9 +583,9 @@ function fullTestHost($db, $idHost) {
     }
     
     if ($return_var === 0) {
-        $results['ping'] = ['success' => true, 'message' => 'Host is reachable'];
+        $results['ping'] = ['success' => true, 'message' => $lang522 ];
     } else {
-        $results['ping'] = ['success' => false, 'message' => 'Host is not reachable'];
+        $results['ping'] = ['success' => false, 'message' => $lang523 ];
     }
     
     // 2. API тест
@@ -555,15 +595,15 @@ function fullTestHost($db, $idHost) {
     // 3. Общий вердикт
     if ($results['ping']['success'] && $results['api']['success']) {
         $results['overall'] = true;
-        $results['message'] = 'Host is online and API is accessible';
+        $results['message'] = $lang524;
         $status = 'online';
     } elseif ($results['ping']['success'] && !$results['api']['success']) {
         $results['overall'] = false;
-        $results['message'] = 'Host is reachable but API is not accessible';
+        $results['message'] = $lang525;
         $status = 'pending';
     } else {
         $results['overall'] = false;
-        $results['message'] = 'Host is offline';
+        $results['message'] = $lang526;
         $status = 'offline';
     }
     
@@ -635,13 +675,18 @@ function getOutgoingRequests($db) {
  * Принять входящий запрос в хосты
  */
 function joinRequestToHosts($db, $arId) {
-    $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id");
+    global $lang527;
+	global $lang528;
+	global $lang529;
+	global $lang530;
+	
+	$stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
     $result = $stmt->execute();
     $request = $result->fetchArray(SQLITE3_ASSOC);
     
     if (!$request) {
-        return ['success' => false, 'message' => 'Request not found'];
+        return ['success' => false, 'message' => $lang527 ];
     }
     
     // Проверяем существует ли уже хост с таким IP
@@ -649,7 +694,7 @@ function joinRequestToHosts($db, $arId) {
     $checkStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
     $checkResult = $checkStmt->execute();
     if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
-        return ['success' => false, 'message' => 'Host with this IP already exists'];
+        return ['success' => false, 'message' => $lang528 ];
     }
     
     $hostApiKey = $request['arApiKey'];
@@ -666,7 +711,7 @@ function joinRequestToHosts($db, $arId) {
     
     $insertStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
     $insertStmt->bindValue(':name', $request['arName'], SQLITE3_TEXT);
-    $insertStmt->bindValue(':apikey', $hostApiKey, SQLITE3_TEXT);  // ← Ключ из запроса
+    $insertStmt->bindValue(':apikey', $hostApiKey, SQLITE3_TEXT);
     $insertStmt->bindValue(':comment', "Added from agent request (ID: {$request['arId']}) on " . date('Y-m-d H:i:s') . "\nOriginal type: {$request['arType']}", SQLITE3_TEXT);
     $insertStmt->bindValue(':version', $request['arVersion'], SQLITE3_TEXT);
     $insertStmt->bindValue(':proto', $request['arProto'], SQLITE3_TEXT);
@@ -681,43 +726,55 @@ function joinRequestToHosts($db, $arId) {
         $deleteStmt->bindValue(':id', $arId, SQLITE3_INTEGER);
         $deleteStmt->execute();
         
-        return ['success' => true, 'message' => 'Host joined and request deleted successfully!'];
+        return ['success' => true, 'message' => $lang529 ];
     }
-    return ['success' => false, 'message' => 'Failed to join host'];
+    return ['success' => false, 'message' => $lang530 ];
 }
 
 /**
  * Удалить входящий запрос
  */
 function deleteIncomingRequest($db, $arId) {
+	global $lang531;
+	global $lang532;
+	
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id AND (arReq IS NULL OR arReq = '' OR arReq = 'incoming')");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
-    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'Request deleted' : 'Delete failed'];
+    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? $lang531 : $lang532 ];
 }
 
 /**
  * Удалить все входящие запросы
  */
 function deleteAllIncomingRequests($db) {
+	global $lang533;
+	global $lang534;
+	
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arReq IS NULL OR arReq = '' OR arReq = 'incoming'");
-    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'All requests deleted' : 'Delete failed'];
+    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? $lang533 : $lang534 ];
 }
 
 /**
  * Удалить исходящий запрос
  */
 function deleteOutgoingRequest($db, $arId) {
+	global $lang535;
+	global $lang536;
+	
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
-    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'Outgoing request revoked' : 'Delete failed'];
+    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? $lang535 : $lang536 ];
 }
 
 /**
  * Удалить все исходящие запросы
  */
 function deleteAllOutgoingRequests($db) {
+	global $lang537;
+	global $lang538;
+	
     $stmt = $db->prepare("DELETE FROM agent_request WHERE arReq = 'outgoing'");
-    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? 'All outgoing requests revoked' : 'Delete failed'];
+    return ['success' => $stmt->execute(), 'message' => $stmt->execute() ? $lang537 : $lang538 ];
 }
 
 /**
@@ -734,6 +791,8 @@ function getHostPin($db) {
  * Обновить PIN
  */
 function regenerateHostPin($db) {
+	global $lang539;
+	
     $chars = '0123456789';
     $newPin = '';
     for ($i = 0; $i < 4; $i++) {
@@ -744,13 +803,21 @@ function regenerateHostPin($db) {
     if ($stmt->execute()) {
         return ['success' => true, 'pin' => $newPin];
     }
-    return ['success' => false, 'message' => 'Failed to update PIN'];
+    return ['success' => false, 'message' => $lang539 ];
 }
 
 /**
  * Создать исходящий запрос к удалённому серверу
  */
 function createOutgoingRequest($db, $data) {
+	global $lang540;
+	global $lang541;
+	global $lang542;
+	global $lang543;
+	global $lang544;
+	global $lang545;
+	global $lang546;
+	
     $serverIp = $data['server_ip'] ?? '';
     $serverPin = $data['server_pin'] ?? '';
     $serverProto = $data['server_proto'] ?? 'http';
@@ -762,7 +829,7 @@ function createOutgoingRequest($db, $data) {
     $targetHostSn = $data['target_host_sn'] ?? '';
     
     if (empty($serverIp) || empty($serverPin) || empty($targetApiKey)) {
-        return ['success' => false, 'message' => 'Server IP, PIN and API Key are required'];
+        return ['success' => false, 'message' => $lang540 ];
     }
     
     // Проверяем, не существует ли уже хост с таким IP
@@ -770,7 +837,7 @@ function createOutgoingRequest($db, $data) {
     $checkStmt->bindValue(':ip', $serverIp, SQLITE3_TEXT);
     $checkResult = $checkStmt->execute();
     if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
-        return ['success' => false, 'message' => 'Host with this IP already exists'];
+        return ['success' => false, 'message' => $lang541 ];
     }
     
     // 1. СРАЗУ СОЗДАЕМ MASTER ХОСТ В ТАБЛИЦУ hosts
@@ -795,7 +862,7 @@ function createOutgoingRequest($db, $data) {
     $insertHostStmt->bindValue(':sn', 'Pending...', SQLITE3_TEXT);
     
     if (!$insertHostStmt->execute()) {
-        return ['success' => false, 'message' => 'Failed to create master host in database'];
+        return ['success' => false, 'message' => $lang542 ];
     }
     
     $newHostId = $db->lastInsertRowID();
@@ -834,7 +901,7 @@ function createOutgoingRequest($db, $data) {
         if ($curlError) {
             return [
                 'success' => true, 
-                'message' => 'Master host saved, but remote server unreachable: ' . $curlError,
+                'message' => $lang543 . $curlError,
                 'host_id' => $newHostId,
                 'remote_reachable' => false
             ];
@@ -845,7 +912,7 @@ function createOutgoingRequest($db, $data) {
         if ($httpCode === 200 && isset($responseData['success']) && $responseData['success']) {
             return [
                 'success' => true, 
-                'message' => 'Master host added and remote server approved connection',
+                'message' => $lang544,
                 'host_id' => $newHostId,
                 'remote_reachable' => true,
                 'remote_response' => $responseData
@@ -853,7 +920,7 @@ function createOutgoingRequest($db, $data) {
         } else {
             return [
                 'success' => true,
-                'message' => 'Master host saved, but remote server returned: ' . ($responseData['message'] ?? 'Unknown error'),
+                'message' => $lang545 . ($responseData['message'] ?? 'Unknown error'),
                 'host_id' => $newHostId,
                 'remote_reachable' => true,
                 'remote_response' => $responseData
@@ -862,7 +929,7 @@ function createOutgoingRequest($db, $data) {
     } catch (Exception $e) {
         return [
             'success' => true,
-            'message' => 'Master host saved, but connection error: ' . $e->getMessage(),
+            'message' => $lang546 . $e->getMessage(),
             'host_id' => $newHostId,
             'remote_reachable' => false
         ];
@@ -877,6 +944,7 @@ function getHostApiKey($db) {
 }
 
 function getLocalHostSn($db) {
+	global $lang547;
     $stmt = $db->prepare("SELECT hostSn, hostName, hostVersion FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
     $row = $result->fetchArray(SQLITE3_ASSOC);
@@ -890,17 +958,18 @@ function getLocalHostSn($db) {
         ];
     }
     
-    return ['success' => false, 'message' => 'Host not found'];
+    return ['success' => false, 'message' => $lang547 ];
 }
 
 function saveHostSn($db, $idHost, $sn, $name = null, $version = null) {
+	global $lang548;
+	global $lang549;
+	
     if ($name !== null && $version !== null) {
-        // Обновляем SN, Name и Version
         $stmt = $db->prepare("UPDATE hosts SET hostSn = :sn, hostName = :name, hostVersion = :version WHERE idHost = :id");
         $stmt->bindValue(':name', $name, SQLITE3_TEXT);
         $stmt->bindValue(':version', $version, SQLITE3_TEXT);
     } else {
-        // Обновляем только SN
         $stmt = $db->prepare("UPDATE hosts SET hostSn = :sn WHERE idHost = :id");
     }
     
@@ -908,9 +977,9 @@ function saveHostSn($db, $idHost, $sn, $name = null, $version = null) {
     $stmt->bindValue(':id', $idHost, SQLITE3_INTEGER);
     
     if ($stmt->execute()) {
-        return ['success' => true, 'message' => 'Host info saved successfully'];
+        return ['success' => true, 'message' => $lang548 ];
     }
-    return ['success' => false, 'message' => 'Failed to save host info'];
+    return ['success' => false, 'message' => $lang549 ];
 }
 
 
@@ -918,13 +987,21 @@ function saveHostSn($db, $idHost, $sn, $name = null, $version = null) {
  * Подтверждение или отклонение исходящего запроса
  */
 function confirmOutgoingRequest($db, $arId, $action) {
+	global $lang550;
+	global $lang551;
+	global $lang552;
+	global $lang553;
+	global $lang554;
+	global $lang555;
+	global $lang556;
+	
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
     $result = $stmt->execute();
     $request = $result->fetchArray(SQLITE3_ASSOC);
     
     if (!$request) {
-        return ['success' => false, 'message' => 'Outgoing request not found'];
+        return ['success' => false, 'message' => $lang550 ];
     }
     
     if ($action === 'accept') {
@@ -933,7 +1010,7 @@ function confirmOutgoingRequest($db, $arId, $action) {
         $checkStmt->bindValue(':ip', $request['arIp'], SQLITE3_TEXT);
         $checkResult = $checkStmt->execute();
         if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
-            return ['success' => false, 'message' => 'Host with this IP already exists'];
+            return ['success' => false, 'message' => $lang551 ];
         }
         
         // Создаем хост из запроса
@@ -971,11 +1048,11 @@ function confirmOutgoingRequest($db, $arId, $action) {
             
             return [
                 'success' => true, 
-                'message' => 'Request accepted and host created successfully',
+                'message' => $lang552,
                 'host_id' => $newId
             ];
         }
-        return ['success' => false, 'message' => 'Failed to create host from request'];
+        return ['success' => false, 'message' => $lang553 ];
         
     } elseif ($action === 'reject') {
         // Просто удаляем запрос
@@ -983,28 +1060,32 @@ function confirmOutgoingRequest($db, $arId, $action) {
         $deleteStmt->bindValue(':id', $arId, SQLITE3_INTEGER);
         
         if ($deleteStmt->execute()) {
-            return ['success' => true, 'message' => 'Request rejected and removed'];
+            return ['success' => true, 'message' => $lang554 ];
         }
-        return ['success' => false, 'message' => 'Failed to remove request'];
+        return ['success' => false, 'message' => $lang555 ];
     }
     
-    return ['success' => false, 'message' => 'Invalid action. Use "accept" or "reject"'];
+    return ['success' => false, 'message' => $lang556 ];
 }
 
 /**
  * Тест скорости между хостами
  */
 function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10240) {
-    // Получаем данные исходного хоста
+    global $lang557;
+	global $lang558;
+	global $lang559;
+	
+	// Получаем данные исходного хоста
     $sourceHost = getHostById($db, $sourceHostId);
     if (!$sourceHost) {
-        return ['success' => false, 'message' => 'Source host not found'];
+        return ['success' => false, 'message' => $lang557 ];
     }
     
     // Получаем данные целевого хоста
     $targetHost = getHostById($db, $targetHostId);
     if (!$targetHost) {
-        return ['success' => false, 'message' => 'Target host not found'];
+        return ['success' => false, 'message' => $lang558 ];
     }
     
     // Определяем, кто мы (текущий сервер)
@@ -1046,7 +1127,7 @@ function speedTestBetweenHosts($db, $sourceHostId, $targetHostId, $testSize = 10
     if ($results['packet_loss'] >= 100) {
         return [
             'success' => false,
-            'message' => 'Target host is offline or unreachable. Packet loss: ' . $results['packet_loss'] . '%',
+            'message' => $lang559 . $results['packet_loss'] . '%',
             'results' => $results,
             'from_host' => $sourceHost,
             'to_host' => $targetHost
@@ -1548,6 +1629,7 @@ function speedTestProxy($db, $host1, $host2, $testSize = 1024) {
  * Выполнение прокси теста скорости
  */
 function performProxySpeedTest($url, $apiKey, $postData) {
+	global $lang560;
     try {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -1573,13 +1655,15 @@ function performProxySpeedTest($url, $apiKey, $postData) {
         return ['success' => false, 'message' => $e->getMessage()];
     }
     
-    return ['success' => false, 'message' => 'Proxy test failed'];
+    return ['success' => false, 'message' => $lang560 ];
 }
 
 /**
  * Проверить статус исходящего запроса
  */
 function checkOutgoingRequestStatus($db, $arId) {
+	global $lang561;
+	
     $stmt = $db->prepare("SELECT * FROM agent_request WHERE arId = :id AND arReq = 'outgoing'");
     $stmt->bindValue(':id', $arId, SQLITE3_INTEGER);
     $result = $stmt->execute();
@@ -1588,7 +1672,7 @@ function checkOutgoingRequestStatus($db, $arId) {
     if ($request) {
         return ['success' => true, 'exists' => true, 'request' => $request];
     }
-    return ['success' => true, 'exists' => false, 'message' => 'Request already processed or does not exist'];
+    return ['success' => true, 'exists' => false, 'message' => $lang561 ];
 }
 
 function getTrapStatus($db) {
@@ -1609,7 +1693,11 @@ function getTrapStatus($db) {
  * Установить статус Trap
  */
 function setTrapStatus($db, $enabled) {
-    $value = $enabled ? '1' : '0';
+    global $lang562;
+	global $lang563;
+	global $lang564;
+	
+	$value = $enabled ? '1' : '0';
     
     $checkStmt = $db->prepare("SELECT setId FROM settings WHERE setId = 3");
     $checkResult = $checkStmt->execute();
@@ -1627,11 +1715,11 @@ function setTrapStatus($db, $enabled) {
         return [
             'success' => true,
             'enabled' => $enabled,
-            'message' => $enabled ? 'Trap enabled' : 'Trap disabled'
+            'message' => $enabled ? $lang562 : $lang563
         ];
     }
     
-    return ['success' => false, 'message' => 'Failed to update trap status'];
+    return ['success' => false, 'message' => $lang564 ];
 }
 
 // ========== API ROUTER ==========
@@ -1736,44 +1824,53 @@ switch ($action) {
 		break;
 	
 	case 'test_host_api':
+		global $lang565;
+		global $lang566;
+		
 		$idHost = (int)($_GET['idHost'] ?? 0);
 		if (!$idHost) {
-			echo json_encode(['success' => false, 'message' => 'Host ID required']);
+			echo json_encode(['success' => false, 'message' => $lang565 ]);
 			break;
 		}
 		$host = getHostById($db, $idHost);
 		if (!$host) {
-			echo json_encode(['success' => false, 'message' => 'Host not found']);
+			echo json_encode(['success' => false, 'message' => $lang566 ]);
 			break;
 		}
 		echo json_encode(testHostApi($db, $host));
 		break;
 		
-		case 'speed_test':
+	case 'speed_test':
+		global $lang567;
+		
 		$sourceId = (int)($_GET['source_id'] ?? 0);
 		$targetId = (int)($_GET['target_id'] ?? 0);
 		$testSize = (int)($_GET['test_size'] ?? 1024);
-		
+			
 		if (!$sourceId || !$targetId) {
-			echo json_encode(['success' => false, 'message' => 'Source and Target host IDs are required']);
+			echo json_encode(['success' => false, 'message' => $lang567 ]);
 			break;
 		}
-		
+			
 		echo json_encode(speedTestBetweenHosts($db, $sourceId, $targetId, $testSize));
 		break;
 
 	case 'proxy_speed_test':
+		global $lang568;
+		global $lang569;
+		global $lang570;
+		
 		$targetHostId = (int)($_POST['target_host_id'] ?? 0);
 		$testSize = (int)($_POST['test_size'] ?? 1024);
 		
 		if (!$targetHostId) {
-			echo json_encode(['success' => false, 'message' => 'Target host ID required']);
+			echo json_encode(['success' => false, 'message' => $lang568 ]);
 			break;
 		}
 		
 		$targetHost = getHostById($db, $targetHostId);
 		if (!$targetHost) {
-			echo json_encode(['success' => false, 'message' => 'Target host not found']);
+			echo json_encode(['success' => false, 'message' => $lang569 ]);
 			break;
 		}
 		
@@ -1781,7 +1878,7 @@ switch ($action) {
 		if ($result) {
 			echo json_encode(['success' => true, 'upload_speed' => $result]);
 		} else {
-			echo json_encode(['success' => false, 'message' => 'Speed test failed']);
+			echo json_encode(['success' => false, 'message' => $lang570 ]);
 		}
 		break;
 	
@@ -1795,22 +1892,25 @@ switch ($action) {
 		break;
 	
 	case 'get_host_info':
+		global $lang571;
+		global $lang572;
+	
 		$idHost = (int)($_GET['idHost'] ?? 0);
 		if (!$idHost) {
-			echo json_encode(['success' => false, 'message' => 'Host ID required']);
+			echo json_encode(['success' => false, 'message' => $lang571 ]);
 			break;
 		}
 		$host = getHostById($db, $idHost);
 		if ($host) {
 			echo json_encode(['success' => true, 'data' => $host]);
 		} else {
-			echo json_encode(['success' => false, 'message' => 'Host not found']);
+			echo json_encode(['success' => false, 'message' => $lang572 ]);
 		}
 		break;
 	
 case 'confirm_outgoing_request':
     $arId = (int)($_GET['arId'] ?? 0);
-    $action = $_GET['confirm_action'] ?? ''; // 'accept' или 'reject'
+    $action = $_GET['confirm_action'] ?? '';
     echo json_encode(confirmOutgoingRequest($db, $arId, $action));
     break;
 	

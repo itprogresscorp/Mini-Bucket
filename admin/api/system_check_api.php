@@ -82,7 +82,7 @@ function validateApiKey() {
 
 validateApiKey();
 
-
+require_once '../lang/loader.php';
 
 // Настройки логов
 define('LOG_FILE', '/var/log/install_script.log');
@@ -118,9 +118,10 @@ function isPackageInstalled($package) {
 
 // Список всех проверок
 function getChecksList() {
+	global $lang4470, $lang4471, $lang4472, $lang4473, $lang4474, $lang4475, $lang4476, $lang4477, $lang4478, $lang4479, $lang4480;
     return [
         'packages' => [
-            'name' => 'System packages',
+            'name' => $lang4470,
             'items' => [
                 'apache2' => 'Apache2 web server',
                 'php' => 'PHP',
@@ -161,7 +162,7 @@ function getChecksList() {
             ]
         ],
         'services' => [
-            'name' => 'System services',
+            'name' => $lang4471,
             'items' => [
                 'apache2' => 'WEB-Apache2',
                 'ntp' => 'NTP',
@@ -174,23 +175,23 @@ function getChecksList() {
             ]
         ],
         'files_configs' => [
-            'name' => 'Files and configurations',
+            'name' => $lang4472,
             'items' => [
-                'apache_admin_config' => 'Mini-B admin config (port 1488)',
-                'sudo_www_data' => 'Sudo for www-data without password',
-                'admin_directory' => 'Directory /var/www/html/admin',
-                'admin_temp_dir' => 'Directory /var/www/html/admin/tmp',
+                'apache_admin_config' => $lang4473,
+                'sudo_www_data' => $lang4474,
+                'admin_directory' => $lang4475 . ' /var/www/html/admin',
+                'admin_temp_dir' => $lang4475 . ' /var/www/minib/tmp',
                 //'ssh_keys_root' => 'SSH keys root',
-                'ssh_keys_key' => 'SSH keys in /key'
+                'ssh_keys_key' => $lang4476
             ]
         ],
         'permissions' => [
-            'name' => 'Permissions',
+            'name' => $lang4477,
             'items' => [
-                'user_groups' => 'User in groups www-data,disk,plugdev',
-                'acl_mnt' => 'ACL permissions on /mnt',
-                'mdadm_perms' => 'Permissions /etc/mdadm',
-                'lvm_perms' => 'Permissions /etc/lvm'
+                'user_groups' => $lang4478,
+                'acl_mnt' => $lang4479 . ' /mnt',
+                'mdadm_perms' => $lang4480 . ' /etc/mdadm',
+                'lvm_perms' => $lang4480 . ' /etc/lvm'
             ]
         ]
     ];
@@ -257,36 +258,39 @@ function fixItem($category, $item) {
     
     switch($category) {
         case 'packages':
+			global $lang4481, $lang4482, $lang4483, $lang4484, $lang4485;
             if (!isPackageInstalled($item)) {
                 runCommand("apt update", $output);
                 $success = runCommand("apt install -y $item", $output);
                 $result['success'] = $success;
-                $result['message'] = $success ? "Package $item installed" : "Error installing $item";
+                $result['message'] = $success ? $lang4481 . $item . $lang4482 : $lang4483 . $item;
                 $result['output'] = $output;
             } else {
                 $result['success'] = true;
-                $result['message'] = "Package $item already installed";
+                $result['message'] = $lang4484 . $item . $lang4485;
             }
             break;
             
         case 'services':
+			global $lang4486, $lang4487, $lang4488, $lang4489, $lang4490;
             if (!getServiceStatus($item)) {
                 $success = runCommand("systemctl restart $item", $output);
                 if (!$success) {
                     $success = runCommand("systemctl enable $item && systemctl start $item", $output);
                 }
                 $result['success'] = $success;
-                $result['message'] = $success ? "Service $item started" : "Error starting $item";
+                $result['message'] = $success ? $lang4486 . $item . $lang4487 : $lang4488 . $item;
                 $result['output'] = $output;
             } else {
                 $result['success'] = true;
-                $result['message'] = "Service $item already running";
+                $result['message'] = $lang4489 . $item . $lang4490;
             }
             break;
             
         case 'files_configs':
             switch($item) {
                 case 'apache_admin_config':
+					global $lang4491;
                     $config = 'Listen 1488
 
 <VirtualHost *:1488>
@@ -306,28 +310,31 @@ function fixItem($category, $item) {
                     runCommand("a2ensite admin.conf", $output);
                     runCommand("systemctl restart apache2", $output);
                     $result['success'] = true;
-                    $result['message'] = "Apache config created";
+                    $result['message'] = $lang4491;
                     break;
                     
                 case 'sudo_www_data':
+					global $lang4492;
                     file_put_contents('/etc/sudoers.d/www-data', "www-data ALL=(ALL) NOPASSWD: ALL\n");
                     chmod('/etc/sudoers.d/www-data', 0440);
                     $result['success'] = true;
-                    $result['message'] = "Sudo config created";
+                    $result['message'] = $lang4492;
                     break;
                     
                 case 'admin_directory':
+					global $lang4493;
                     runCommand("mkdir -p /var/www/html/admin", $output);
                     runCommand("chown -R www-data:www-data /var/www/html/admin", $output);
                     $result['success'] = true;
-                    $result['message'] = "Admin directory created";
+                    $result['message'] = $lang4493;
                     break;
                     
                 case 'admin_temp_dir':
-                    runCommand("mkdir -p /var/www/html/admin/tmp", $output);
-                    runCommand("chmod 777 /var/www/html/admin/tmp", $output);
+					global $lang4494;
+                    runCommand("mkdir -p /var/www/minib/tmp", $output);
+                    runCommand("chmod 777 /var/www/minib/tmp", $output);
                     $result['success'] = true;
-                    $result['message'] = "Tmp directory created";
+                    $result['message'] = $lang4494;
                     break;
                     
                 //case 'ssh_keys_root':
@@ -339,11 +346,12 @@ function fixItem($category, $item) {
                    // break;
                     
                 case 'ssh_keys_key':
+					global $lang4495;
                     runCommand("mkdir -p /key", $output);
                     runCommand("cp -r /root/.ssh/* /key/", $output);
                     runCommand("chown -R www-data:www-data /key", $output);
                     $result['success'] = true;
-                    $result['message'] = "SSH keys copied to /key";
+                    $result['message'] = $lang4495;
                     break;
             }
             break;
@@ -351,6 +359,7 @@ function fixItem($category, $item) {
         case 'permissions':
             switch($item) {
                 case 'user_groups':
+					global $lang4496, $lang4497;
 					$user = trim(shell_exec('whoami'));
 					$output = [];
 					
@@ -362,28 +371,31 @@ function fixItem($category, $item) {
 					// runCommand("usermod -a -G www-data $user", $output);
 					
 					$result['success'] = true;
-					$result['message'] = "User $user added to groups sudo, disk, plugdev";
+					$result['message'] = $lang4496 . $user . $lang4497;
 					$result['output'] = $output;
 					break;
                     
                 case 'acl_mnt':
+					global $lang4498;
                     runCommand("setfacl -R -m u:www-data:rwX,d:u:www-data:rwX,g:users:rwX,d:g:users:rwX /mnt", $output);
                     $result['success'] = true;
-                    $result['message'] = "ACL permissions on /mnt configured";
+                    $result['message'] = $lang4498;
                     break;
                     
                 case 'mdadm_perms':
+					global $lang4499;
                     runCommand("chmod -R 777 /etc/mdadm", $output);
                     runCommand("chown -R www-data:www-data /etc/mdadm", $output);
                     $result['success'] = true;
-                    $result['message'] = "Permissions /etc/mdadm configured";
+                    $result['message'] = $lang4499;
                     break;
                     
                 case 'lvm_perms':
+					global $lang4500;
                     runCommand("chmod -R 777 /etc/lvm", $output);
                     runCommand("chown -R www-data:www-data /etc/lvm", $output);
                     $result['success'] = true;
-                    $result['message'] = "Permissions /etc/lvm configured";
+                    $result['message'] = $lang4500;
                     break;
             }
             break;
@@ -422,11 +434,12 @@ if ($action === 'check_all') {
     ]);
     
 } elseif ($action === 'fix') {
+	global $lang4501;
     $category = $_POST['category'] ?? '';
     $item = $_POST['item'] ?? '';
     
     if (!$category || !$item) {
-        echo json_encode(['success' => false, 'error' => 'Missing parameters']);
+        echo json_encode(['success' => false, 'error' => $lang4501]);
         exit;
     }
     
@@ -459,7 +472,8 @@ if ($action === 'check_all') {
         $content = shell_exec("tail -n 100 $file 2>/dev/null");
         echo json_encode(['success' => true, 'content' => $content]);
     } else {
-        echo json_encode(['success' => true, 'content' => 'Log file not found']);
+		global $lang4502;
+        echo json_encode(['success' => true, 'content' => $lang4502]);
     }
 } else {
     echo json_encode(['success' => false, 'error' => 'Unknown action']);

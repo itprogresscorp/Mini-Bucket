@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('RSYNC_CONF', '/etc/rsyncd.conf');
 define('RSYNC_SECRETS', '/etc/rsyncd.secrets');
@@ -560,6 +562,7 @@ switch ($action) {
         break;
         
     case 'save_config':
+		global $lang2696, $lang2697;
         $config = [
             'uid' => $_POST['uid'] ?? 'nobody',
             'gid' => $_POST['gid'] ?? 'nogroup',
@@ -570,7 +573,7 @@ switch ($action) {
             'log_file' => '/var/log/rsyncd.log'
         ];
         $result = saveRsyncGlobalConfig($config);
-        echo json_encode(['success' => $result, 'message' => $result ? 'Конфигурация сохранена' : 'Ошибка сохранения']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2696 : $lang2697]);
         break;
         
     case 'get_modules':
@@ -578,6 +581,7 @@ switch ($action) {
         break;
         
     case 'create_module':
+		global $lang2698, $lang2699, $lang2700, $lang2701, $lang2702, $lang2703;
         $name = trim($_POST['name'] ?? '');
         $path = trim($_POST['path'] ?? '');
         $comment = trim($_POST['comment'] ?? '');
@@ -586,17 +590,17 @@ switch ($action) {
         $auth_users = $_POST['users'] ?? [];
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя модуля']);
+            echo json_encode(['success' => false, 'error' => $lang2698]);
         } elseif (empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Укажите существующий путь']);
+            echo json_encode(['success' => false, 'error' => $lang2699]);
         } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Имя модуля может содержать только латинские буквы, цифры, _ и -']);
+            echo json_encode(['success' => false, 'error' => $lang2700]);
         } else {
             $modules = getRsyncModules();
             
             foreach ($modules as $module) {
                 if ($module['name'] === $name) {
-                    echo json_encode(['success' => false, 'error' => 'Модуль с таким именем уже существует']);
+                    echo json_encode(['success' => false, 'error' => $lang2701]);
                     exit;
                 }
             }
@@ -612,14 +616,15 @@ switch ($action) {
             ];
             
             if (saveRsyncModules($modules)) {
-                echo json_encode(['success' => true, 'message' => 'Модуль создан']);
+                echo json_encode(['success' => true, 'message' => $lang2702]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка сохранения']);
+                echo json_encode(['success' => false, 'error' => $lang2703]);
             }
         }
         break;
         
     case 'update_module':
+		global $lang2704, $lang2705, $lang2706, $lang2707;
         $old_name = $_POST['old_name'] ?? '';
         $name = trim($_POST['name'] ?? '');
         $path = trim($_POST['path'] ?? '');
@@ -629,9 +634,9 @@ switch ($action) {
         $auth_users = $_POST['users'] ?? [];
         
         if (empty($name) || empty($path) || !file_exists($path)) {
-            echo json_encode(['success' => false, 'error' => 'Заполните все поля']);
+            echo json_encode(['success' => false, 'error' => $lang2704]);
         } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Имя модуля может содержать только латинские буквы, цифры, _ и -']);
+            echo json_encode(['success' => false, 'error' => $lang2705]);
         } else {
             $modules = getRsyncModules();
             $updated = false;
@@ -651,14 +656,15 @@ switch ($action) {
             }
             
             if ($updated && saveRsyncModules($newModules)) {
-                echo json_encode(['success' => true, 'message' => 'Модуль обновлен']);
+                echo json_encode(['success' => true, 'message' => $lang2706]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка обновления']);
+                echo json_encode(['success' => false, 'error' => $lang2707]);
             }
         }
         break;
         
     case 'delete_module':
+		global $lang2708, $lang2709;
         $name = $_POST['name'] ?? '';
         $modules = getRsyncModules();
         $newModules = [];
@@ -670,9 +676,9 @@ switch ($action) {
         }
         
         if (saveRsyncModules($newModules)) {
-            echo json_encode(['success' => true, 'message' => 'Модуль удален']);
+            echo json_encode(['success' => true, 'message' => $lang2708]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Ошибка удаления']);
+            echo json_encode(['success' => false, 'error' => $lang2709]);
         }
         break;
         
@@ -681,43 +687,46 @@ switch ($action) {
         break;
         
     case 'create_user':
+		global $lang2710, $lang2711, $lang2712, $lang2713, $lang2714, $lang2715;
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         $password2 = $_POST['password2'] ?? '';
         
         if (empty($username)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя пользователя']);
+            echo json_encode(['success' => false, 'error' => $lang2710]);
         } elseif (!preg_match('/^[a-z_][a-z0-9_-]*$/i', $username)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы в имени']);
+            echo json_encode(['success' => false, 'error' => $lang2711]);
         } elseif (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Пароль должен быть не менее 4 символов']);
+            echo json_encode(['success' => false, 'error' => $lang2712]);
         } elseif ($password !== $password2) {
-            echo json_encode(['success' => false, 'error' => 'Пароли не совпадают']);
+            echo json_encode(['success' => false, 'error' => $lang2713]);
         } else {
             $result = addRsyncUser($username, $password);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Пользователь создан' : 'Пользователь уже существует']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang2714 : $lang2715]);
         }
         break;
         
     case 'change_password':
+		global $lang2716, $lang2717, $lang2718, $lang2719;
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $password2 = $_POST['password2'] ?? '';
         
         if (strlen($password) < 4) {
-            echo json_encode(['success' => false, 'error' => 'Пароль слишком короткий']);
+            echo json_encode(['success' => false, 'error' => $lang2716]);
         } elseif ($password !== $password2) {
-            echo json_encode(['success' => false, 'error' => 'Пароли не совпадают']);
+            echo json_encode(['success' => false, 'error' => $lang2717]);
         } else {
             $result = updateRsyncUserPassword($username, $password);
-            echo json_encode(['success' => $result, 'message' => $result ? 'Пароль изменен' : 'Ошибка изменения']);
+            echo json_encode(['success' => $result, 'message' => $result ? $lang2718 : $lang2719]);
         }
         break;
         
     case 'delete_user':
+		global $lang2720, $lang2721;
         $username = $_POST['username'] ?? '';
         $result = deleteRsyncUser($username);
-        echo json_encode(['success' => $result, 'message' => $result ? 'Пользователь удален' : 'Ошибка удаления']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2720 : $lang2721]);
         break;
         
     case 'get_logs':
@@ -739,19 +748,20 @@ switch ($action) {
         break;
         
     case 'create_folder':
+		global $lang2722, $lang2723, $lang2724, $lang2725;
         $path = $_POST['path'] ?? '';
         $name = trim($_POST['name'] ?? '');
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя папки']);
+            echo json_encode(['success' => false, 'error' => $lang2722]);
         } elseif (!preg_match('/^[a-zA-Z0-9_\-\.\s]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы']);
+            echo json_encode(['success' => false, 'error' => $lang2723]);
         } else {
             $fullPath = rtrim($path, '/') . '/' . $name;
             if (createDirectory($fullPath)) {
-                echo json_encode(['success' => true, 'message' => 'Папка создана', 'path' => $fullPath]);
+                echo json_encode(['success' => true, 'message' => $lang2724, 'path' => $fullPath]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Не удалось создать папку']);
+                echo json_encode(['success' => false, 'error' => $lang2725]);
             }
         }
         break;

@@ -21,6 +21,7 @@
  */
 
 require_once 'config.php';
+require_once 'lang/loader.php';
 
 if (isset($_SESSION['user_id'])) {
     header('Location: index.php');
@@ -29,6 +30,7 @@ if (isset($_SESSION['user_id'])) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	global $lang4403, $lang4404;
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
@@ -51,10 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php');
             exit;
         } else {
-            $error = 'Invalid username or password';
+            $error = $lang4403;
         }
     } else {
-        $error = 'Please fill all fields';
+        $error = $lang4404;
     }
 }
 ?>
@@ -68,6 +70,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="lib/fontawesome-free-6.7.2-web/css/all.min.css">
     <link rel="stylesheet" href="css/loader.css">
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <style>
         * {
             margin: 0;
@@ -356,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			<img src="css/MINIB_LOGO.png" width="64px" height="64px"></img>
                 <!--<i class="fas fa-bucket"></i>-->
             </div>
-            <h1>Mini-b</h1>
+            <h1>Mini-B</h1>
             <p>NAS Control Panel</p>
         </div>
 
@@ -369,16 +387,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST">
             <div class="input-group-custom">
-                <label class="input-label">Username</label>
-                <input type="text" name="username" class="input-field" placeholder="login" autofocus required>
+                <label class="input-label"><?php echo $lang4405; ?></label>
+                <input type="text" name="username" class="input-field" placeholder="<?php echo $lang4406; ?>" autofocus required>
             </div>
             <div class="input-group-custom">
-                <label class="input-label">Password</label>
-                <input type="password" name="password" class="input-field" placeholder="Enter your password" required>
+                <label class="input-label"><?php echo $lang4407; ?></label>
+                <input type="password" name="password" class="input-field" placeholder="<?php echo $lang4408; ?>" required>
             </div>
             <button type="submit" class="btn-apple">
                 <i class="fas fa-arrow-right"></i>
-                <span>Sign In</span>
+                <span><?php echo $lang4409; ?></span>
             </button>
         </form>
 

@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -84,8 +85,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         .status-group {
@@ -505,7 +522,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -516,40 +533,40 @@ $menu = require_once 'menu.php';
         
         <div class="status-group" id="statusGroup">
             <span class="status-badge" id="rsyncRunningBadge">
-                <i class="fas fa-play-circle"></i> Rsync: Loading...
+                <i class="fas fa-play-circle"></i> <?php echo $lang2575; ?>
             </span>
             <span class="status-badge" id="rsyncEnabledBadge">
-                <i class="fas fa-check-circle"></i> Auto: Loading...
+                <i class="fas fa-check-circle"></i> <?php echo $lang2576; ?>
             </span>
             <span class="status-badge" id="rsyncPidBadge" style="background:#e9ecef; color:#495057; display:none;">
-                <i class="fas fa-microchip"></i> PID: <span id="rsyncPid">-</span>
+                <i class="fas fa-microchip"></i> <?php echo $lang2577; ?> <span id="rsyncPid">-</span>
             </span>
             <span class="status-badge" id="rsyncVersionBadge" style="background:#e9ecef; color:#495057;">
-                <i class="fas fa-code-branch"></i> v<span id="rsyncVersion">-</span>
+                <i class="fas fa-code-branch"></i> <?php echo $lang2578; ?><span id="rsyncVersion">-</span>
             </span>
         </div>
         <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div class="dropdown">
             <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-power-off"></i> Management
+                <i class="fas fa-power-off"></i> <?php echo $lang2579; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success"></i> Start</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger"></i> Stop</button></li>
-                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning"></i> Restart</button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('start')"><i class="fas fa-play text-success me-2"></i> <?php echo $lang2580; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('stop')"><i class="fas fa-stop text-danger me-2"></i> <?php echo $lang2581; ?></button></li>
+                <li><button class="dropdown-item" onclick="serviceAction('restart')"><i class="fas fa-sync-alt text-warning me-2"></i> <?php echo $lang2582; ?></button></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info"></i> Enable autostart</button></li>
+                <li><button class="dropdown-item" id="toggleAutostartBtn" onclick="toggleAutostart()"><i class="fas fa-play text-info me-2"></i> <?php echo $lang2583; ?></button></li>
             </ul>
         </div>
         
         <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
             <i class="fas fa-cog"></i>
         </button>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang2584; ?>"></i>
     </div>
 </div>
 
@@ -562,29 +579,29 @@ $menu = require_once 'menu.php';
             <div class="col-md-8">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-cubes text-primary"></i> Rsync Modules</h3>
+                        <h3><i class="fas fa-cubes text-primary"></i> <?php echo $lang2585; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                            <i class="fas fa-plus"></i> Create Module
+                            <i class="fas fa-plus"></i> <?php echo $lang2586; ?>
                         </button>
                     </div>
                     <div class="widget-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-module mb-0">
                                 <thead>
-                                    <tr><th>Module Name</th><th>Path</th><th>Permissions</th><th>Access</th><th>Actions</th></tr>
+                                    <tr><th><?php echo $lang2587; ?></th><th><?php echo $lang2588; ?></th><th><?php echo $lang2589; ?></th><th><?php echo $lang2590; ?></th><th><?php echo $lang2591; ?></th></tr>
                                 </thead>
                                 <tbody id="modulesTableBody">
-                                    <tr><td colspan="5" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted py-4"><div class="loading-spinner-sm"></div> <?php echo $lang2592; ?></td></tr>
                                 </tbody>
                              </table>
                         </div>
                         <div class="options-help">
-                            <strong><i class="fas fa-info-circle"></i> Examples of connecting to Rsync modules:</strong>
+                            <strong><i class="fas fa-info-circle"></i> <?php echo $lang2593; ?></strong>
                             <ul>
-                                <li><code>rsync -avz user@server::module_name /local/path/</code> - sync from server</li>
-                                <li><code>rsync -avz /local/path/ user@server::module_name/</code> - upload to server</li>
-                                <li><code>rsync -avz --delete user@server::module_name /local/path/</code> - with file deletion</li>
-                                <li><code>rsync -avz --list-only user@server::</code> - list available modules</li>
+                                <li><code>rsync -avz user@server::module_name /local/path/</code> - <?php echo $lang2594; ?></li>
+                                <li><code>rsync -avz /local/path/ user@server::module_name/</code> - <?php echo $lang2595; ?></li>
+                                <li><code>rsync -avz --delete user@server::module_name /local/path/</code> - <?php echo $lang2596; ?></li>
+                                <li><code>rsync -avz --list-only user@server::</code> - <?php echo $lang2597; ?></li>
                             </ul>
                         </div>
                     </div>
@@ -594,34 +611,34 @@ $menu = require_once 'menu.php';
             <div class="col-md-4">
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-hdd text-primary"></i> Disk Partitions</h3>
+                        <h3><i class="fas fa-hdd text-primary"></i> <?php echo $lang2598; ?></h3>
                         <a class="btn btn-primary btn-sm" href="disk_manager.php"><i class="fas fa-tools"></i></a>
                     </div>
                     <div class="widget-body" id="storagesContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2599; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-users text-primary"></i> Rsync Users</h3>
+                        <h3><i class="fas fa-users text-primary"></i> <?php echo $lang2600; ?></h3>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                     <div class="widget-body" id="usersContainer">
-                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                        <div class="text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2601; ?></div>
                     </div>
                 </div>
                 
                 <div class="widget">
                     <div class="widget-header">
-                        <h3><i class="fas fa-history text-primary"></i> Rsync Log</h3>
+                        <h3><i class="fas fa-history text-primary"></i> <?php echo $lang2602; ?></h3>
                         <i class="fas fa-sync-alt refresh-btn text-muted" onclick="loadLogs()" style="font-size:12px"></i>
                     </div>
                     <div class="widget-body p-0">
                         <div class="log-viewer" id="logsContainer">
-                            <div class="text-muted text-center py-3"><div class="loading-spinner-sm"></div> Loading...</div>
+                            <div class="text-muted text-center py-3"><div class="loading-spinner-sm"></div> <?php echo $lang2603; ?></div>
                         </div>
                     </div>
                 </div>
@@ -635,45 +652,45 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Global Rsync Settings</h5>
+                <h5 class="modal-title"><i class="fas fa-sliders-h"></i> <?php echo $lang2604; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="globalConfigForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">UID</label>
+                            <label class="form-label"><?php echo $lang2605; ?></label>
                             <input type="text" name="uid" id="config_uid" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">GID</label>
+                            <label class="form-label"><?php echo $lang2606; ?></label>
                             <input type="text" name="gid" id="config_gid" class="form-control">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="use_chroot" class="form-check-input" id="config_chroot">
-                                <label class="form-check-label" for="config_chroot">Use chroot</label>
+                                <label class="form-check-label" for="config_chroot"><?php echo $lang2607; ?></label>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Max Connections</label>
+                            <label class="form-label"><?php echo $lang2608; ?></label>
                             <input type="number" name="max_connections" id="config_max_connections" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Timeout (sec)</label>
+                            <label class="form-label"><?php echo $lang2609; ?></label>
                             <input type="number" name="timeout" id="config_timeout" class="form-control">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch">
                                 <input type="checkbox" name="transfer_logging" class="form-check-input" id="config_transfer_logging">
-                                <label class="form-check-label" for="config_transfer_logging">Log transfers</label>
+                                <label class="form-check-label" for="config_transfer_logging"><?php echo $lang2610; ?></label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2611; ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2612; ?></button>
                 </div>
             </form>
         </div>
@@ -684,27 +701,27 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add Rsync User</h5>
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> <?php echo $lang2613; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addUserForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
+                        <label class="form-label"><?php echo $lang2614; ?></label>
                         <input type="text" name="username" class="form-control" pattern="[a-z_][a-z0-9_-]*" required>
-                        <small class="text-muted">Only Latin letters, numbers, _ and -</small>
+                        <small class="text-muted"><?php echo $lang2615; ?></small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
+                        <label class="form-label"><?php echo $lang2616; ?></label>
                         <input type="password" name="password" class="form-control" required minlength="4">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Repeat password</label>
+                        <label class="form-label"><?php echo $lang2617; ?></label>
                         <input type="password" name="password2" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2618; ?></button>
                 </div>
             </form>
         </div>
@@ -715,23 +732,23 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title"><i class="fas fa-key"></i> Change Rsync Password</h5>
+                <h5 class="modal-title"><i class="fas fa-key"></i> <?php echo $lang2619; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="changePasswordForm">
                 <div class="modal-body">
                     <input type="hidden" name="username" id="changePasswordUsername">
                     <div class="mb-3">
-                        <label class="form-label">New Password</label>
+                        <label class="form-label"><?php echo $lang2620; ?></label>
                         <input type="password" name="password" class="form-control" required minlength="4">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Repeat Password</label>
+                        <label class="form-label"><?php echo $lang2621; ?></label>
                         <input type="password" name="password2" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-warning">Change</button>
+                    <button type="submit" class="btn btn-warning"><?php echo $lang2622; ?></button>
                 </div>
             </form>
         </div>
@@ -742,49 +759,49 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Create Rsync Module</h5>
+                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> <?php echo $lang2623; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addModuleForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Module Name *</label>
+                            <label class="form-label"><?php echo $lang2624; ?> *</label>
                             <input type="text" name="name" class="form-control" required placeholder="e.g.: backup">
-                            <small class="text-muted">Latin letters, numbers, _ and -</small>
+                            <small class="text-muted"><?php echo $lang2625; ?></small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Folder Path *</label>
+                            <label class="form-label"><?php echo $lang2626; ?> *</label>
                             <div class="input-group">
                                 <input type="text" name="path" id="addModulePath" class="form-control" readonly required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowser('addModulePath')">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang2627; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Description</label>
-                            <input type="text" name="comment" class="form-control" placeholder="Optional description">
+                            <label class="form-label"><?php echo $lang2628; ?></label>
+                            <input type="text" name="comment" class="form-control" placeholder="<?php echo $lang2629; ?>">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="read_only" class="form-check-input" id="module_read_only" checked>
-                                <label class="form-check-label" for="module_read_only"><i class="fas fa-eye"></i> Read Only</label>
+                                <label class="form-check-label" for="module_read_only"><i class="fas fa-eye"></i> <?php echo $lang2630; ?></label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="list" class="form-check-input" id="module_list" checked>
-                                <label class="form-check-label" for="module_list"><i class="fas fa-list"></i> Show in list</label>
+                                <label class="form-check-label" for="module_list"><i class="fas fa-list"></i> <?php echo $lang2631; ?></label>
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Users with access</label>
+                            <label class="form-label"><?php echo $lang2632; ?></label>
                             <div class="user-select-list" id="moduleUsersList"></div>
-                            <small class="text-muted">If no user is selected, the module will be available without authentication</small>
+                            <small class="text-muted"><?php echo $lang2633; ?></small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Create Module</button>
+                    <button type="submit" class="btn btn-success"><?php echo $lang2634; ?></button>
                 </div>
             </form>
         </div>
@@ -795,7 +812,7 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Rsync Module</h5>
+                <h5 class="modal-title"><i class="fas fa-edit"></i> <?php echo $lang2635; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="editModuleForm">
@@ -803,37 +820,37 @@ $menu = require_once 'menu.php';
                     <input type="hidden" name="old_name" id="edit_old_name">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Module Name *</label>
+                            <label class="form-label"><?php echo $lang2636; ?> *</label>
                             <input type="text" name="name" id="edit_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Folder Path *</label>
+                            <label class="form-label"><?php echo $lang2637; ?> *</label>
                             <div class="input-group">
                                 <input type="text" name="path" id="edit_path" class="form-control" readonly required>
                                 <button type="button" class="btn btn-secondary" onclick="openFolderBrowserEdit()">
-                                    <i class="fas fa-folder-open"></i> Browse
+                                    <i class="fas fa-folder-open"></i> <?php echo $lang2638; ?>
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Description</label>
+                            <label class="form-label"><?php echo $lang2639; ?></label>
                             <input type="text" name="comment" id="edit_comment" class="form-control">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="read_only" class="form-check-input" id="edit_read_only">
-                                <label class="form-check-label" for="edit_read_only"><i class="fas fa-eye"></i> Read Only</label>
+                                <label class="form-check-label" for="edit_read_only"><i class="fas fa-eye"></i> <?php echo $lang2640; ?></label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" name="list" class="form-check-input" id="edit_list">
-                                <label class="form-check-label" for="edit_list"><i class="fas fa-list"></i> Show in list</label>
+                                <label class="form-check-label" for="edit_list"><i class="fas fa-list"></i> <?php echo $lang2641; ?></label>
                             </div>
                         </div>
                         <div class="col-md-12" id="editUsersContainer"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary"><?php echo $lang2642; ?></button>
                 </div>
             </form>
         </div>
@@ -844,20 +861,20 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2643; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumb"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPath" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialog()"><i class="fas fa-folder-plus"></i> <?php echo $lang2644; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowser"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2645; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolder()"><?php echo $lang2646; ?></button>
             </div>
         </div>
     </div>
@@ -867,31 +884,31 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-folder-open"></i> Select Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-open"></i> <?php echo $lang2647; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <nav aria-label="breadcrumb"><ol class="breadcrumb" id="folderBreadcrumbEdit"></ol></nav>
                 <div class="input-group mb-3">
                     <input type="text" id="currentPathEdit" class="form-control" readonly>
-                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> Create Folder</button>
+                    <button type="button" class="btn btn-success" onclick="showCreateFolderDialogEdit()"><i class="fas fa-folder-plus"></i> <?php echo $lang2648; ?></button>
                 </div>
                 <div class="folder-browser" id="folderBrowserEdit"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()">Select</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2649; ?></button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentFolderEdit()"><?php echo $lang2650; ?></button>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="createFolderDialog" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolder()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2651; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2652; ?></label> <code id="createFolderPath"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2653; ?></label><input type="text" id="newFolderName" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2654; ?></button><button type="button" class="btn btn-success" onclick="createNewFolder()"><?php echo $lang2655; ?></button></div></div></div>
 </div>
 
 <div class="modal fade" id="createFolderDialogEdit" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> Create Folder</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Path:</label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label">Folder Name</label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()">Create</button></div></div></div>
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang2656; ?></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label"><?php echo $lang2657; ?></label> <code id="createFolderPathEdit"></code></div><div class="mb-3"><label class="form-label"><?php echo $lang2658; ?></label><input type="text" id="newFolderNameEdit" class="form-control" placeholder="New Folder"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang2659; ?></button><button type="button" class="btn btn-success" onclick="createNewFolderEdit()"><?php echo $lang2660; ?></button></div></div></div>
 </div>
 
 <script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
@@ -942,9 +959,9 @@ async function loadStatus() {
     let result = await apiCall('get_status');
     if (result.success) {
         let status = result.data;
-        $('#rsyncRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> Rsync: ${status.running ? 'Running' : 'Stopped'}`);
+        $('#rsyncRunningBadge').html(`<i class="fas fa-${status.running ? 'play-circle' : 'stop-circle'}"></i> <?php echo $lang2661; ?> ${status.running ? 'Running' : 'Stopped'}`);
         $('#rsyncRunningBadge').removeClass('status-running status-stopped').addClass(status.running ? 'status-running' : 'status-stopped');
-        $('#rsyncEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> Auto: ${status.enabled ? 'On' : 'Off'}`);
+        $('#rsyncEnabledBadge').html(`<i class="fas fa-${status.enabled ? 'check-circle' : 'times-circle'}"></i> <?php echo $lang2662; ?> ${status.enabled ? 'On' : 'Off'}`);
         $('#rsyncEnabledBadge').removeClass('status-enabled status-disabled').addClass(status.enabled ? 'status-enabled' : 'status-disabled');
         if (status.pid) { $('#rsyncPidBadge').show(); $('#rsyncPid').text(status.pid); } else { $('#rsyncPidBadge').hide(); }
         $('#rsyncVersion').text(status.version || 'unknown');
@@ -956,8 +973,8 @@ async function loadStatus() {
 
 async function serviceAction(action) {
     let result = await apiCall('service_action', 'POST', { service_action: action });
-    if (result.success) { showAlert(`Service ${action}ed`, 'success'); loadStatus(); }
-    else showAlert(`Error during ${action}`, 'danger');
+    if (result.success) { showAlert(`<?php echo $lang2663; ?> ${action} <?php echo $lang2664; ?>`, 'success'); loadStatus(); }
+    else showAlert(`<?php echo $lang2665; ?> ${action}`, 'danger');
 }
 
 async function toggleAutostart() {
@@ -985,8 +1002,8 @@ $('#globalConfigForm').on('submit', async function(e) {
     e.preventDefault();
     let data = $(this).serialize();
     let result = await apiCall('save_config', 'POST', data);
-    if (result.success) { showAlert('Configuration saved', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
-    else showAlert('Save error', 'danger');
+    if (result.success) { showAlert('<?php echo $lang2666; ?>', 'success'); $('#settingsModal').modal('hide'); loadStatus(); }
+    else showAlert('<?php echo $lang2667; ?>', 'danger');
 });
 
 async function loadUsers() {
@@ -994,7 +1011,7 @@ async function loadUsers() {
     if (result.success) {
         rsyncUsersList = result.data;
         if (rsyncUsersList.length === 0) {
-            $('#usersContainer').html('<div class="alert alert-info mb-0">No users. Create the first one.</div>');
+            $('#usersContainer').html('<div class="alert alert-info mb-0"><?php echo $lang2668; ?></div>');
         } else {
             let html = '<div class="d-flex flex-wrap">';
             rsyncUsersList.forEach(u => {
@@ -1008,12 +1025,12 @@ async function loadUsers() {
 }
 
 function updateUserCheckboxes() {
-    let html = '<div class="form-check mb-2"><input type="checkbox" id="select_all_users" class="form-check-input"><label class="form-check-label" for="select_all_users">Select all</label></div><hr>';
+    let html = '<div class="form-check mb-2"><input type="checkbox" id="select_all_users" class="form-check-input"><label class="form-check-label" for="select_all_users"><?php echo $lang2669; ?></label></div><hr>';
     rsyncUsersList.forEach(u => {
         html += `<div class="form-check"><input type="checkbox" name="users[]" value="${escapeHtml(u.username)}" class="form-check-input user-checkbox" id="module_user_${escapeHtml(u.username)}"><label class="form-check-label" for="module_user_${escapeHtml(u.username)}">${escapeHtml(u.username)}</label></div>`;
     });
     if (rsyncUsersList.length === 0) {
-        html = '<span class="text-muted">No Rsync users. Create users first.</span>';
+        html = '<span class="text-muted"><?php echo $lang2670; ?></span>';
     }
     $('#moduleUsersList').html(html);
     
@@ -1023,7 +1040,7 @@ function updateUserCheckboxes() {
 }
 
 async function deleteUser(username) {
-    if (!confirm(`Delete user ${username}?`)) return;
+    if (!confirm(`<?php echo $lang2671; ?> ${username}?`)) return;
     let result = await apiCall('delete_user', 'POST', { username: username });
     if (result.success) { showAlert(result.message, 'success'); loadUsers(); loadModules(); }
     else showAlert(result.message, 'danger');
@@ -1055,12 +1072,12 @@ async function loadModules() {
     if (result.success) {
         let modules = result.data;
         if (modules.length === 0) {
-            $('#modulesTableBody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-cubes fa-2x mb-2 d-block"></i>No modules created</td></tr>');
+            $('#modulesTableBody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-cubes fa-2x mb-2 d-block"></i><?php echo $lang2672; ?></td></tr>');
         } else {
             let html = '';
             modules.forEach(m => {
-                let rightsBadge = m.read_only ? '<span class="badge bg-warning"><i class="fas fa-eye"></i> Read Only</span>' : '<span class="badge bg-success"><i class="fas fa-pen"></i> Read/Write</span>';
-                let listBadge = m.list ? '<span class="badge bg-info"><i class="fas fa-list"></i> List allowed</span>' : '<span class="badge bg-secondary"><i class="fas fa-lock"></i> List hidden</span>';
+                let rightsBadge = m.read_only ? '<span class="badge bg-warning"><i class="fas fa-eye"></i> <?php echo $lang2673; ?></span>' : '<span class="badge bg-success"><i class="fas fa-pen"></i> <?php echo $lang2674; ?></span>';
+                let listBadge = m.list ? '<span class="badge bg-info"><i class="fas fa-list"></i> <?php echo $lang2675; ?></span>' : '<span class="badge bg-secondary"><i class="fas fa-lock"></i> <?php echo $lang2676; ?></span>';
                 let usersBadge = '';
                 if (m.auth_users && m.auth_users.length > 0) {
                     usersBadge = `<span class="badge bg-secondary" title="Users: ${m.auth_users.join(', ')}"><i class="fas fa-lock"></i> ${m.auth_users.length}</span>`;
@@ -1099,8 +1116,8 @@ function editModule(name, path, comment, readOnly, list, users) {
     $('#edit_read_only').prop('checked', readOnly);
     $('#edit_list').prop('checked', list);
     
-    let html = '<label class="form-label">Users with access</label><div class="user-select-list">';
-    html += '<div class="form-check mb-2"><input type="checkbox" id="edit_select_all_users" class="form-check-input"><label class="form-check-label" for="edit_select_all_users">Select all</label></div><hr>';
+    let html = '<label class="form-label"><?php echo $lang2677; ?></label><div class="user-select-list">';
+    html += '<div class="form-check mb-2"><input type="checkbox" id="edit_select_all_users" class="form-check-input"><label class="form-check-label" for="edit_select_all_users"><?php echo $lang2678; ?></label></div><hr>';
     
     rsyncUsersList.forEach(u => {
         let checked = users && users.includes(u.username) ? 'checked' : '';
@@ -1108,7 +1125,7 @@ function editModule(name, path, comment, readOnly, list, users) {
     });
     
     if (rsyncUsersList.length === 0) {
-        html += '<span class="text-muted">No Rsync users. Create users first.</span>';
+        html += '<span class="text-muted"><?php echo $lang2679; ?></span>';
     }
     
     html += '</div>';
@@ -1130,7 +1147,7 @@ $('#editModuleForm').on('submit', async function(e) {
 });
 
 async function deleteModule(name) {
-    if (!confirm(`Удалить модуль "${name}"?`)) return;
+    if (!confirm(`<?php echo $lang2680; ?> "${name}"?`)) return;
     let result = await apiCall('delete_module', 'POST', { name: name });
     if (result.success) { showAlert(result.message, 'success'); loadModules(); loadStatus(); }
     else showAlert(result.error || 'Error', 'danger');
@@ -1141,12 +1158,12 @@ async function loadStorages() {
     if (result.success) {
         let storages = result.storages;
         if (storages.length === 0) {
-            $('#storagesContainer').html('<div class="alert alert-info">No available partitions. Connect disks.</div>');
+            $('#storagesContainer').html('<div class="alert alert-info"><?php echo $lang2681; ?></div>');
         } else {
             let html = '';
             storages.forEach(s => {
                 let fillColor = s.used_percent > 90 ? '#dc3545' : (s.used_percent > 70 ? '#ffc107' : '#28a745');
-                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> Used: ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> Used: ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> Free: ${s.available || '—'}</span></div></div>`;
+                html += `<div class="storage-card"><div class="storage-header"><span class="storage-name"><i class="fas fa-hdd"></i> ${escapeHtml(s.name)}</span><span class="storage-type type-${s.type}">${s.type.toUpperCase()}</span></div><div class="storage-mount"><i class="fas fa-folder-open"></i> ${escapeHtml(s.mount)}</div><div class="storage-stats mb-1"><span><i class="fas fa-chart-pie"></i> <?php echo $lang2682; ?> ${s.used_percent}%</span><span><i class="fas fa-database"></i> ${s.size_gb}</span></div><div class="progress-custom"><div class="progress-fill" style="width: ${s.used_percent}%; background: ${fillColor};"></div></div><div class="storage-stats"><span><i class="fas fa-chart-line"></i> <?php echo $lang2683; ?> ${s.used || '—'}</span><span><i class="fas fa-check-circle text-success"></i> <?php echo $lang2684; ?> ${s.available || '—'}</span></div></div>`;
             });
             $('#storagesContainer').html(html);
         }
@@ -1159,7 +1176,7 @@ async function loadLogs() {
         let logs = result.data;
         let html = '';
         if (logs.length === 0) {
-            html = '<div class="text-muted text-center py-3">No data in log file</div>';
+            html = '<div class="text-muted text-center py-3"><?php echo $lang2685; ?></div>';
         } else {
             logs.forEach(log => {
                 html += `<div class="log-line">${escapeHtml(log)}</div>`;
@@ -1190,11 +1207,11 @@ async function loadFolder(path, container, breadcrumbContainer, currentPathInput
         result.items.forEach(item => {
             listHtml += `<div class="list-group-item list-group-item-action folder-item" onclick="selectDirectory('${item.path}', '${container}', '${currentPathInput}')"><i class="fas fa-folder"></i> ${escapeHtml(item.name)}</div>`;
         });
-        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted">Empty folder</div>';
+        if (result.items.length === 0 && result.path !== '/') listHtml += '<div class="list-group-item text-muted"><?php echo $lang2686; ?></div>';
         listHtml += '</div>';
         $(container).html(listHtml);
     } else {
-        showAlert('Error loading folders', 'danger');
+        showAlert('<?php echo $lang2687; ?>', 'danger');
     }
 }
 
@@ -1213,7 +1230,7 @@ function selectCurrentFolder() {
     if (currentTargetInput) {
         $(`#${currentTargetInput}`).val(currentBrowsePath);
         $('#browseFolderModal').modal('hide');
-        showAlert('Selected folder: ' + currentBrowsePath, 'success');
+        showAlert('<?php echo $lang2688; ?> ' + currentBrowsePath, 'success');
     }
 }
 
@@ -1250,12 +1267,12 @@ function showCreateFolderDialogEdit() {
 async function createNewFolder() {
     let path = $('#createFolderPath').text();
     let name = $('#newFolderName').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2689; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialog').modal('hide');
         loadFolder(currentBrowsePath, '#folderBrowser', '#folderBreadcrumb', '#currentPath');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2690; ?>"' + name + '"<?php echo $lang2691; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1264,12 +1281,12 @@ async function createNewFolder() {
 async function createNewFolderEdit() {
     let path = $('#createFolderPathEdit').text();
     let name = $('#newFolderNameEdit').val();
-    if (!name) { showAlert('Enter folder name', 'danger'); return; }
+    if (!name) { showAlert('<?php echo $lang2692; ?>', 'danger'); return; }
     let result = await apiCall('create_folder', 'POST', { path: path, name: name });
     if (result.success) {
         $('#createFolderDialogEdit').modal('hide');
         loadFolder(currentBrowsePathEdit, '#folderBrowserEdit', '#folderBreadcrumbEdit', '#currentPathEdit');
-        showAlert('Folder "' + name + '" created', 'success');
+        showAlert('<?php echo $lang2693; ?>"' + name + '"<?php echo $lang2694; ?>', 'success');
     } else {
         showAlert(result.error, 'danger');
     }
@@ -1277,7 +1294,7 @@ async function createNewFolderEdit() {
 
 async function refreshAllData() {
     await Promise.all([loadStatus(), loadConfig(), loadUsers(), loadModules(), loadStorages(), loadLogs()]);
-    showAlert('Data updated...', 'success');
+    showAlert('<?php echo $lang2695; ?>', 'success');
 }
 
 setInterval(() => {

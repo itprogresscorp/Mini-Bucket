@@ -40,6 +40,8 @@ function getTrapStatus($db) {
 $db = getDB();
 $trap_enabled = getTrapStatus($db);
 
+require_once '../lang/loader.php';
+
 if ($trap_enabled !== true) {
     http_response_code(403);
     echo json_encode([
@@ -113,16 +115,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $pin = $_SERVER['HTTP_X_PIN'] ?? $_SERVER['HTTP_X_API_PIN'] ?? $_SERVER['HTTP_PIN'] ?? '';
 
 if (empty($pin)) {
+	global $lang4573;
     http_response_code(401);
     echo json_encode([
         'success' => false,
-        'message' => 'PIN is required in X-PIN header'
+        'message' => $lang4573
     ]);
     exit;
 }
 
 // Verify PIN against database
 try {
+	global $lang4574, $lang4575;
     $stmt = $db->prepare("SELECT hostPin FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
     $row = $result->fetchArray(SQLITE3_ASSOC);
@@ -133,7 +137,7 @@ try {
         http_response_code(403);
         echo json_encode([
             'success' => false,
-            'message' => 'Invalid PIN'
+            'message' => $lang4574
         ]);
         exit;
     }
@@ -141,7 +145,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => $lang4575 . $e->getMessage()
     ]);
     exit;
 }
@@ -196,10 +200,11 @@ $arReq = "incoming";
 
 // Validation
 if (empty($arName) && empty($arApiKey) && empty($arHostSn)) {
+	global $lang4576;
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => 'At least name, API key, or Host SN is required'
+        'message' => $lang4576
     ]);
     exit;
 }
@@ -263,10 +268,11 @@ try {
         $updateStmt->bindValue(':ip', $realIp, SQLITE3_TEXT);
         
         if ($updateStmt->execute()) {
+			global $lang4577;
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'message' => 'Agent data updated successfully',
+                'message' => $lang4577,
                 'action' => 'updated',
                 'ip' => $realIp,
                 'protocol' => $realProtocol,
@@ -278,10 +284,11 @@ try {
                 'host_sn' => $arHostSn
             ]);
         } else {
+			global $lang4578;
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to update agent data'
+                'message' => $lang4578
             ]);
         }
     } else {
@@ -325,11 +332,11 @@ try {
         
         if ($insertStmt->execute()) {
             $insertId = $db->lastInsertRowID();
-            
+            global $lang4579;
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'message' => 'New agent registered successfully',
+                'message' => $lang4579,
                 'action' => 'inserted',
                 'request_id' => $insertId,
                 'ip' => $realIp,
@@ -340,10 +347,11 @@ try {
                 'host_sn' => $arHostSn
             ]);
         } else {
+			global $lang4580;
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to save agent data'
+                'message' => $lang4580
             ]);
         }
     }

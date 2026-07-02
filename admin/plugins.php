@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -83,9 +84,25 @@ $menu = require_once 'menu.php';
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <script>
     window.apiConfig = <?php echo json_encode($js_config); ?>;
-    console.log('API Config loaded:', window.apiConfig);
+    //console.log('API Config loaded:', window.apiConfig);
     </script>
     <style>
         .status-group {
@@ -620,7 +637,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -631,10 +648,10 @@ $menu = require_once 'menu.php';
 	<i class="fas fa-puzzle-piece"></i> Plugins Manager
         <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang3985; ?>"></i>
     </div>
 </div>
 
@@ -647,26 +664,26 @@ $menu = require_once 'menu.php';
         <div class="widget">
             <div class="widget-header">
                 <div class="widget-header-left">
-                    <h3><i class="fas fa-puzzle-piece"></i> Plugins Manager</h3>
+                    <h3><i class="fas fa-puzzle-piece"></i> <?php echo $lang3986; ?></h3>
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search plugins..." autocomplete="off">
+                        <input type="text" id="searchInput" placeholder="<?php echo $lang3987; ?>" autocomplete="off">
                     </div>
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadPluginModal">
-                    <i class="fas fa-upload"></i> Upload ZIP
+                    <i class="fas fa-upload"></i> <?php echo $lang3988; ?>
                 </button>
             </div>
             <div class="widget-body">
                 <ul class="nav nav-tabs-custom" id="pluginTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="installed-tab" data-bs-toggle="tab" data-bs-target="#installed" type="button" role="tab">
-                            <i class="fas fa-check-circle"></i> Installed Plugins
+                            <i class="fas fa-check-circle"></i> <?php echo $lang3989; ?>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="repository-tab" data-bs-toggle="tab" data-bs-target="#repository" type="button" role="tab">
-                            <i class="fas fa-database"></i> Repository
+                            <i class="fas fa-database"></i> <?php echo $lang3990; ?>
                         </button>
                     </li>
                 </ul>
@@ -675,7 +692,7 @@ $menu = require_once 'menu.php';
                     <div class="tab-pane fade show active" id="installed" role="tabpanel">
                         <div id="pluginsContainer" class="grid-view">
                             <div class="text-center py-5 col-12">
-                                <div class="loading-spinner-sm"></div> Loading plugins...
+                                <div class="loading-spinner-sm"></div> <?php echo $lang3991; ?>
                             </div>
                         </div>
                     </div>
@@ -683,7 +700,7 @@ $menu = require_once 'menu.php';
                     <div class="tab-pane fade" id="repository" role="tabpanel">
                         <div id="repositoryContainer">
                             <div class="text-center py-5 col-12">
-                                <div class="loading-spinner-sm"></div> Loading repository...
+                                <div class="loading-spinner-sm"></div> <?php echo $lang3992; ?>
                             </div>
                         </div>
                     </div>
@@ -698,15 +715,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-upload"></i> Upload Plugin ZIP</h5>
+                <h5 class="modal-title"><i class="fas fa-upload"></i> <?php echo $lang3994; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
 				<form id="uploadPluginForm" enctype="multipart/form-data">
 					<div class="mb-3">
-						<label for="pluginFileInput" class="form-label">Select Plugin ZIP File</label>
+						<label for="pluginFileInput" class="form-label"><?php echo $lang3995; ?></label>
 						<input type="file" class="form-control" id="pluginFileInput" name="plugin_file" accept=".zip">
-						<small class="text-muted">Only ZIP files are supported. The file will be saved to repository.</small>
+						<small class="text-muted"><?php echo $lang3996; ?></small>
 					</div>
 					<div id="uploadProgress" class="mt-3" style="display: none;">
 						<div class="progress">
@@ -716,8 +733,8 @@ $menu = require_once 'menu.php';
 				</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-				<button type="button" class="btn btn-primary" id="uploadPluginBtn">Upload</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3997; ?></button>
+				<button type="button" class="btn btn-primary" id="uploadPluginBtn"><?php echo $lang3998; ?></button>
 			</div>
         </div>
     </div>
@@ -728,21 +745,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-download"></i> Install Plugin</h5>
+                <h5 class="modal-title"><i class="fas fa-download"></i> <?php echo $lang3999; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Do you want to install plugin <strong id="installPluginName"></strong>?</p>
+                <p><?php echo $lang4000; ?> <strong id="installPluginName"></strong>?</p>
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" id="deleteAfterInstall">
                     <label class="form-check-label" for="deleteAfterInstall">
-                        Delete ZIP file from repository after installation
+                        <?php echo $lang4001; ?>
                     </label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmInstallBtn">Install</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang4002; ?></button>
+                <button type="button" class="btn btn-success" id="confirmInstallBtn"><?php echo $lang4003; ?></button>
             </div>
         </div>
     </div>
@@ -753,14 +770,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" id="pluginModalHeader">
-                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Plugin Details</h5>
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> <?php echo $lang4004; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="pluginDetailsContent">
                 <!-- Dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang4005; ?></button>
             </div>
         </div>
     </div>
@@ -771,15 +788,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Plugin Details (Repository)</h5>
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> <?php echo $lang4006; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="repoDetailsContent">
                 <!-- Dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="installFromDetailsBtn">Install</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang4007; ?></button>
+                <button type="button" class="btn btn-success" id="installFromDetailsBtn"><?php echo $lang4008; ?></button>
             </div>
         </div>
     </div>
@@ -875,7 +892,7 @@ function renderInstalledPlugins() {
         $('#pluginsContainer').html(`
             <div class="no-results col-12">
                 <i class="fas fa-search"></i>
-                <p>No plugins found matching "${escapeHtml(searchTerm)}"</p>
+                <p><?php echo $lang4009; ?> "${escapeHtml(searchTerm)}"</p>
             </div>
         `);
         return;
@@ -884,8 +901,8 @@ function renderInstalledPlugins() {
     let html = '';
     filtered.forEach(plugin => {
         let statusClass = plugin.enabled ? 'status-enabled' : 'status-disabled';
-        let statusText = plugin.enabled ? 'Enabled' : 'Disabled';
-        let description = stripHtml(plugin.description || 'No description');
+        let statusText = plugin.enabled ? '<?php echo $lang4010; ?>' : '<?php echo $lang4011; ?>';
+        let description = stripHtml(plugin.description || '<?php echo $lang4012; ?>');
         let truncatedDesc = truncateText(description, 100);
         let isTogglingThis = activeToggling.has(plugin.folder);
         
@@ -917,10 +934,10 @@ function renderInstalledPlugins() {
                         <span class="toggle-slider"></span>
                     </label>
                     <button class="btn btn-info btn-sm" onclick="showPluginDetails('${escapeHtml(plugin.folder)}')" ${isTogglingThis ? 'disabled' : ''}>
-                        <i class="fas fa-info-circle"></i> Details
+                        <i class="fas fa-info-circle"></i> <?php echo $lang4013; ?>
                     </button>
                     <button class="btn btn-danger btn-sm" onclick="deletePlugin('${escapeHtml(plugin.folder)}')" ${isTogglingThis ? 'disabled' : ''}>
-                        <i class="fas fa-trash"></i> Delete
+                        <i class="fas fa-trash"></i> <?php echo $lang4014; ?>
                     </button>
                 </div>
             </div>
@@ -981,7 +998,7 @@ async function togglePluginStatus(pluginName, enable, $toggle) {
             renderInstalledPlugins();
             
         } else {
-            showAlert(result.message || `Failed to ${enable ? 'enable' : 'disable'} plugin`, 'danger');
+            showAlert(result.message || `<?php echo $lang4015; ?> ${enable ? '<?php echo $lang4016; ?>' : '<?php echo $lang4017; ?>'} <?php echo $lang4018; ?>`, 'danger');
             $toggle.prop('checked', !enable);
             $card.removeClass('toggling');
             $toggle.prop('disabled', false);
@@ -990,7 +1007,7 @@ async function togglePluginStatus(pluginName, enable, $toggle) {
         }
     } catch (error) {
         console.error('Toggle error:', error);
-        showAlert(`Error: ${error.message}`, 'danger');
+        showAlert(`<?php echo $lang4019; ?> ${error.message}`, 'danger');
         $toggle.prop('checked', !enable);
         $card.removeClass('toggling');
         $toggle.prop('disabled', false);
@@ -1051,7 +1068,7 @@ async function loadPlugins(skipRender = false) {
             $('#pluginsContainer').html(`
                 <div class="text-center py-5 col-12">
                     <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                    <p class="text-danger">Failed to load plugins</p>
+                    <p class="text-danger"><?php echo $lang4020; ?></p>
                 </div>
             `);
         }
@@ -1066,7 +1083,7 @@ function renderRepositoryPlugins() {
         $('#repositoryContainer').html(`
             <div class="no-results">
                 <i class="fas fa-search"></i>
-                <p>No plugins found in repository matching "${escapeHtml(searchTerm)}"</p>
+                <p><?php echo $lang4021; ?> "${escapeHtml(searchTerm)}"</p>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadPluginModal">
                     <i class="fas fa-upload"></i> Upload plugin ZIP
                 </button>
@@ -1085,14 +1102,14 @@ function renderRepositoryPlugins() {
         
         if (plugin.installed) {
             let statusColor = plugin.installed_enabled ? '#28a745' : '#dc3545';
-            let statusText = plugin.installed_enabled ? 'Enabled' : 'Disabled';
+            let statusText = plugin.installed_enabled ? '<?php echo $lang4023; ?>' : '<?php echo $lang4024; ?>';
             let versionMatch = !plugin.installed_version || plugin.installed_version === plugin.version;
-            let versionWarning = versionMatch ? '' : `<span class="text-warning ms-1" title="Version mismatch: installed ${plugin.installed_version}, available ${plugin.version}"><i class="fas fa-exclamation-triangle"></i></span>`;
+            let versionWarning = versionMatch ? '' : `<span class="text-warning ms-1" title="<?php echo $lang4025; ?> ${plugin.installed_version}, <?php echo $lang4026; ?> ${plugin.version}"><i class="fas fa-exclamation-triangle"></i></span>`;
             
             installStatusHtml = `
                 <div class="installed-badge ms-2" style="display: inline-block;">
                     <span class="badge" style="background: ${statusColor}; color: white;">
-                        <i class="fas ${plugin.installed_enabled ? 'fa-check-circle' : 'fa-ban'}"></i> Installed (${statusText})
+                        <i class="fas ${plugin.installed_enabled ? 'fa-check-circle' : 'fa-ban'}"></i> <?php echo $lang4027; ?> (${statusText})
                         ${versionWarning}
                     </span>
                 </div>
@@ -1120,17 +1137,17 @@ function renderRepositoryPlugins() {
                 <div class="repository-actions" onclick="event.stopPropagation()">
                     ${!plugin.installed ? 
                         `<button class="btn btn-success btn-sm me-2" onclick="confirmInstall('${escapeHtml(plugin.filename)}', '${escapeHtml(plugin.name)}')">
-                            <i class="fas fa-download"></i> Install
+                            <i class="fas fa-download"></i> <?php echo $lang4028; ?>
                         </button>` :
                         `<button class="btn btn-secondary btn-sm me-2" disabled title="Plugin already installed">
-                            <i class="fas fa-check"></i> Installed
+                            <i class="fas fa-check"></i> <?php echo $lang4029; ?>
                         </button>
                         <a href="plugins.php" class="btn btn-info btn-sm me-2">
-                            <i class="fas fa-cog"></i> Manage
+                            <i class="fas fa-cog"></i> <?php echo $lang4030; ?>
                         </a>`
                     }
                     <button class="btn btn-danger btn-sm" onclick="deleteRepositoryZip('${escapeHtml(plugin.filename)}', ${plugin.installed})" ${plugin.installed ? 'data-installed="true"' : ''}>
-                        <i class="fas fa-trash"></i> Delete
+                        <i class="fas fa-trash"></i> <?php echo $lang4031; ?>
                     </button>
                 </div>
             </div>
@@ -1149,7 +1166,7 @@ async function loadRepository() {
         $('#repositoryContainer').html(`
             <div class="text-center py-5 col-12">
                 <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                <p class="text-danger">Failed to load repository</p>
+                <p class="text-danger"><?php echo $lang4032; ?></p>
             </div>
         `);
     }
@@ -1172,12 +1189,12 @@ function showRepoDetails(filename, event) {
     
     if (plugin.installed) {
         let statusColor = plugin.installed_enabled ? 'success' : 'danger';
-        let statusText = plugin.installed_enabled ? 'Enabled' : 'Disabled';
+        let statusText = plugin.installed_enabled ? '<?php echo $lang4033; ?>' : '<?php echo $lang4034; ?>';
         installStatusHtml = `
             <div class="alert alert-${statusColor} mt-3">
                 <i class="fas ${plugin.installed_enabled ? 'fa-check-circle' : 'fa-ban'}"></i>
-                Plugin is already installed (${statusText})
-                ${plugin.installed_version !== plugin.version ? `<br><small class="text-warning">Warning: Installed version ${plugin.installed_version} differs from repository version ${plugin.version}</small>` : ''}
+                <?php echo $lang4035; ?> (${statusText})
+                ${plugin.installed_version !== plugin.version ? `<br><small class="text-warning"><?php echo $lang4036; ?> ${plugin.installed_version} <?php echo $lang4037; ?> ${plugin.version}</small>` : ''}
             </div>
         `;
         installButtonDisabled = true;
@@ -1195,19 +1212,19 @@ function showRepoDetails(filename, event) {
         <hr>
         <div class="row">
             <div class="col-md-6">
-                <p><strong><i class="fas fa-user"></i> Author:</strong> ${escapeHtml(plugin.author)}</p>
-                <p><strong><i class="fas fa-file-archive"></i> Size:</strong> ${escapeHtml(plugin.size)}</p>
-                <p><strong><i class="fas fa-calendar"></i> Modified:</strong> ${escapeHtml(plugin.modified)}</p>
+                <p><strong><i class="fas fa-user"></i> <?php echo $lang4038; ?></strong> ${escapeHtml(plugin.author)}</p>
+                <p><strong><i class="fas fa-file-archive"></i> <?php echo $lang4039; ?></strong> ${escapeHtml(plugin.size)}</p>
+                <p><strong><i class="fas fa-calendar"></i> <?php echo $lang4040; ?></strong> ${escapeHtml(plugin.modified)}</p>
             </div>
             <div class="col-md-6">
-                <p><strong><i class="fas fa-signal"></i> Multinet:</strong> ${escapeHtml(plugin.info?.multinet || plugin.multinet || 'Unknown')}</p>
-                <p><strong><i class="fab fa-php"></i> PHP Version:</strong> ${escapeHtml(plugin.info?.php_version || 'Any')}</p>
-                <p><strong><i class="fab fa-linux"></i> OS:</strong> ${escapeHtml(plugin.info?.os || 'Any')}</p>
+                <p><strong><i class="fas fa-signal"></i> <?php echo $lang4041; ?></strong> ${escapeHtml(plugin.info?.multinet || plugin.multinet || 'Unknown')}</p>
+                <p><strong><i class="fab fa-php"></i> <?php echo $lang4042; ?></strong> ${escapeHtml(plugin.info?.php_version || 'Any')}</p>
+                <p><strong><i class="fab fa-linux"></i> <?php echo $lang4043; ?></strong> ${escapeHtml(plugin.info?.os || 'Any')}</p>
             </div>
         </div>
         <hr>
         <div class="repo-details-full-description">
-            <strong><i class="fas fa-align-left"></i> Description:</strong>
+            <strong><i class="fas fa-align-left"></i> <?php echo $lang4044; ?></strong>
             <p class="mt-2">${escapeHtml(fullDescription)}</p>
         </div>
     `;
@@ -1216,14 +1233,14 @@ function showRepoDetails(filename, event) {
     $('#repoDetailsModal').modal('show');
     
     if (installButtonDisabled) {
-        $('#installFromDetailsBtn').prop('disabled', true).text('Already Installed');
+        $('#installFromDetailsBtn').prop('disabled', true).text('<?php echo $lang4045; ?>');
     } else {
-        $('#installFromDetailsBtn').prop('disabled', false).text('Install');
+        $('#installFromDetailsBtn').prop('disabled', false).text('<?php echo $lang4046; ?>');
     }
 }
 
 async function deletePlugin(pluginName) {
-    if (!confirm(`Are you sure you want to delete plugin "${pluginName}"? This action cannot be undone.`)) {
+    if (!confirm(`<?php echo $lang4047; ?> "${pluginName}"? <?php echo $lang4048; ?>`)) {
         return;
     }
     
@@ -1235,15 +1252,15 @@ async function deletePlugin(pluginName) {
         await refreshMenu();
         renderInstalledPlugins();
     } else {
-        showAlert(result.message || 'Failed to delete plugin', 'danger');
+        showAlert(result.message || '<?php echo $lang4049; ?>', 'danger');
     }
 }
 
 async function deleteRepositoryZip(filename, isInstalled = false) {
-    let confirmMessage = `Are you sure you want to delete "${filename}" from repository?`;
+    let confirmMessage = `<?php echo $lang4050; ?> "${filename}" <?php echo $lang4051; ?>`;
     
     if (isInstalled) {
-        confirmMessage = `WARNING: This plugin is currently installed!\n\nDeleting the ZIP file from repository will NOT uninstall the plugin. It will only remove the archive.\n\n${confirmMessage}`;
+        confirmMessage = `<?php echo $lang4052; ?>\n\n<?php echo $lang4053; ?>\n\n${confirmMessage}`;
     }
     
     if (!confirm(confirmMessage)) {
@@ -1255,7 +1272,7 @@ async function deleteRepositoryZip(filename, isInstalled = false) {
         showAlert(result.message, 'success');
         await loadRepository();
     } else {
-        showAlert(result.error || 'Failed to delete file', 'danger');
+        showAlert(result.error || '<?php echo $lang4054; ?>', 'danger');
     }
 }
 
@@ -1269,7 +1286,7 @@ async function installFromRepository(deleteAfter) {
     if (!currentInstallFilename) return;
     
     $('#installConfirmModal').modal('hide');
-    showAlert('Installing plugin...', 'info');
+    showAlert('<?php echo $lang4055; ?>', 'info');
     
     let result = await apiCall('install_from_repository', 'POST', { 
         filename: currentInstallFilename,
@@ -1284,7 +1301,7 @@ async function installFromRepository(deleteAfter) {
         await refreshMenu();
         renderInstalledPlugins();
     } else {
-        showAlert(result.error || 'Failed to install plugin', 'danger');
+        showAlert(result.error || '<?php echo $lang4056; ?>', 'danger');
     }
     
     currentInstallFilename = null;
@@ -1295,7 +1312,7 @@ async function showPluginDetails(pluginName) {
     if (result.success && result.data) {
         let p = result.data;
         let statusColor = p.enabled ? 'success' : 'danger';
-        let statusText = p.enabled ? 'Enabled' : 'Disabled';
+        let statusText = p.enabled ? '<?php echo $lang4057; ?>' : '<?php echo $lang4058; ?>';
         let description = stripHtml(p.description || 'No description');
         
         let html = `
@@ -1309,13 +1326,13 @@ async function showPluginDetails(pluginName) {
                 </div>
                 <div class="col-md-8">
                     <table class="table table-sm">
-                        <tr><th width="35%">Version:</th><td>${escapeHtml(p.version || '1.0.0')}</td>
-                        <tr><th>Author:</th><td>${escapeHtml(p.author || 'Unknown')}</td>
-                        <tr><th>Release Date:</th><td>${escapeHtml(p.release_date || 'Unknown')}</td>
-                        <tr><th>PHP Version:</th><td>${escapeHtml(p.php_version || 'Any')}</td>
-                        <tr><th>OS:</th><td>${escapeHtml(p.os || 'Any')}</td>
-                        <tr><th>Multinet:</th><td>${escapeHtml(p.multinet || 'Unknown')}</td>
-                        <tr><th>Description:</th><td>${escapeHtml(description)}</td>
+                        <tr><th width="35%"><?php echo $lang4059; ?></th><td>${escapeHtml(p.version || '1.0.0')}</td>
+                        <tr><th><?php echo $lang4060; ?></th><td>${escapeHtml(p.author || 'Unknown')}</td>
+                        <tr><th><?php echo $lang4061; ?></th><td>${escapeHtml(p.release_date || 'Unknown')}</td>
+                        <tr><th><?php echo $lang4062; ?></th><td>${escapeHtml(p.php_version || 'Any')}</td>
+                        <tr><th><?php echo $lang4063; ?></th><td>${escapeHtml(p.os || 'Any')}</td>
+                        <tr><th><?php echo $lang4064; ?></th><td>${escapeHtml(p.multinet || 'Unknown')}</td>
+                        <tr><th><?php echo $lang4065; ?></th><td>${escapeHtml(description)}</td>
                     </table>
                 </div>
             </div>
@@ -1324,7 +1341,7 @@ async function showPluginDetails(pluginName) {
         $('#pluginDetailsContent').html(html);
         $('#pluginDetailsModal').modal('show');
     } else {
-        showAlert('Failed to load plugin details', 'danger');
+        showAlert('<?php echo $lang4066; ?>', 'danger');
     }
 }
 
@@ -1346,7 +1363,7 @@ async function uploadPlugin(file) {
 async function refreshAllData() {
     await loadPlugins();
     await loadRepository();
-    showAlert('Data updated', 'success');
+    showAlert('<?php echo $lang4068; ?>', 'success');
 }
 
 // Search handler with debounce
@@ -1372,7 +1389,7 @@ $(document).ready(function() {
         if (fileInput && fileInput.files.length > 0) {
             uploadPlugin(fileInput.files[0]);
         } else {
-            showAlert('Please select a ZIP file', 'danger');
+            showAlert('<?php echo $lang4069; ?>', 'danger');
         }
     });
     

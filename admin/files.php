@@ -21,7 +21,7 @@
  */
 
 require_once 'config.php';
-
+require_once 'lang/loader.php';
 isAuthenticated();
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
@@ -32,6 +32,8 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     exit;
 }
+
+$menu = require_once 'menu.php';
 
 // Получаем API ключ по ID хоста
 $stmt = $db->prepare("SELECT idHost, hostName, hostApiKey, hostProto, hostIp, hostPort, hostApiPath FROM hosts WHERE idHost = :id");
@@ -70,7 +72,6 @@ $js_config = [
     'isLocalhost' => ($current_host_id == 1)
 ];
 
-$menu = require_once 'menu.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,8 +84,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -271,7 +288,7 @@ $menu = require_once 'menu.php';
         <i class="fas fa-folder"></i> File Manager
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
     </div>
@@ -295,33 +312,33 @@ $menu = require_once 'menu.php';
                     </div>
                     <div class="mt-2">
                         <select class="drive-select" id="leftDriveSelect">
-                            <option value="">Loading drives...</option>
+                            <option value=""><?php echo $lang75; ?></option>
                         </select>
                     </div>
                 </div>
                 <div class="search-bar">
                     <div class="d-flex gap-2 flex-wrap">
-                        <input type="text" id="leftSearchInput" class="search-input flex-grow-1" placeholder="Search (supports *.ext wildcards)">
-                        <label class="btn btn-sm btn-outline-secondary"><input type="checkbox" id="leftRecursiveCheckbox"> Recursive</label>
-                        <button type="button" id="leftSearchBtn" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
-                        <button type="button" id="leftClearSearchBtn" class="btn btn-secondary btn-sm" style="display:none"><i class="fas fa-times"></i> Clear</button>
+                        <input type="text" id="leftSearchInput" class="search-input flex-grow-1" placeholder="<?php echo $lang154; ?>">
+                        <label class="btn btn-sm btn-outline-secondary"><input type="checkbox" id="leftRecursiveCheckbox"> <?php echo $lang76; ?></label>
+                        <button type="button" id="leftSearchBtn" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> <?php echo $lang77; ?></button>
+                        <button type="button" id="leftClearSearchBtn" class="btn btn-secondary btn-sm" style="display:none"><i class="fas fa-times"></i> <?php echo $lang78; ?></button>
                     </div>
                     <div id="leftSearchInfo" class="search-result-info" style="display:none"></div>
                 </div>
                 <div class="panel-toolbar">
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.selectAll('left')"><i class="fas fa-check-double"></i> All</button>
-                        <button type="button" class="btn-apple btn-apple-primary" onclick="fileManager.copyToOther('left')"><i class="fas fa-copy"></i> Copy →</button>
-                        <button type="button" class="btn-apple btn-apple-warning" onclick="fileManager.moveToOther('left')"><i class="fas fa-arrow-right"></i> Move →</button>
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.copyToClipboard('left')"><i class="fas fa-copy"></i> Copy</button>
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.cutToClipboard('left')"><i class="fas fa-cut"></i> Cut</button>
-                        <button type="button" class="btn-apple btn-apple-success" onclick="fileManager.pasteFromClipboard('left')"><i class="fas fa-paste"></i> Paste</button>
-                        <button type="button" class="btn-apple btn-apple-danger" onclick="fileManager.deleteSelected('left')"><i class="fas fa-trash"></i> Delete</button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.selectAll('left')"><i class="fas fa-check-double"></i> <?php echo $lang79; ?></button>
+                        <button type="button" class="btn-apple btn-apple-primary" onclick="fileManager.copyToOther('left')"><i class="fas fa-copy"></i> <?php echo $lang80; ?> →</button>
+                        <button type="button" class="btn-apple btn-apple-warning" onclick="fileManager.moveToOther('left')"><i class="fas fa-arrow-right"></i> <?php echo $lang81; ?> →</button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.copyToClipboard('left')"><i class="fas fa-copy"></i> <?php echo $lang82; ?></button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.cutToClipboard('left')"><i class="fas fa-cut"></i> <?php echo $lang83; ?></button>
+                        <button type="button" class="btn-apple btn-apple-success" onclick="fileManager.pasteFromClipboard('left')"><i class="fas fa-paste"></i> <?php echo $lang84; ?></button>
+                        <button type="button" class="btn-apple btn-apple-danger" onclick="fileManager.deleteSelected('left')"><i class="fas fa-trash"></i> <?php echo $lang85; ?></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#uploadModal" onclick="fileManager.setActivePanel('left')"><i class="fas fa-upload"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#mkdirModal" onclick="fileManager.setActivePanel('left')"><i class="fas fa-folder-plus"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal"><i class="fas fa-archive"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#permissionsModal"><i class="fas fa-lock"></i></button>
-                        <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#aclModal"><i class="fas fa-users"></i> ACL</button>
+                        <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#aclModal"><i class="fas fa-users"></i> <?php echo $lang86; ?></button>
                     </div>
                 </div>
                 <div class="file-list" id="leftFileList">
@@ -344,27 +361,27 @@ $menu = require_once 'menu.php';
                 </div>
                 <div class="search-bar">
                     <div class="d-flex gap-2 flex-wrap">
-                        <input type="text" id="rightSearchInput" class="search-input flex-grow-1" placeholder="Search (supports *.ext wildcards)">
-                        <label class="btn btn-sm btn-outline-secondary"><input type="checkbox" id="rightRecursiveCheckbox"> Recursive</label>
-                        <button type="button" id="rightSearchBtn" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
-                        <button type="button" id="rightClearSearchBtn" class="btn btn-secondary btn-sm" style="display:none"><i class="fas fa-times"></i> Clear</button>
+                        <input type="text" id="rightSearchInput" class="search-input flex-grow-1" placeholder="<?php echo $lang154; ?>">
+                        <label class="btn btn-sm btn-outline-secondary"><input type="checkbox" id="rightRecursiveCheckbox"> <?php echo $lang76; ?></label>
+                        <button type="button" id="rightSearchBtn" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> <?php echo $lang77; ?></button>
+                        <button type="button" id="rightClearSearchBtn" class="btn btn-secondary btn-sm" style="display:none"><i class="fas fa-times"></i> <?php echo $lang78; ?></button>
                     </div>
                     <div id="rightSearchInfo" class="search-result-info" style="display:none"></div>
                 </div>
                 <div class="panel-toolbar">
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.selectAll('right')"><i class="fas fa-check-double"></i> All</button>
-                        <button type="button" class="btn-apple btn-apple-primary" onclick="fileManager.copyToOther('right')"><i class="fas fa-copy"></i> ← Copy</button>
-                        <button type="button" class="btn-apple btn-apple-warning" onclick="fileManager.moveToOther('right')"><i class="fas fa-arrow-left"></i> ← Move</button>
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.copyToClipboard('right')"><i class="fas fa-copy"></i> Copy</button>
-                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.cutToClipboard('right')"><i class="fas fa-cut"></i> Cut</button>
-                        <button type="button" class="btn-apple btn-apple-success" onclick="fileManager.pasteFromClipboard('right')"><i class="fas fa-paste"></i> Paste</button>
-                        <button type="button" class="btn-apple btn-apple-danger" onclick="fileManager.deleteSelected('right')"><i class="fas fa-trash"></i> Delete</button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.selectAll('right')"><i class="fas fa-check-double"></i> <?php echo $lang79; ?></button>
+                        <button type="button" class="btn-apple btn-apple-primary" onclick="fileManager.copyToOther('right')"><i class="fas fa-copy"></i> ← <?php echo $lang80; ?></button>
+                        <button type="button" class="btn-apple btn-apple-warning" onclick="fileManager.moveToOther('right')"><i class="fas fa-arrow-left"></i> ← <?php echo $lang81; ?></button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.copyToClipboard('right')"><i class="fas fa-copy"></i> <?php echo $lang82; ?></button>
+                        <button type="button" class="btn-apple btn-apple-secondary" onclick="fileManager.cutToClipboard('right')"><i class="fas fa-cut"></i> <?php echo $lang83; ?></button>
+                        <button type="button" class="btn-apple btn-apple-success" onclick="fileManager.pasteFromClipboard('right')"><i class="fas fa-paste"></i> <?php echo $lang84; ?></button>
+                        <button type="button" class="btn-apple btn-apple-danger" onclick="fileManager.deleteSelected('right')"><i class="fas fa-trash"></i> <?php echo $lang85; ?></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#uploadModal" onclick="fileManager.setActivePanel('right')"><i class="fas fa-upload"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#mkdirModal" onclick="fileManager.setActivePanel('right')"><i class="fas fa-folder-plus"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal"><i class="fas fa-archive"></i></button>
                         <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#permissionsModal"><i class="fas fa-lock"></i></button>
-                        <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#aclModal"><i class="fas fa-users"></i> ACL</button>
+                        <button type="button" class="btn-apple btn-apple-secondary" data-bs-toggle="modal" data-bs-target="#aclModal"><i class="fas fa-users"></i> <?php echo $lang86; ?></button>
                     </div>
                 </div>
                 <div class="file-list" id="rightFileList">
@@ -378,7 +395,7 @@ $menu = require_once 'menu.php';
 <!-- Progress Widget -->
 <div id="progressWidget" class="progress-widget" style="display: none;">
     <div class="widget-header">
-        <span><i class="fas fa-exchange-alt"></i> <span id="progressType">Processing</span>...</span>
+        <span><i class="fas fa-exchange-alt"></i> <span id="progressType"><?php echo $lang87; ?></span>...</span>
         <div class="widget-actions">
             <button id="viewLogBtn" title="View Log"><i class="fas fa-file-alt"></i></button>
             <button id="cancelProgressBtn" title="Cancel"><i class="fas fa-times"></i></button>
@@ -391,7 +408,7 @@ $menu = require_once 'menu.php';
         </svg>
         <div class="progress-text" id="progressPercent">0%</div>
     </div>
-    <div class="progress-status" id="progressStatus">Waiting...</div>
+    <div class="progress-status" id="progressStatus"><?php echo $lang88; ?></div>
     <div class="progress-current-file" id="progressCurrentFile"></div>
 </div>
 
@@ -400,14 +417,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-file-alt"></i> Operation Log</h5>
+                <h5 class="modal-title"><i class="fas fa-file-alt"></i> <?php echo $lang89; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <pre id="logContent" style="max-height: 400px; overflow: auto; font-size: 12px;"></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang90; ?></button>
             </div>
         </div>
     </div>
@@ -418,19 +435,19 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Upload Files</h5>
+                <h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> <?php echo $lang91; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Select Files</label>
+                    <label class="form-label"><?php echo $lang92; ?></label>
                     <input type="file" class="form-control" id="uploadFiles" multiple>
                 </div>
-                <div class="alert alert-primary">Uploading to: <strong id="uploadTargetPanel">Left Panel</strong></div>
+                <div class="alert alert-primary"><?php echo $lang93; ?>: <strong id="uploadTargetPanel"><?php echo $lang94; ?></strong></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="fileManager.uploadFiles()">Upload</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" onclick="fileManager.uploadFiles()"><?php echo $lang96; ?></button>
             </div>
         </div>
     </div>
@@ -441,19 +458,19 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-folder-plus"></i> New Folder</h5>
+                <h5 class="modal-title"><i class="fas fa-folder-plus"></i> <?php echo $lang97; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Folder name</label>
+                    <label class="form-label"><?php echo $lang98; ?></label>
                     <input type="text" class="form-control" id="mkdirName" placeholder="New Folder" required>
                 </div>
-                <div class="alert alert-primary">Creating in: <strong id="mkdirTargetPanel">Left Panel</strong></div>
+                <div class="alert alert-primary"><?php echo $lang99; ?>: <strong id="mkdirTargetPanel"><?php echo $lang94; ?></strong></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="fileManager.createDirectory()">Create</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" onclick="fileManager.createDirectory()"><?php echo $lang100; ?></button>
             </div>
         </div>
     </div>
@@ -464,32 +481,32 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-archive"></i> Archive / Extract</h5>
+                <h5 class="modal-title"><i class="fas fa-archive"></i> <?php echo $lang101; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Action</label>
+                    <label class="form-label"><?php echo $lang102; ?></label>
                     <select class="form-select" id="archiveAction">
-                        <option value="create">Create Archive (TAR)</option>
-                        <option value="extract">Extract Archive(s)</option>
+                        <option value="create"><?php echo $lang103; ?></option>
+                        <option value="extract"><?php echo $lang104; ?></option>
                     </select>
                 </div>
                 <div id="createArchiveOptions">
                     <div class="mb-3">
-                        <label class="form-label">Archive Name</label>
+                        <label class="form-label"><?php echo $lang105; ?></label>
                         <input type="text" class="form-control" id="archiveName" placeholder="my_archive">
                     </div>
                 </div>
                 <div id="extractArchiveOptions" style="display:none">
-                    <div class="alert alert-info">Selected archive files will be extracted to folders with the same name.</div>
+                    <div class="alert alert-info"><?php echo $lang106; ?></div>
                 </div>
-                <div class="alert alert-primary">Working in: <strong id="archiveTargetPanel">Left Panel</strong></div>
+                <div class="alert alert-primary"><?php echo $lang107; ?>: <strong id="archiveTargetPanel"><?php echo $lang108; ?></strong></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="createArchiveBtn" onclick="fileManager.createArchive()">Create Archive</button>
-                <button type="button" class="btn btn-primary" id="extractArchiveBtn" style="display:none" onclick="fileManager.extractArchive()">Extract</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" id="createArchiveBtn" onclick="fileManager.createArchive()"><?php echo $lang109; ?></button>
+                <button type="button" class="btn btn-primary" id="extractArchiveBtn" style="display:none" onclick="fileManager.extractArchive()"><?php echo $lang110; ?></button>
             </div>
         </div>
     </div>
@@ -500,42 +517,42 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-lock"></i> Set Permissions</h5>
+                <h5 class="modal-title"><i class="fas fa-lock"></i> <?php echo $lang111; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Owner</label>
+                    <label class="form-label"><?php echo $lang112; ?></label>
                     <select class="form-select" id="permOwner">
-                        <option value="">-- Keep current --</option>
+                        <option value="">-- <?php echo $lang113; ?> --</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Group</label>
+                    <label class="form-label"><?php echo $lang114; ?></label>
                     <select class="form-select" id="permGroup">
-                        <option value="">-- Keep current --</option>
+                        <option value="">-- <?php echo $lang113; ?> --</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Permissions (Unix octal)</label>
+                    <label class="form-label"><?php echo $lang115; ?></label>
                     <select class="form-select" id="permValue">
-                        <option value="0755">755 (rwxr-xr-x) - Default for directories</option>
-                        <option value="0644">644 (rw-r--r--) - Default for files</option>
-                        <option value="0777">777 (rwxrwxrwx) - Full access</option>
-                        <option value="0700">700 (rwx------) - Owner only</option>
-                        <option value="0750">750 (rwxr-x---) - Owner and group</option>
-                        <option value="0666">666 (rw-rw-rw-) - Read/write all</option>
-                        <option value="0600">600 (rw-------) - Read/write owner only</option>
+                        <option value="0755">755 (rwxr-xr-x) - <?php echo $lang116; ?></option>
+                        <option value="0644">644 (rw-r--r--) - <?php echo $lang117; ?></option>
+                        <option value="0777">777 (rwxrwxrwx) - <?php echo $lang118; ?></option>
+                        <option value="0700">700 (rwx------) - <?php echo $lang119; ?></option>
+                        <option value="0750">750 (rwxr-x---) - <?php echo $lang120; ?></option>
+                        <option value="0666">666 (rw-rw-rw-) - <?php echo $lang121; ?></option>
+                        <option value="0600">600 (rw-------) - <?php echo $lang122; ?></option>
                     </select>
                 </div>
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" id="permRecursive">
-                    <label class="form-check-label" for="permRecursive">Apply recursively to all subdirectories and files</label>
+                    <label class="form-check-label" for="permRecursive"><?php echo $lang123; ?></label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="fileManager.setPermissions()">Apply Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" onclick="fileManager.setPermissions()"><?php echo $lang124; ?></button>
             </div>
         </div>
     </div>
@@ -546,61 +563,62 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-users"></i> ACL Permissions</h5>
+                <h5 class="modal-title"><i class="fas fa-users"></i> <?php echo $lang125; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info">ACL allows fine-grained permissions for users and groups.</div>
+                <div class="alert alert-info"><?php echo $lang126; ?></div>
                 <div class="card mb-3">
-                    <div class="card-header">User ACL Entries</div>
+                    <div class="card-header"><?php echo $lang127; ?></div>
                     <div class="card-body" id="aclUsersContainer">
                         <div class="acl-row">
                             <select class="acl-user-select form-select">
-                                <option value="">-- Select User --</option>
+                                <option value="">-- <?php echo $lang128; ?> --</option>
                             </select>
                             <select class="acl-user-perms form-select">
-                                <option value="r">Read only (r--)</option>
-                                <option value="rw">Read-Write (rw-)</option>
-                                <option value="rx">Read-Execute (r-x)</option>
-                                <option value="rwx">Full (rwx)</option>
+                                <option value="r"><?php echo $lang129; ?> (r--)</option>
+                                <option value="rw"><?php echo $lang130; ?> (rw-)</option>
+                                <option value="rx"><?php echo $lang131; ?> (r-x)</option>
+                                <option value="rwx"><?php echo $lang132; ?> (rwx)</option>
                             </select>
                             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.acl-row').remove()"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="fileManager.addAclUserRow()"><i class="fas fa-plus"></i> Add User</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="fileManager.addAclUserRow()"><i class="fas fa-plus"></i> <?php echo $lang133; ?></button>
                 </div>
                 <div class="card mb-3">
-                    <div class="card-header">Group ACL Entries</div>
+                    <div class="card-header"><?php echo $lang134; ?></div>
                     <div class="card-body" id="aclGroupsContainer">
                         <div class="acl-row">
                             <select class="acl-group-select form-select">
-                                <option value="">-- Select Group --</option>
+                                <option value="">-- <?php echo $lang135; ?> --</option>
                             </select>
                             <select class="acl-group-perms form-select">
-                                <option value="r">Read only (r--)</option>
-                                <option value="rw">Read-Write (rw-)</option>
-                                <option value="rx">Read-Execute (r-x)</option>
-                                <option value="rwx">Full (rwx)</option>
+                                <option value="r"><?php echo $lang129; ?> (r--)</option>
+                                <option value="rw"><?php echo $lang130; ?> (rw-)</option>
+                                <option value="rx"><?php echo $lang131; ?> (r-x)</option>
+                                <option value="rwx"><?php echo $lang132; ?> (rwx)</option>
                             </select>
                             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.acl-row').remove()"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="fileManager.addAclGroupRow()"><i class="fas fa-plus"></i> Add Group</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="fileManager.addAclGroupRow()"><i class="fas fa-plus"></i> <?php echo $lang136; ?></button>
                 </div>
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" id="aclRecursive">
-                    <label class="form-check-label" for="aclRecursive">Apply recursively</label>
+                    <label class="form-check-label" for="aclRecursive"><?php echo $lang137; ?></label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="fileManager.setAclPermissions()">Apply ACL</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang95; ?></button>
+                <button type="button" class="btn btn-primary" onclick="fileManager.setAclPermissions()"><?php echo $lang138; ?></button>
             </div>
         </div>
     </div>
 </div>
 
 <script src="lib/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+<script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 
 <script>
 const API_BASE = "<?php echo $current_host_id == 1 ? 'api/files_api.php' : rtrim($host_url, '/') . '/files_api.php'; ?>";
@@ -679,7 +697,7 @@ const fileManager = {
 			return await response.json();
 		} catch (error) {
 			console.error('API Error:', error);
-			this.showAlert('Network error', 'danger');
+			this.showAlert('<?php echo $lang139; ?>', 'danger');
 			return null;
        
 		}
@@ -704,22 +722,22 @@ const fileManager = {
     populateUserSelects: function() {
         const options = this.systemUsers.map(u => `<option value="${this.escapeHtml(u)}">${this.escapeHtml(u)}</option>`).join('');
         document.querySelectorAll('.acl-user-select').forEach(select => {
-            select.innerHTML = '<option value="">-- Select User --</option>' + options;
+            select.innerHTML = '<option value="">-- <?php echo $lang128; ?> --</option>' + options;
         });
         const permOwner = document.getElementById('permOwner');
         if (permOwner) {
-            permOwner.innerHTML = '<option value="">-- Keep current --</option>' + options;
+            permOwner.innerHTML = '<option value="">-- <?php echo $lang113; ?> --</option>' + options;
         }
     },
     
     populateGroupSelects: function() {
         const options = this.systemGroups.map(g => `<option value="${this.escapeHtml(g)}">${this.escapeHtml(g)}</option>`).join('');
         document.querySelectorAll('.acl-group-select').forEach(select => {
-            select.innerHTML = '<option value="">-- Select Group --</option>' + options;
+            select.innerHTML = '<option value="">-- <?php echo $lang135; ?> --</option>' + options;
         });
         const permGroup = document.getElementById('permGroup');
         if (permGroup) {
-            permGroup.innerHTML = '<option value="">-- Keep current --</option>' + options;
+            permGroup.innerHTML = '<option value="">-- <?php echo $lang113; ?> --</option>' + options;
         }
     },
     
@@ -786,12 +804,12 @@ const fileManager = {
         if (!fileList) return;
         
         if (state.items.length === 0 && !state.search) {
-            fileList.innerHTML = '<div class="text-center text-muted p-4"><i class="fas fa-folder-open"></i> Empty directory</div>';
+            fileList.innerHTML = '<div class="text-center text-muted p-4"><i class="fas fa-folder-open"></i> <?php echo $lang140; ?></div>';
             return;
         }
         
         if (state.items.length === 0 && state.search) {
-            fileList.innerHTML = `<div class="text-center text-muted p-4"><i class="fas fa-search"></i> No files matching "${this.escapeHtml(state.search)}"</div>`;
+            fileList.innerHTML = `<div class="text-center text-muted p-4"><i class="fas fa-search"></i> <?php echo $lang141; ?> "${this.escapeHtml(state.search)}"</div>`;
             return;
         }
         
@@ -855,7 +873,7 @@ const fileManager = {
         
         if (state.search) {
             if (searchInfo) {
-                searchInfo.innerHTML = `<i class="fas fa-info-circle"></i> Found ${state.items.length} item(s) matching "${this.escapeHtml(state.search)}"`;
+                searchInfo.innerHTML = `<i class="fas fa-info-circle"></i> <?php echo $lang142; ?> ${state.items.length} <?php echo $lang143; ?> "${this.escapeHtml(state.search)}"`;
                 searchInfo.style.display = 'block';
             }
             if (clearBtn) clearBtn.style.display = 'inline-block';
@@ -979,7 +997,7 @@ const fileManager = {
     // Copy to other panel
     copyToOther: async function(panel) {
         if (!this.hasSelected(panel)) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1014,7 +1032,7 @@ const fileManager = {
     // Move to other panel
     moveToOther: async function(panel) {
         if (!this.hasSelected(panel)) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1049,7 +1067,7 @@ const fileManager = {
     // Copy to clipboard
     copyToClipboard: async function(panel) {
         if (!this.hasSelected(panel)) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1076,7 +1094,7 @@ const fileManager = {
     // Cut to clipboard
     cutToClipboard: async function(panel) {
         if (!this.hasSelected(panel)) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1103,7 +1121,7 @@ const fileManager = {
     // Paste from clipboard
     pasteFromClipboard: async function(panel) {
         if (!this.clipboard || !this.clipboard.files || this.clipboard.files.length === 0) {
-            this.showAlert('Clipboard is empty.', 'warning');
+            this.showAlert('<?php echo $lang145; ?>', 'warning');
             return false;
         }
         
@@ -1135,12 +1153,12 @@ const fileManager = {
     // Delete selected files
     deleteSelected: async function(panel) {
         if (!this.hasSelected(panel)) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>.', 'warning');
             return false;
         }
         
         const count = this.getSelectedFiles(panel).length;
-        if (!confirm(`Delete ${count} selected item(s)? This cannot be undone.`)) {
+        if (!confirm(`<?php echo $lang146; ?> ${count} <?php echo $lang147; ?>`)) {
             return false;
         }
         
@@ -1170,7 +1188,7 @@ const fileManager = {
         const files = fileInput.files;
         
         if (files.length === 0) {
-            this.showAlert('Please select files to upload.', 'warning');
+            this.showAlert('<?php echo $lang148; ?>', 'warning');
             return;
         }
         
@@ -1212,7 +1230,7 @@ const fileManager = {
         const dirName = document.getElementById('mkdirName').value.trim();
         
         if (!dirName) {
-            this.showAlert('Please enter a folder name.', 'warning');
+            this.showAlert('<?php echo $lang149; ?>', 'warning');
             return;
         }
         
@@ -1240,7 +1258,7 @@ const fileManager = {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
         if (selectedFiles.length === 0) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1271,7 +1289,7 @@ const fileManager = {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
         if (selectedFiles.length === 0) {
-            this.showAlert('Please select at least one archive.', 'warning');
+            this.showAlert('<?php echo $lang150; ?>', 'warning');
             return false;
         }
         
@@ -1300,7 +1318,7 @@ const fileManager = {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
         if (selectedFiles.length === 0) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1338,7 +1356,7 @@ const fileManager = {
         const selectedFiles = this.getSelectedFiles(this.activePanel);
         
         if (selectedFiles.length === 0) {
-            this.showAlert('Please select at least one item.', 'warning');
+            this.showAlert('<?php echo $lang144; ?>', 'warning');
             return false;
         }
         
@@ -1447,7 +1465,7 @@ const fileManager = {
                 
                 if (data.completed) {
                     this.stopProgressMonitoring();
-                    this.showAlert('Operation completed successfully!', 'success');
+                    this.showAlert('<?php echo $lang151; ?>', 'success');
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);
@@ -1494,7 +1512,7 @@ const fileManager = {
     // View operation log
     viewOperationLog: async function() {
         if (!this.currentOperationId) {
-            this.showAlert('No active operation', 'warning');
+            this.showAlert('<?php echo $lang152; ?>', 'warning');
             return;
         }
         
@@ -1540,7 +1558,7 @@ const fileManager = {
             indicator.innerHTML = `
                 <i class="fas fa-${this.clipboard.operation === 'copy' ? 'copy' : 'cut'}"></i>
                 ${this.clipboard.files.length} item(s) in clipboard
-                <a href="#" onclick="fileManager.clearClipboard(); return false;" class="ms-2"><i class="fas fa-times"></i> Clear</a>
+                <a href="#" onclick="fileManager.clearClipboard(); return false;" class="ms-2"><i class="fas fa-times"></i> <?php echo $lang78; ?></a>
             `;
             indicator.style.display = 'block';
         } else {
@@ -1555,7 +1573,7 @@ const fileManager = {
         if (result && result.success) {
             this.clipboard = null;
             this.updateClipboardIndicator();
-            this.showAlert('Clipboard cleared.', 'info');
+            this.showAlert('<?php echo $lang153; ?>', 'info');
         }
     },
     
@@ -1585,14 +1603,14 @@ const fileManager = {
         div.className = 'acl-row';
         div.innerHTML = `
             <select class="acl-user-select form-select">
-                <option value="">-- Select User --</option>
+                <option value="">-- <?php echo $lang128; ?> --</option>
                 ${options}
             </select>
             <select class="acl-user-perms form-select">
-                <option value="r">Read only (r--)</option>
-                <option value="rw">Read-Write (rw-)</option>
-                <option value="rx">Read-Execute (r-x)</option>
-                <option value="rwx">Full (rwx)</option>
+                <option value="r"><?php echo $lang129; ?> (r--)</option>
+                <option value="rw"><?php echo $lang130; ?> (rw-)</option>
+                <option value="rx"><?php echo $lang131; ?> (r-x)</option>
+                <option value="rwx"><?php echo $lang132; ?> (rwx)</option>
             </select>
             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.acl-row').remove()"><i class="fas fa-trash"></i></button>
         `;
@@ -1610,14 +1628,14 @@ const fileManager = {
         div.className = 'acl-row';
         div.innerHTML = `
             <select class="acl-group-select form-select">
-                <option value="">-- Select Group --</option>
+                <option value="">-- <?php echo $lang135; ?> --</option>
                 ${options}
             </select>
             <select class="acl-group-perms form-select">
-                <option value="r">Read only (r--)</option>
-                <option value="rw">Read-Write (rw-)</option>
-                <option value="rx">Read-Execute (r-x)</option>
-                <option value="rwx">Full (rwx)</option>
+                <option value="r"><?php echo $lang129; ?> (r--)</option>
+                <option value="rw"><?php echo $lang130; ?> (rw-)</option>
+                <option value="rx"><?php echo $lang131; ?> (r-x)</option>
+                <option value="rwx"><?php echo $lang132; ?> (rwx)</option>
             </select>
             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.acl-row').remove()"><i class="fas fa-trash"></i></button>
         `;

@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 $cacheFile = '/var/www/minib/tmp/raid_api_cache.json';
 $cacheTTL = 3;
 
@@ -731,7 +733,19 @@ function getRaidCandidates() {
     $candidates = [];
     $disks = getAvailableDisksForRaid();
     
+    $systemDisk = getSystemDisk();
+    
     foreach ($disks as $disk) {
+        $diskName = $disk['name'];
+        
+        if ($diskName === $systemDisk) {
+            continue;
+        }
+        
+        if (strpos($diskName, $systemDisk) === 0 && preg_match('/^' . preg_quote($systemDisk, '/') . '\d+$/', $diskName)) {
+            continue;
+        }
+        
         if ($disk['available'] && !$disk['is_raid_array']) {
             $candidates[] = [
                 'name' => $disk['name'],
@@ -744,6 +758,33 @@ function getRaidCandidates() {
     setCached('raid_candidates', $candidates);
     
     return $candidates;
+}
+
+function getSystemDisk() {
+    $output = shell_exec("mount | grep ' / ' | awk '{print $1}'");
+    if ($output) {
+        $device = trim($output);
+        if (preg_match('/\/dev\/(sd[a-z]|nvme\d+n\d+|vd[a-z]|hd[a-z])/', $device, $matches)) {
+            return $matches[1];
+        }
+    }
+    
+    $output = shell_exec("lsblk -no NAME,MOUNTPOINT | grep ' /$' | awk '{print $1}'");
+    if ($output) {
+        $device = trim($output);
+        return preg_replace('/\d+$/', '', $device);
+    }
+    
+    $output = shell_exec("df / | tail -1 | awk '{print $1}'");
+    if ($output) {
+        $device = trim($output);
+        if (preg_match('/\/dev\/(sd[a-z]+)/', $device, $matches)) {
+            return preg_replace('/\d+$/', '', $matches[1]);
+        }
+    }
+    
+    error_log("Cannot determine system disk, using fallback");
+    return 'sda';
 }
 
 function getBrokenRaids() {
@@ -798,18 +839,20 @@ function getBrokenRaids() {
 }
 
 function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
-    if (!preg_match('/^md\d+$/', $name)) {
-        return ['success' => false, 'error' => 'Invalid RAID name. Use md0, md1, etc.'];
+    global $lang1616, $lang1617, $lang1618, $lang1619, $lang1620, $lang1621, $lang1622, $lang1623, $lang1624, $lang1625, $lang1626, $lang1627, $lang1628, $lang1629, $lang1630, $lang1631, $lang1632;
+	
+	if (!preg_match('/^md\d+$/', $name)) {
+        return ['success' => false, 'error' => $lang1616 ];
     }
     
     $mdstat = execCmd("cat /proc/mdstat 2>/dev/null | grep '^" . preg_quote($name, '/') . " '", true, 5);
     if (!empty($mdstat)) {
-        return ['success' => false, 'error' => 'RAID array ' . $name . ' already exists'];
+        return ['success' => false, 'error' => $lang1617 . $name . $lang1618 ];
     }
     
     $minDisks = ['0' => 2, '1' => 2, '4' => 3, '5' => 3, '6' => 4, '10' => 4, 'linear' => 2];
     if (count($devices) < ($minDisks[$level] ?? 2)) {
-        return ['success' => false, 'error' => 'RAID ' . $level . ' requires at least ' . ($minDisks[$level] ?? 2) . ' devices'];
+        return ['success' => false, 'error' => $lang1619 . $level . $lang1620 . ($minDisks[$level] ?? 2) . $lang1621 ];
     }
     
     $allDevices = array_merge($devices, $spare);
@@ -818,7 +861,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
         $devicePath = "/dev/" . $device;
         
         if (!file_exists($devicePath)) {
-            return ['success' => false, 'error' => "Device {$devicePath} not found"];
+            return ['success' => false, 'error' => $lang1622 . $devicePath . $lang1623 ];
         }
         
         execCmd("fuser -km " . escapeshellarg($devicePath) . " 2>/dev/null", true, 5);
@@ -847,7 +890,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
             
             $stillMounted = execCmd("cat /proc/mounts | grep -E '^" . preg_quote($devicePath, '/') . "\\s'", false, 5);
             if (!empty($stillMounted)) {
-                return ['success' => false, 'error' => "Device {$device} is still mounted at {$mountPoint} and cannot be unmounted"];
+                return ['success' => false, 'error' => $lang1624 . $device . $lang1625 . $mountPoint . $lang1626 ];
             }
         }
         
@@ -858,7 +901,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
             
             $pvCheckAgain = execCmd("pvs --noheadings -o pv_name 2>/dev/null | grep '" . preg_quote($devicePath, '/') . "'", true, 5);
             if (!empty($pvCheckAgain)) {
-                return ['success' => false, 'error' => "Device {$device} is still used as Physical Volume. Please remove it from LVM first via LVM Manager."];
+                return ['success' => false, 'error' => $lang1627 . $device . $lang1628 ];
             }
         }
         
@@ -885,7 +928,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
         $devicePath = "/dev/" . $device;
         $writeTest = execCmd("dd if=/dev/zero of=" . escapeshellarg($devicePath) . " bs=1M count=1 2>&1", true, 10);
         if (strpos($writeTest, 'error') !== false || strpos($writeTest, 'cannot') !== false) {
-            return ['success' => false, 'error' => "Device {$device} is not writable: " . $writeTest];
+            return ['success' => false, 'error' => $lang1629 . $device . $lang1630 . $writeTest];
         }
     }
     
@@ -947,7 +990,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
         }
         
         if (!$arrayFound) {
-            return ['success' => false, 'error' => 'RAID array created but device node not found'];
+            return ['success' => false, 'error' => $lang1631 ];
         }
         
         sleep(2);
@@ -998,7 +1041,7 @@ function createRaid($name, $level, $devices, $spare = [], $chunk = null) {
         
         clearCache();
         
-        return ['success' => true, 'message' => 'RAID array created successfully'];
+        return ['success' => true, 'message' => $lang1632 ];
     }
     
     return ['success' => false, 'error' => $result];
@@ -1033,7 +1076,7 @@ function getSpareDevicesInRaid($mdName) {
 function stopRaid($mdName) {
     execCmd("echo 'clear' > /sys/block/" . escapeshellarg($mdName) . "/md/array_state 2>/dev/null", true, 3);
     execCmd("echo 'remove' > /sys/block/" . escapeshellarg($mdName) . "/md/array_state 2>/dev/null", true, 3);
-    
+    global $lang1633, $lang1634;
     $result = execCmd("mdadm --stop /dev/" . escapeshellarg($mdName) . " 2>&1", true, 10);
     
     sleep(1);
@@ -1042,15 +1085,16 @@ function stopRaid($mdName) {
     clearCache();
     
     if (!$stillExists) {
-        return ['success' => true, 'message' => 'RAID array stopped'];
+        return ['success' => true, 'message' => $lang1633 ];
     }
     
-    return ['success' => false, 'error' => 'Cannot stop RAID array: ' . $result];
+    return ['success' => false, 'error' => $lang1634 . $result];
 }
 
 function startRaid($mdName) {
+	global $lang1635, $lang1636;
     if (raidExists($mdName)) {
-        return ['success' => true, 'message' => 'RAID array already active'];
+        return ['success' => true, 'message' => $lang1635 ];
     }
     
     $result = execCmd("mdadm --assemble /dev/" . escapeshellarg($mdName) . " 2>&1", true, 15);
@@ -1058,7 +1102,7 @@ function startRaid($mdName) {
     clearCache();
     
     if (strpos($result, 'has been started') !== false || strpos($result, 'assembled') !== false) {
-        return ['success' => true, 'message' => 'RAID array started'];
+        return ['success' => true, 'message' => $lang1636 ];
     }
     
     return ['success' => false, 'error' => $result];
@@ -1070,12 +1114,12 @@ function deleteRaid($mdName, $force = false) {
     // 1. ПРОВЕРКА LVM
     // ============================================================
     $lvmInfo = getLVGInfoForRaid($mdName);
-    
+    global $lang1637, $lang1638, $lang1639, $lang1640, $lang1641, $lang1642; 
     if ($lvmInfo['is_pv'] && !$force) {
         $vgName = $lvmInfo['vg_name'] ?: 'unknown';
         return [
             'success' => false,
-            'error' => 'RAID массив используется в LVM как Physical Volume',
+            'error' => $lang1637,
             'in_lvm' => true,
             'vg_name' => $vgName,
             'vg_size' => $lvmInfo['vg_size'],
@@ -1101,7 +1145,7 @@ function deleteRaid($mdName, $force = false) {
     if (!empty($mountPoint) && !$force) {
         return [
             'success' => false,
-            'error' => 'RAID массив смонтирован',
+            'error' => $lang1638,
             'is_mounted' => true,
             'mount_point' => trim($mountPoint)
         ];
@@ -1307,7 +1351,7 @@ function deleteRaid($mdName, $force = false) {
     if (empty($finalCheck) && !$deviceNodeExists) {
         return [
             'success' => true,
-            'message' => "RAID $mdName полностью удален",
+            'message' => $lang1639 . $mdName . $lang1640,
             'cleaned_devices' => $allDevices,
             'extra_cleaned' => $foundExtra,
             'log_file' => $logFile
@@ -1315,7 +1359,7 @@ function deleteRaid($mdName, $force = false) {
     } else {
         return [
             'success' => false,
-            'error' => "RAID $mdName не удален",
+            'error' => $lang1641 . $mdName . $lang1642,
             'mdstat' => $finalCheck,
             'device_node_exists' => $deviceNodeExists,
             'log_file' => $logFile
@@ -1324,7 +1368,8 @@ function deleteRaid($mdName, $force = false) {
 }
 
 function checkRaidBeforeDelete($mdName) {
-    $result = [
+    global $lang1643, $lang1644, $lang1645, $lang1646, $lang1647, $lang1648, $lang1649, $lang1650, $lang1651;
+	$result = [
         'can_delete' => true,
         'errors' => [],
         'warnings' => [],
@@ -1339,7 +1384,7 @@ function checkRaidBeforeDelete($mdName) {
     $lvmInfo = getLVGInfoForRaid($mdName);
     if ($lvmInfo['is_pv']) {
         $result['can_delete'] = false;
-        $result['errors'][] = "RAID массив используется в LVM как Physical Volume (VG: {$lvmInfo['vg_name']})";
+        $result['errors'][] = $lang1643 . $lvmInfo['vg_name'];
         $result['in_lvm'] = true;
         $result['vg_name'] = $lvmInfo['vg_name'];
         $result['vg_size'] = $lvmInfo['vg_size'];
@@ -1351,7 +1396,7 @@ function checkRaidBeforeDelete($mdName) {
     $mountPoint = execCmd("mount | grep '/dev/" . $mdName . "' | awk '{print $3}'", true, 5);
     if (!empty($mountPoint)) {
         $result['can_delete'] = false;
-        $result['errors'][] = "RAID массив смонтирован в {$mountPoint}";
+        $result['errors'][] = $lang1644 . $mountPoint;
         return $result;
     }
     
@@ -1365,22 +1410,22 @@ function checkRaidBeforeDelete($mdName) {
         
         $otherRaid = execLight("mdadm --examine " . escapeshellarg($devicePath) . " 2>/dev/null | grep -E 'Array UUID'", 5);
         if (!empty($otherRaid) && strpos($otherRaid, $mdName) === false) {
-            $result['warnings'][] = "Устройство {$device} принадлежит другому RAID массиву";
+            $result['warnings'][] = $lang1645 . $device . $lang1646;
         }
         
         $fsType = execLight("blkid -o value -s TYPE " . escapeshellarg($devicePath) . " 2>/dev/null", 5);
         if (!empty($fsType) && $fsType !== 'linux_raid_member') {
-            $result['warnings'][] = "На устройстве {$device} обнаружена файловая система {$fsType}";
+            $result['warnings'][] = $lang1647 . $device . $lang1648 . $fsType;
         }
     }
     
     $health = getRaidHealth($mdName);
     if ($health['degraded']) {
-        $result['warnings'][] = "RAID массив находится в деградированном состоянии";
+        $result['warnings'][] = $lang1649;
     }
     
     if ($health['failed_disks'] > 0) {
-        $result['warnings'][] = "Обнаружено {$health['failed_disks']} failed дисков";
+        $result['warnings'][] = $lang1650 . $health['failed_disks'] . $lang1651;
     }
     
     return $result;
@@ -1462,8 +1507,9 @@ function getAllDiskDevices() {
 }
 
 function addDeviceToRaid($mdName, $device) {
-    if (!raidExists($mdName)) {
-        return ['success' => false, 'error' => 'RAID array ' . $mdName . ' does not exist'];
+    global $lang1652, $lang1653, $lang1654;
+	if (!raidExists($mdName)) {
+        return ['success' => false, 'error' => $lang1652 . $mdName . $lang1653];
     }
     
     $checkRaid = execLight("mdadm --examine /dev/" . escapeshellarg($device) . " 2>/dev/null | grep -i 'raid'", 3);
@@ -1476,37 +1522,39 @@ function addDeviceToRaid($mdName, $device) {
     clearCache();
     
     if (strpos($result, 'added') !== false || strpos($result, 're-added') !== false) {
-        return ['success' => true, 'message' => 'Device added to RAID'];
+        return ['success' => true, 'message' => $lang1654];
     }
     
     return ['success' => false, 'error' => $result];
 }
 
 function checkRaid($mdName) {
+	global $lang1655, $lang1656, $lang1657;
     if (!raidExists($mdName)) {
-        return ['success' => false, 'error' => 'RAID array ' . $mdName . ' does not exist'];
+        return ['success' => false, 'error' => $lang1655 . $mdName . $lang1656];
     }
     execCmd("chmod -R 777 /sys/block/" . escapeshellarg($mdName) . "/md/sync_action 2>&1", true, 3);
     $result = execCmd("echo 'check' > /sys/block/" . escapeshellarg($mdName) . "/md/sync_action 2>&1", true, 3);
     
     if (empty($result)) {
         clearCache();
-        return ['success' => true, 'message' => 'Check started'];
+        return ['success' => true, 'message' => $lang1657];
     }
     
     return ['success' => false, 'error' => $result];
 }
 
 function repairRaid($mdName) {
+	global $lang1658, $lang1659, $lang1660;
     if (!raidExists($mdName)) {
-        return ['success' => false, 'error' => 'RAID array ' . $mdName . ' does not exist'];
+        return ['success' => false, 'error' => $lang1658 . $mdName . $lang1659];
     }
     execCmd("chmod -R 777 /sys/block/" . escapeshellarg($mdName) . "/md/sync_action 2>&1", true, 3);
     $result = execCmd("sudo echo 'repair' > /sys/block/" . escapeshellarg($mdName) . "/md/sync_action 2>&1", true, 3);
     
     if (empty($result)) {
         clearCache();
-        return ['success' => true, 'message' => 'Repair started'];
+        return ['success' => true, 'message' => $lang1660];
     }
     
     return ['success' => false, 'error' => $result];
@@ -1558,6 +1606,7 @@ function getRaidDiskStatus($mdName) {
 }
 
 function cleanupStaleRaid($mdName) {
+	global $lang1661, $lang1662, $lang1663, $lang1664, $lang1665, $lang1666, $lang1667;
     $result = [
         'success' => false,
         'cleaned' => false,
@@ -1567,12 +1616,12 @@ function cleanupStaleRaid($mdName) {
     
     $mdstat = execLight("cat /proc/mdstat 2>/dev/null | grep '^" . preg_quote($mdName, '/') . " '", 5);
     if (empty($mdstat)) {
-        $result['message'] = "RAID array $mdName not found";
+        $result['message'] = $lang1661 . $mdName . $lang1662;
         return $result;
     }
     
     if (strpos($mdstat, 'inactive') === false && strpos($mdstat, 'active') !== false) {
-        $result['message'] = "RAID array $mdName is active, cannot cleanup stale";
+        $result['message'] = $lang1663 . $mdName . $lang1664;
         return $result;
     }
     
@@ -1642,10 +1691,10 @@ function cleanupStaleRaid($mdName) {
     if (empty($finalCheck)) {
         $result['success'] = true;
         $result['cleaned'] = true;
-        $result['message'] = "Stale RAID array $mdName cleaned successfully";
+        $result['message'] = $lang1665 . $mdName . $lang1666;
         $result['log_file'] = $logFile;
     } else {
-        $result['message'] = "Failed to clean stale RAID array $mdName";
+        $result['message'] = $lang1667 . $mdName;
         $result['log_file'] = $logFile;
     }
     
@@ -1686,12 +1735,13 @@ function cleanupAllStaleRaids() {
 }
 
 function forceCleanDisk($diskName) {
+	global $lang1668, $lang1669, $lang1670, $lang1671, $lang1672;
     $diskPath = "/dev/" . $diskName;
     $log = [];
     $log[] = "=== FORCE CLEANING DISK: $diskName ===";
     
     if (!file_exists($diskPath)) {
-        return ['success' => false, 'error' => "Disk $diskPath not found"];
+        return ['success' => false, 'error' => $lang1668 . $diskPath . $lang1669];
     }
     
     // ============================================================
@@ -1793,7 +1843,7 @@ function forceCleanDisk($diskName) {
         
         return [
             'success' => true,
-            'message' => "Disk $diskName successfully cleaned",
+            'message' => $lang1670 . $diskName . $lang1671,
             'disk' => $diskName,
             'log' => $log
         ];
@@ -1801,7 +1851,7 @@ function forceCleanDisk($diskName) {
         $log[] = "FAILED: Disk $diskName still has superblock!";
         return [
             'success' => false,
-            'error' => "Failed to clean disk $diskName",
+            'error' => $lang1672 . $diskName,
             'disk' => $diskName,
             'check' => $check,
             'log' => $log
@@ -1812,7 +1862,7 @@ function forceCleanDisk($diskName) {
 function clearMdArray($mdName) {
     $log = [];
     $log[] = "=== Clearing MD array: $mdName ===";
-    
+    global $lang1673, $lang1674, $lang1675;
     execCmd("sudo sh -c 'echo \"clear\" > /sys/block/" . $mdName . "/md/array_state' 2>/dev/null", true, 5);
     sleep(1);
     
@@ -1837,9 +1887,9 @@ function clearMdArray($mdName) {
     $stillExists = execLight("cat /proc/mdstat 2>/dev/null | grep '^" . preg_quote($mdName, '/') . " '", 5);
     
     if (empty($stillExists)) {
-        return ['success' => true, 'message' => "MD array $mdName cleared", 'log' => $log];
+        return ['success' => true, 'message' => $lang1673 . $mdName . $lang1674, 'log' => $log];
     } else {
-        return ['success' => false, 'error' => "Failed to clear $mdName", 'mdstat' => $stillExists];
+        return ['success' => false, 'error' => $lang1675 . $mdName, 'mdstat' => $stillExists];
     }
 }
 
@@ -1899,7 +1949,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = $_GET;
 }
 
-$response = ['success' => false, 'error' => 'Unknown action'];
+global $lang1676;
+$response = ['success' => false, 'error' => $lang1676];
 
 switch ($action) {
     case 'get_all_raid':
@@ -1913,18 +1964,20 @@ switch ($action) {
         break;
         
     case 'get_raid_health':
+	global $lang1677;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1677];
         } else {
             $response = ['success' => true, 'health' => getRaidHealth($name)];
         }
         break;
         
     case 'get_raid_info':
+		global $lang1678, $lang1679;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1678];
         } else {
             $allRaid = getAllRaidArrays();
             $info = null;
@@ -1939,7 +1992,7 @@ switch ($action) {
                 $info['lvm_info'] = getLVGInfoForRaid($name);
                 $response = ['success' => true, 'info' => $info];
             } else {
-                $response = ['success' => false, 'error' => 'RAID array not found'];
+                $response = ['success' => false, 'error' => $lang1679];
             }
         }
         break;
@@ -1953,6 +2006,7 @@ switch ($action) {
         break;
         
     case 'raid_create':
+		global $lang1680, $lang1681, $lang1682;
         $name = $input['name'] ?? '';
         $level = $input['level'] ?? '';
         $devices = $input['devices'] ?? [];
@@ -1960,101 +2014,110 @@ switch ($action) {
         $chunk = $input['chunk'] ?? null;
         
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'Name required'];
+            $response = ['success' => false, 'error' => $lang1680];
         } elseif ($level === '' || $level === null) {
-            $response = ['success' => false, 'error' => 'Level required'];
+            $response = ['success' => false, 'error' => $lang1681];
         } elseif (empty($devices)) {
-            $response = ['success' => false, 'error' => 'Devices required'];
+            $response = ['success' => false, 'error' => $lang1682];
         } else {
             $response = createRaid($name, $level, $devices, $spare, $chunk);
         }
         break;
         
     case 'raid_stop':
+		global $lang1683;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1683];
         } else {
             $response = stopRaid($name);
         }
         break;
         
     case 'raid_start':
+		global $lang1684;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1684];
         } else {
             $response = startRaid($name);
         }
         break;
         
     case 'raid_delete':
+		global $lang1685;
         $name = $input['name'] ?? '';
         $force = $input['force'] ?? false;
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1685];
         } else {
             $response = deleteRaid($name, $force);
         }
         break;
         
     case 'raid_add_device':
+		global $lang1686;
         $name = $input['name'] ?? '';
         $device = $input['device'] ?? '';
         if (empty($name) || empty($device)) {
-            $response = ['success' => false, 'error' => 'RAID name and device required'];
+            $response = ['success' => false, 'error' => $lang1686];
         } else {
             $response = addDeviceToRaid($name, $device);
         }
         break;
         
     case 'raid_check':
+		global $lang1687;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1687];
         } else {
             $response = checkRaid($name);
         }
         break;
         
     case 'raid_repair':
+		global $lang1688;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1688];
         } else {
             $response = repairRaid($name);
         }
         break;
         
     case 'raid_sync_status':
+	global $lang1689;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1689];
         } else {
             $response = ['success' => true, 'status' => getRaidSyncStatus($name)];
         }
         break;
         
     case 'get_disk_status':
+		global $lang1690;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1690];
         } else {
             $response = ['success' => true, 'disks' => getRaidDiskStatus($name)];
         }
         break;
     
     case 'cleanup_stale_raid':
+		global $lang1691, $lang1692, $lang1693;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1691];
         } else {
             $result = cleanupStaleRaid($name);
             if ($result) {
                 clearCache();
-                $response = ['success' => true, 'message' => 'Stale RAID array cleaned up'];
+                $response = ['success' => true, 'message' => $lang1692];
             } else {
-                $response = ['success' => false, 'error' => 'Not a stale RAID array or cleanup failed'];
+                $response = ['success' => false, 'error' => $lang1693];
             }
         }
         break;
@@ -2064,9 +2127,10 @@ switch ($action) {
         break;
     
     case 'check_lvm_raid':
+		global $lang1694;
         $name = $input['name'] ?? '';
         if (empty($name)) {
-            $response = ['success' => false, 'error' => 'RAID name required'];
+            $response = ['success' => false, 'error' => $lang1694];
         } else {
             $lvmInfo = getLVGInfoForRaid($name);
             $response = ['success' => true, 'lvm_info' => $lvmInfo];
@@ -2074,18 +2138,20 @@ switch ($action) {
         break;
     
 	case 'check_raid_before_delete':
+		global $lang1695;
 		$name = $input['name'] ?? '';
 		if (empty($name)) {
-			$response = ['success' => false, 'error' => 'RAID name required'];
+			$response = ['success' => false, 'error' => $lang1695];
 		} else {
 			$response = ['success' => true, 'check' => checkRaidBeforeDelete($name)];
 		}
 		break;
 	
 	case 'cleanup_stale_raid_detailed':
+		global $lang1696;
 		$name = $input['name'] ?? '';
 		if (empty($name)) {
-			$response = ['success' => false, 'error' => 'RAID name required'];
+			$response = ['success' => false, 'error' => $lang1696];
 		} else {
 			$response = cleanupStaleRaid($name);
 		}
@@ -2096,18 +2162,20 @@ switch ($action) {
 		break;
 	
 	case 'force_clean_disk':
+	global $lang1697;
 		$disk = $input['disk'] ?? '';
 		if (empty($disk)) {
-			$response = ['success' => false, 'error' => 'Disk name required'];
+			$response = ['success' => false, 'error' => $lang1697];
 		} else {
 			$response = forceCleanDisk($disk);
 		}
 		break;
 	
 	case 'clear_md_array':
+		global $lang1698;
     $mdName = $input['name'] ?? '';
     if (empty($mdName)) {
-        $response = ['success' => false, 'error' => 'MD name required'];
+        $response = ['success' => false, 'error' => $lang1698];
     } else {
         $response = clearMdArray($mdName);
     }
@@ -2118,7 +2186,8 @@ switch ($action) {
     break;
 	
     default:
-        $response = ['success' => false, 'error' => 'Unknown action: ' . $action];
+		global $lang1699;
+        $response = ['success' => false, 'error' => $lang1699 . $action];
 }
 
 echo json_encode($response, JSON_UNESCAPED_UNICODE);

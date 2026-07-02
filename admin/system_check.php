@@ -23,6 +23,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -83,9 +84,26 @@ $js_config = [
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<link rel="stylesheet" href="style.css">
+	<link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
 	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
 
     <style>
@@ -286,8 +304,8 @@ $js_config = [
         <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle p-3 shadow-sm mb-3" style="width: 70px; height: 70px;">
             <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #007aff;"></i>
         </div>
-        <h1 class="fw-bold" style="font-size: 2.5rem; letter-spacing: -0.5px;">System Checker</h1>
-        <p class="text-secondary">Server configuration diagnostics and recovery</p>
+        <h1 class="fw-bold" style="font-size: 2.5rem; letter-spacing: -0.5px;"><?php echo $lang4410; ?></h1>
+        <p class="text-secondary"><?php echo $lang4411; ?></p>
     </div>
     
     <!-- Control Panel -->
@@ -296,10 +314,10 @@ $js_config = [
             <div class="col-md-4">
                 <div class="d-flex gap-2">
                     <button class="btn-apple" id="runCheckBtn">
-                        <i class="bi bi-arrow-repeat me-2"></i>Check All
+                        <i class="bi bi-arrow-repeat me-2"></i><?php echo $lang4412; ?>
                     </button>
                     <button class="btn-apple-outline" id="fixAllBtn">
-                        <i class="bi bi-hammer me-2"></i>Fix All
+                        <i class="bi bi-hammer me-2"></i><?php echo $lang4413; ?>
                     </button>
                 </div>
             </div>
@@ -308,7 +326,7 @@ $js_config = [
                 <div class="d-flex gap-2">
                     <div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
                 </div>
@@ -317,10 +335,10 @@ $js_config = [
             <div class="col-md-4">
                 <div class="d-flex gap-2 justify-content-md-end">
                     <button class="btn-apple-outline" onclick="showLogs('install')">
-                        <i class="bi bi-file-text me-1"></i>Install Log
+                        <i class="bi bi-file-text me-1"></i><?php echo $lang4414; ?>
                     </button>
                     <button class="btn-apple-outline" onclick="showLogs('error')">
-                        <i class="bi bi-exclamation-triangle me-1"></i>Error Log
+                        <i class="bi bi-exclamation-triangle me-1"></i><?php echo $lang4415; ?>
                     </button>
                 </div>
             </div>
@@ -329,7 +347,7 @@ $js_config = [
         <!-- Общий прогресс -->
         <div class="mt-4" id="globalProgressSection" style="display: none;">
             <div class="d-flex justify-content-between mb-2">
-                <span class="small fw-semibold"><i class="bi bi-hourglass-split me-1"></i>Overall Progress</span>
+                <span class="small fw-semibold"><i class="bi bi-hourglass-split me-1"></i><?php echo $lang4416; ?></span>
                 <span class="small text-secondary" id="progressPercent">0%</span>
             </div>
             <div class="progress-apple">
@@ -348,7 +366,7 @@ $js_config = [
         <div class="row">
                 <div class="d-flex gap-2 align-items-center justify-content-center">
                     <a class="btn-apple" href="index.php">
-                        <i class="bi bi-back me-2"></i>Dashboard
+                        <i class="bi bi-back me-2"></i><?php echo $lang4417; ?>
                     </a>
                 </div>
 			</div>
@@ -359,17 +377,17 @@ $js_config = [
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-terminal me-2"></i><span id="logModalTitle">System Logs</span></h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-terminal me-2"></i><span id="logModalTitle"><?php echo $lang4418; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="log-viewer" id="logContent">
-                    <div class="text-center text-secondary p-4">Loading logs...</div>
+                    <div class="text-center text-secondary p-4"><?php echo $lang4419; ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn-apple" id="refreshLogBtn"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang4420; ?></button>
+                <button type="button" class="btn-apple" id="refreshLogBtn"><i class="bi bi-arrow-clockwise me-1"></i><?php echo $lang4421; ?></button>
             </div>
         </div>
     </div>
@@ -381,19 +399,19 @@ $js_config = [
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-semibold">
-                    <i class="bi bi-laptop me-2"></i>Server Diagnostics
+                    <i class="bi bi-laptop me-2"></i><?php echo $lang4422; ?>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="globalModalBody">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary mb-3" role="status"></div>
-                    <p>Starting system check...</p>
+                    <p><?php echo $lang4423; ?></p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn-apple" id="globalFixAllBtn">Fix All</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang4424; ?></button>
+                <button type="button" class="btn-apple" id="globalFixAllBtn"><?php echo $lang4425; ?></button>
             </div>
         </div>
     </div>
@@ -436,17 +454,17 @@ function showToast(message, type = 'success') {
 // Запуск полной проверки
 async function runFullCheck(showProgress = true) {
     if (isChecking) {
-        showToast('Check already in progress', 'warning');
+        showToast('<?php echo $lang4426; ?>', 'warning');
         return;
     }
     
     isChecking = true;
-    $('#runCheckBtn').html('<i class="bi bi-arrow-repeat animate-pulse me-2"></i>Checking...');
+    $('#runCheckBtn').html('<i class="bi bi-arrow-repeat animate-pulse me-2"></i><?php echo $lang4427; ?>');
     $('#runCheckBtn').prop('disabled', true);
     
     if (showProgress) {
         $('#globalProgressSection').show();
-        updateGlobalProgress(0, 'Starting check...');
+        updateGlobalProgress(0, '<?php echo $lang4428; ?>');
     }
     
     const headers = {};
@@ -466,27 +484,27 @@ async function runFullCheck(showProgress = true) {
             renderResults(data.results);
             updateStats();
             if (showProgress) {
-                updateGlobalProgress(100, 'Check completed');
+                updateGlobalProgress(100, '<?php echo $lang4429; ?>');
                 setTimeout(() => $('#globalProgressSection').fadeOut(), 2000);
             }
-            showToast('Check completed', 'success');
+            showToast('<?php echo $lang4430; ?>', 'success');
         } else {
-            throw new Error('Error getting data');
+            throw new Error('<?php echo $lang4431; ?>');
         }
     } catch (error) {
         console.error(error);
-        showToast('Error during system check', 'danger');
+        showToast('<?php echo $lang4432; ?>', 'danger');
         $('#checksContainer').html(`
             <div class="apple-card p-5 text-center">
                 <i class="bi bi-wifi-off" style="font-size: 3rem; color: #ff3b30;"></i>
-                <h5 class="mt-3">Connection Error</h5>
-                <p class="text-secondary">Could not connect to API. Check if system_check_api.php is available</p>
-                <button class="btn-apple mt-2" onclick="location.reload()">Refresh</button>
+                <h5 class="mt-3"><?php echo $lang4433; ?></h5>
+                <p class="text-secondary"><?php echo $lang4434; ?></p>
+                <button class="btn-apple mt-2" onclick="location.reload()"><?php echo $lang4435; ?></button>
             </div>
         `);
     } finally {
         isChecking = false;
-        $('#runCheckBtn').html('<i class="bi bi-arrow-repeat me-2"></i>Check All');
+        $('#runCheckBtn').html('<i class="bi bi-arrow-repeat me-2"></i><?php echo $lang4436; ?>');
         $('#runCheckBtn').prop('disabled', false);
     }
 }
@@ -531,15 +549,15 @@ function renderResults(results) {
                             </div>
                             <div>
                                 <div class="fw-semibold small">${item.name}</div>
-                                <div class="text-secondary small">${item.status ? '✓ Working' : '✗ Needs attention'}</div>
+                                <div class="text-secondary small">${item.status ? '✓ <?php echo $lang4437; ?>' : '✗ <?php echo $lang4438; ?>'}</div>
                             </div>
                         </div>
                         ${!item.status ? `
                             <button class="btn btn-sm btn-outline-primary rounded-pill fix-item-btn" data-category="${catKey}" data-item="${itemKey}">
-                                <i class="bi bi-hammer me-1"></i>Fix
+                                <i class="bi bi-hammer me-1"></i><?php echo $lang4439; ?>
                             </button>
                         ` : `
-                            <span class="text-success small"><i class="bi bi-check-circle"></i> OK</span>
+                            <span class="text-success small"><i class="bi bi-check-circle"></i> <?php echo $lang4440; ?></span>
                         `}
                     </div>
                 </div>
@@ -596,26 +614,26 @@ async function fixSingleItem(category, item, buttonElement = null) {
         const result = await response.json();
         
         if (result.success) {
-            showToast(result.message || 'Fixed successfully', 'success');
+            showToast(result.message || '<?php echo $lang4441; ?>', 'success');
             await runFullCheck(false);
         } else {
-            showToast('Error: ' + (result.message || 'unknown error'), 'danger');
+            showToast('<?php echo $lang4442; ?> ' + (result.message || 'unknown error'), 'danger');
             btn.html(originalHtml).prop('disabled', false);
         }
     } catch (error) {
         console.error('Fix error:', error);
-        showToast('Network error during fix: ' + error.message, 'danger');
+        showToast('<?php echo $lang4443; ?> ' + error.message, 'danger');
         btn.html(originalHtml).prop('disabled', false);
     }
 }
 
 // Исправление всего
 async function fixEverything() {
-    if (!confirm('Are you sure you want to fix ALL issues? Packages will be reinstalled and settings will be changed.')) return;
+    if (!confirm('<?php echo $lang4444; ?>')) return;
     
-    $('#fixAllBtn').html('<i class="bi bi-hourglass-split animate-pulse me-2"></i>Fixing...').prop('disabled', true);
+    $('#fixAllBtn').html('<i class="bi bi-hourglass-split animate-pulse me-2"></i><?php echo $lang4445; ?>').prop('disabled', true);
     $('#globalProgressSection').show();
-    updateGlobalProgress(0, 'Starting mass fix...');
+    updateGlobalProgress(0, '<?php echo $lang4446; ?>');
     
     try {
         const formData = new URLSearchParams();
@@ -642,18 +660,18 @@ async function fixEverything() {
         const result = await response.json();
         
         if (result.success) {
-            updateGlobalProgress(100, 'All issues fixed!');
-            showToast('All components successfully fixed', 'success');
+            updateGlobalProgress(100, '<?php echo $lang4447; ?>');
+            showToast('<?php echo $lang4448; ?>', 'success');
             await runFullCheck(false);
         } else {
             throw new Error(result.message || 'API returned error');
         }
     } catch (error) {
         console.error('Fix all error:', error);
-        showToast('Error during mass fix: ' + error.message, 'danger');
-        updateGlobalProgress(0, 'Fix failed: ' + error.message);
+        showToast('<?php echo $lang4449; ?> ' + error.message, 'danger');
+        updateGlobalProgress(0, '<?php echo $lang4450; ?> ' + error.message);
     } finally {
-        $('#fixAllBtn').html('<i class="bi bi-hammer me-2"></i>Fix All').prop('disabled', false);
+        $('#fixAllBtn').html('<i class="bi bi-hammer me-2"></i><?php echo $lang4451; ?>').prop('disabled', false);
         setTimeout(() => $('#globalProgressSection').fadeOut(), 3000);
     }
 }
@@ -673,7 +691,7 @@ function updateStats() {
     const percent = total > 0 ? (fixed / total * 100).toFixed(0) : 0;
     $('#globalProgressBar').css('width', percent + '%');
     $('#progressPercent').text(percent + '%');
-    $('#statusMessage').html(`<i class="bi bi-check2-circle"></i> Ready: ${fixed}/${total} items`);
+    $('#statusMessage').html(`<i class="bi bi-check2-circle"></i> <?php echo $lang4452; ?> ${fixed}/${total} items`);
 }
 
 function updateGlobalProgress(percent, message) {
@@ -696,13 +714,13 @@ function toggleCategory(catId) {
 // Показ логов
 async function showLogs(type) {
     currentLogType = type;
-    $('#logModalTitle').html(type === 'install' ? '<i class="bi bi-file-text me-2"></i>Install Log' : '<i class="bi bi-exclamation-triangle me-2"></i>Error Log');
+    $('#logModalTitle').html(type === 'install' ? '<i class="bi bi-file-text me-2"></i><?php echo $lang4453; ?>' : '<i class="bi bi-exclamation-triangle me-2"></i><?php echo $lang4454; ?>');
     $('#logModal').modal('show');
     await loadLogs();
 }
 
 async function loadLogs() {
-    $('#logContent').html('<div class="text-center text-secondary p-4"><div class="spinner-border text-primary"></div><p class="mt-2">Loading logs...</p></div>');
+    $('#logContent').html('<div class="text-center text-secondary p-4"><div class="spinner-border text-primary"></div><p class="mt-2"><?php echo $lang4455; ?></p></div>');
     
     try {
         const headers = {};
@@ -718,13 +736,13 @@ async function loadLogs() {
         
         if (data.success && data.content) {
             const formatted = data.content.split('\n').map(line => `<div class="log-line">${escapeHtml(line)}</div>`).join('');
-            $('#logContent').html(formatted || '<div class="text-secondary p-4 text-center">Log is empty</div>');
+            $('#logContent').html(formatted || '<div class="text-secondary p-4 text-center"><?php echo $lang4456; ?></div>');
         } else {
-            $('#logContent').html('<div class="text-secondary p-4 text-center">No log data</div>');
+            $('#logContent').html('<div class="text-secondary p-4 text-center"><?php echo $lang4457; ?></div>');
         }
     } catch (e) {
         console.error('Load logs error:', e);
-        $('#logContent').html('<div class="text-danger p-4 text-center">Error loading logs</div>');
+        $('#logContent').html('<div class="text-danger p-4 text-center"><?php echo $lang4458; ?></div>');
     }
 }
 
@@ -745,7 +763,7 @@ window.openSystemChecker = function() {
     modalBody.html(`
         <div class="text-center py-5">
             <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p>Starting diagnostics...</p>
+            <p><?php echo $lang4459; ?></p>
         </div>
     `);
     
@@ -756,17 +774,17 @@ window.openSystemChecker = function() {
             if (data.success) {
                 renderModalResults(data.results);
             } else {
-                modalBody.html('<div class="alert alert-danger m-3">Error loading data</div>');
+                modalBody.html('<div class="alert alert-danger m-3"><?php echo $lang4460; ?></div>');
             }
         })
         .catch(err => {
-            modalBody.html('<div class="alert alert-danger m-3">Network error</div>');
+            modalBody.html('<div class="alert alert-danger m-3"><?php echo $lang4461; ?></div>');
         });
     
     // Handler for "Fix All" button in modal
     $('#globalFixAllBtn').off('click').on('click', async function() {
-        if (!confirm('Fix all issues?')) return;
-        $(this).html('<i class="bi bi-hourglass-split me-2"></i>Fixing...').prop('disabled', true);
+        if (!confirm('<?php echo $lang4462; ?>')) return;
+        $(this).html('<i class="bi bi-hourglass-split me-2"></i><?php echo $lang4463; ?>').prop('disabled', true);
         
         const formData = new URLSearchParams();
         formData.append('action', 'fix_all');
@@ -780,15 +798,15 @@ window.openSystemChecker = function() {
         const result = await resp.json();
         
         if (result.success) {
-            showToast('Fix completed', 'success');
+            showToast('<?php echo $lang4464; ?>', 'success');
             const newResp = await fetch('api/system_check_api.php?action=check_all');
             const newData = await newResp.json();
             if (newData.success) renderModalResults(newData.results);
         } else {
-            showToast('Fix error', 'danger');
+            showToast('<?php echo $lang4465; ?>', 'danger');
         }
         
-        $(this).html('Fix All').prop('disabled', false);
+        $(this).html('<?php echo $lang4466; ?>').prop('disabled', false);
     });
 };
 
@@ -803,14 +821,14 @@ function renderModalResults(results) {
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center p-2 rounded border" style="background: #f8f9fa;">
                         <span><span style="color: ${statusColor}">${statusText}</span> ${item.name}</span>
-                        ${!item.status ? `<button class="btn btn-sm btn-link quick-fix-modal" data-cat="${catKey}" data-item="${itemKey}">Fix</button>` : ''}
+                        ${!item.status ? `<button class="btn btn-sm btn-link quick-fix-modal" data-cat="${catKey}" data-item="${itemKey}"><?php echo $lang4467; ?></button>` : ''}
                     </div>
                 </div>
             `;
         }
         html += `</div>`;
     }
-    html += `<div class="alert alert-info mt-3 small">For mass fixing use the button below</div></div>`;
+    html += `<div class="alert alert-info mt-3 small"><?php echo $lang4468; ?></div></div>`;
     $('#globalModalBody').html(html);
     
     $('.quick-fix-modal').on('click', async function() {
@@ -833,7 +851,7 @@ function renderModalResults(results) {
         const resp = await fetch('api/system_check_api.php?action=check_all');
         const newData = await resp.json();
         if (newData.success) renderModalResults(newData.results);
-        showToast('Fixed', 'success');
+        showToast('<?php echo $lang4469; ?>', 'success');
     });
 }
 

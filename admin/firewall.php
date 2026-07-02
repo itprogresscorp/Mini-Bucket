@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -87,8 +88,24 @@ $menu = require_once 'menu.php';
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         * {
@@ -592,7 +609,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
@@ -609,7 +626,7 @@ $menu = require_once 'menu.php';
         <span><i class="bi bi-shield-check me-2"></i> Firewall</span>
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
         <div id="ufwStatusWidget" class="d-flex align-items-center gap-3"></div>
@@ -619,12 +636,12 @@ $menu = require_once 'menu.php';
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" onclick="openAddRuleModal()"><i class="fas fa-plus"></i> Add Rule</a></li>
-                <li><a class="dropdown-item" href="#" onclick="openAddAppRuleModal()"><i class="fas fa-tools"></i> From Service</a></li>
-                <li><a class="dropdown-item" href="#" onclick="quickBlockIP()"><i class="fas fa-ban"></i> Block IP</a></li>
+                <li><a class="dropdown-item" href="#" onclick="openAddRuleModal()"><i class="fas fa-plus me-2"></i><?php echo $lang3164; ?></a></li>
+                <li><a class="dropdown-item" href="#" onclick="openAddAppRuleModal()"><i class="fas fa-tools me-2"></i><?php echo $lang3165; ?></a></li>
+                <li><a class="dropdown-item" href="#" onclick="quickBlockIP()"><i class="fas fa-ban me-2"></i><?php echo $lang3166; ?></a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="#" onclick="resetAllRules()"><i class="fas fa-trash"></i> Reset All Rules</a></li>
-                <li><a class="dropdown-item" href="#" onclick="refreshRules()"><i class="fas fa-repeat"></i> Refresh</a></li>
+                <li><a class="dropdown-item text-danger" href="#" onclick="resetAllRules()"><i class="fas fa-trash me-2"></i><?php echo $lang3167; ?></a></li>
+                <li><a class="dropdown-item" href="#" onclick="refreshRules()"><i class="fas fa-repeat me-2"></i><?php echo $lang3168; ?></a></li>
             </ul>
         </div>
     </div>
@@ -638,24 +655,24 @@ $menu = require_once 'menu.php';
         <ul class="nav nav-tabs-apple" id="firewallTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#rulesTab" type="button" role="tab">
-                    <i class="bi bi-list-ul me-2"></i>Rules
+                    <i class="bi bi-list-ul me-2"></i><?php echo $lang3169; ?>
                     <span id="rulesCount" class="badge bg-secondary ms-1" style="background: #8e8e93 !important;">0</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#connectionsTab" type="button" role="tab">
-                    <i class="bi bi-diagram-3 me-2"></i>Active Connections
+                    <i class="bi bi-diagram-3 me-2"></i><?php echo $lang3170; ?>
                     <span id="connectionsCount" class="badge bg-secondary ms-1" style="background: #8e8e93 !important;">0</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logsTab" type="button" role="tab">
-                    <i class="bi bi-clock-history me-2"></i>Logs
+                    <i class="bi bi-clock-history me-2"></i><?php echo $lang3171; ?>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settingsTab" type="button" role="tab">
-                    <i class="bi bi-gear me-2"></i>Settings
+                    <i class="bi bi-gear me-2"></i><?php echo $lang3172; ?>
                 </button>
             </li>
         </ul>
@@ -665,9 +682,9 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade show active" id="rulesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-shield-check"></i> Firewall Rules</h3>
+                        <h3><i class="bi bi-shield-check"></i> <?php echo $lang3173; ?></h3>
                         <button class="btn-apple" onclick="openAddRuleModal()">
-                            <i class="bi bi-plus-lg"></i> Add Rule
+                            <i class="bi bi-plus-lg"></i> <?php echo $lang3174; ?>
                         </button>
                     </div>
                     <div class="card-body-apple">
@@ -676,28 +693,28 @@ $menu = require_once 'menu.php';
                                 <div class="col-md-4">
                                     <div class="input-group">
                                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                                        <input type="text" id="ruleSearch" class="form-control border-start-0" placeholder="Search by port, protocol, comment..." style="border-radius: 0 12px 12px 0;">
+                                        <input type="text" id="ruleSearch" class="form-control border-start-0" placeholder="<?php echo $lang3175; ?>" style="border-radius: 0 12px 12px 0;">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <select id="filterDirection" class="form-select">
-                                        <option value="all">📊 All directions</option>
-                                        <option value="in">⬇️ Incoming (IN)</option>
-                                        <option value="out">⬆️ Outgoing (OUT)</option>
+                                        <option value="all">📊 <?php echo $lang3176; ?></option>
+                                        <option value="in">⬇️ <?php echo $lang3177; ?></option>
+                                        <option value="out">⬆️ <?php echo $lang3178; ?></option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <select id="filterAction" class="form-select">
-                                        <option value="all">🎯 All actions</option>
-                                        <option value="allow">✅ Allow</option>
-                                        <option value="deny">❌ Deny</option>
-                                        <option value="reject">🚫 Reject</option>
-                                        <option value="limit">⏱️ Limit</option>
+                                        <option value="all">🎯 <?php echo $lang3179; ?></option>
+                                        <option value="allow">✅ <?php echo $lang3180; ?></option>
+                                        <option value="deny">❌ <?php echo $lang3181; ?></option>
+                                        <option value="reject">🚫 <?php echo $lang3182; ?></option>
+                                        <option value="limit">⏱️ <?php echo $lang3183; ?></option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <button class="btn btn-outline-secondary w-100" style="border-radius: 10px;" onclick="clearRuleFilters()">
-                                        <i class="bi bi-eraser"></i> Clear
+                                        <i class="bi bi-eraser"></i> <?php echo $lang3184; ?>
                                     </button>
                                 </div>
                             </div>
@@ -705,7 +722,7 @@ $menu = require_once 'menu.php';
                         <div id="rulesList">
                             <div class="text-center text-muted py-4">
                                 <div class="spinner-border text-primary mb-2" role="status"></div>
-                                <p>Loading rules...</p>
+                                <p><?php echo $lang3185; ?></p>
                             </div>
                         </div>
                     </div>
@@ -719,12 +736,12 @@ $menu = require_once 'menu.php';
                         <div class="col-md-8">
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-funnel"></i></span>
-                                <input type="text" id="connectionSearch" class="form-control" placeholder="Filter by IP, port, process...">
+                                <input type="text" id="connectionSearch" class="form-control" placeholder="<?php echo $lang3186; ?>">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <button class="btn-apple w-100" onclick="refreshConnections()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3187; ?>
                             </button>
                         </div>
                     </div>
@@ -734,35 +751,35 @@ $menu = require_once 'menu.php';
                     <div class="stat-card">
                         <i class="bi bi-arrow-down-circle"></i>
                         <div class="stat-number" id="incomingCount">0</div>
-                        <div class="stat-label">Incoming</div>
+                        <div class="stat-label"><?php echo $lang3188; ?></div>
                     </div>
                     <div class="stat-card">
                         <i class="bi bi-arrow-up-circle"></i>
                         <div class="stat-number" id="outgoingCount">0</div>
-                        <div class="stat-label">Outgoing</div>
+                        <div class="stat-label"><?php echo $lang3189; ?></div>
                     </div>
                     <div class="stat-card">
                         <i class="bi bi-people"></i>
                         <div class="stat-number" id="totalCount">0</div>
-                        <div class="stat-label">Total</div>
+                        <div class="stat-label"><?php echo $lang3190; ?></div>
                     </div>
                 </div>
                 
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-arrow-down-circle text-success"></i> Incoming Connections</h3>
+                        <h3><i class="bi bi-arrow-down-circle text-success"></i> <?php echo $lang3191; ?></h3>
                     </div>
                     <div class="card-body-apple" id="incomingConnectionsList">
-                        <div class="text-center text-muted py-4">Loading...</div>
+                        <div class="text-center text-muted py-4"><?php echo $lang3192; ?></div>
                     </div>
                 </div>
                 
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-arrow-up-circle text-warning"></i> Outgoing Connections</h3>
+                        <h3><i class="bi bi-arrow-up-circle text-warning"></i> <?php echo $lang3193; ?></h3>
                     </div>
                     <div class="card-body-apple" id="outgoingConnectionsList">
-                        <div class="text-center text-muted py-4">Loading...</div>
+                        <div class="text-center text-muted py-4"><?php echo $lang3194; ?></div>
                     </div>
                 </div>
             </div>
@@ -771,25 +788,25 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade" id="logsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-file-text"></i> UFW Logs</h3>
+                        <h3><i class="bi bi-file-text"></i> <?php echo $lang3195; ?></h3>
                         <div class="d-flex gap-2">
                             <select id="logLinesSelect" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="50">50 lines</option>
-                                <option value="100" selected>100 lines</option>
-                                <option value="200">200 lines</option>
-                                <option value="500">500 lines</option>
+                                <option value="50">50 <?php echo $lang3196; ?></option>
+                                <option value="100" selected>100 <?php echo $lang3196; ?></option>
+                                <option value="200">200 <?php echo $lang3196; ?></option>
+                                <option value="500">500 <?php echo $lang3196; ?></option>
                             </select>
                             <select id="logTypeFilter" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="all">All events</option>
-                                <option value="ALLOW">✅ Allowed</option>
-                                <option value="BLOCK">❌ Blocked</option>
-                                <option value="LIMIT">⚠️ Limited</option>
+                                <option value="all"><?php echo $lang3197; ?></option>
+                                <option value="ALLOW">✅ <?php echo $lang3198; ?></option>
+                                <option value="BLOCK">❌ <?php echo $lang3199; ?></option>
+                                <option value="LIMIT">⚠️ <?php echo $lang3200; ?></option>
                             </select>
                             <button type="button" class="btn-apple-outline" onclick="refreshLogs()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3201; ?>
                             </button>
                             <button type="button" class="btn-apple-outline" onclick="exportLogs()">
-                                <i class="bi bi-download"></i> Export
+                                <i class="bi bi-download"></i> <?php echo $lang3202; ?>
                             </button>
                         </div>
                     </div>
@@ -797,14 +814,14 @@ $menu = require_once 'menu.php';
                         <div class="mb-3">
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                                <input type="text" id="logFilter" class="form-control" placeholder="Filter by IP, port, protocol...">
+                                <input type="text" id="logFilter" class="form-control" placeholder="<?php echo $lang3203; ?>">
                                 <button class="btn btn-outline-secondary" style="border-radius: 0 10px 10px 0;" onclick="clearLogFilter()">
-                                    <i class="bi bi-x-lg"></i> Clear
+                                    <i class="bi bi-x-lg"></i> <?php echo $lang3204; ?>
                                 </button>
                             </div>
                         </div>
                         <div id="logsList" style="max-height: 500px; overflow-y: auto;">
-                            <div class="text-center text-muted py-4">Loading logs...</div>
+                            <div class="text-center text-muted py-4"><?php echo $lang3205; ?></div>
                         </div>
                     </div>
                 </div>
@@ -816,35 +833,35 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-globe"></i> Default Policies</h3>
+                                <h3><i class="bi bi-globe"></i> <?php echo $lang3206; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <form id="defaultPoliciesForm">
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Incoming</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3207; ?></label>
                                         <select id="defaultIncoming" class="form-select form-select-apple">
-                                            <option value="deny">Deny</option>
-                                            <option value="allow">Allow</option>
+                                            <option value="deny"><?php echo $lang3208; ?></option>
+                                            <option value="allow"><?php echo $lang3209; ?></option>
                                         </select>
-                                        <small class="text-muted">Default action for new incoming connections</small>
+                                        <small class="text-muted"><?php echo $lang3210; ?></small>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Outgoing</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3211; ?></label>
                                         <select id="defaultOutgoing" class="form-select form-select-apple">
-                                            <option value="allow">Allow</option>
-                                            <option value="deny">Deny</option>
+                                            <option value="allow"><?php echo $lang3212; ?></option>
+                                            <option value="deny"><?php echo $lang3213; ?></option>
                                         </select>
-                                        <small class="text-muted">Default action for new outgoing connections</small>
+                                        <small class="text-muted"><?php echo $lang3214; ?></small>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Routed</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3215; ?></label>
                                         <select id="defaultRouted" class="form-select form-select-apple">
-                                            <option value="deny">Deny</option>
-                                            <option value="allow">Allow</option>
+                                            <option value="deny"><?php echo $lang3216; ?></option>
+                                            <option value="allow"><?php echo $lang3217; ?></option>
                                         </select>
-                                        <small class="text-muted">Policy for routed packets</small>
+                                        <small class="text-muted"><?php echo $lang3218; ?></small>
                                     </div>
-                                    <button type="submit" class="btn-apple">Apply Policies</button>
+                                    <button type="submit" class="btn-apple"><?php echo $lang3219; ?></button>
                                 </form>
                             </div>
                         </div>
@@ -853,21 +870,21 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-bar-chart-steps"></i> Logging</h3>
+                                <h3><i class="bi bi-bar-chart-steps"></i> <?php echo $lang3220; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <form id="loggingForm">
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Logging Level</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3221; ?></label>
                                         <select id="loggingLevel" class="form-select form-select-apple">
-                                            <option value="off">Off</option>
-                                            <option value="low">Low (recommended)</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High (verbose)</option>
+                                            <option value="off"><?php echo $lang3222; ?></option>
+                                            <option value="low"><?php echo $lang3223; ?></option>
+                                            <option value="medium"><?php echo $lang3224; ?></option>
+                                            <option value="high"><?php echo $lang3225; ?></option>
                                         </select>
-                                        <small class="text-muted">High logging may affect performance</small>
+                                        <small class="text-muted"><?php echo $lang3226; ?></small>
                                     </div>
-                                    <button type="submit" class="btn-apple">Apply Logging</button>
+                                    <button type="submit" class="btn-apple"><?php echo $lang3227; ?></button>
                                 </form>
                             </div>
                         </div>
@@ -876,60 +893,60 @@ $menu = require_once 'menu.php';
                 
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-info-circle"></i> UFW Information</h3>
+                        <h3><i class="bi bi-info-circle"></i> <?php echo $lang3228; ?></h3>
                         <button class="btn-apple-outline" onclick="loadSettings()">
-                            <i class="bi bi-arrow-repeat"></i> Refresh
+                            <i class="bi bi-arrow-repeat"></i> <?php echo $lang3229; ?>
                         </button>
                     </div>
                     <div class="card-body-apple" id="ufwInfo">
-                        <div class="text-center text-muted py-4">Loading...</div>
+                        <div class="text-center text-muted py-4"><?php echo $lang3230; ?></div>
                     </div>
                 </div>
                 
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-lightning-charge"></i> Quick Actions</h3>
+                        <h3><i class="bi bi-lightning-charge"></i> <?php echo $lang3231; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <div class="row g-2">
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" style="background: #34c75910; border-color: #34c759; color: #248a3d;" onclick="quickAddRule('22', 'SSH')">
-                                    <i class="bi bi-key"></i> Allow SSH
+                                    <i class="bi bi-key"></i> <?php echo $lang3232; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" onclick="quickAddRule('80', 'HTTP')">
-                                    <i class="bi bi-globe"></i> Allow HTTP
+                                    <i class="bi bi-globe"></i> <?php echo $lang3233; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" onclick="quickAddRule('443', 'HTTPS')">
-                                    <i class="bi bi-lock"></i> Allow HTTPS
+                                    <i class="bi bi-lock"></i> <?php echo $lang3234; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" onclick="quickAddRule('21', 'FTP')">
-                                    <i class="bi bi-folder"></i> Allow FTP
+                                    <i class="bi bi-folder"></i> <?php echo $lang3235; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" onclick="quickAddRule('3306', 'MySQL')">
-                                    <i class="bi bi-database"></i> Allow MySQL
+                                    <i class="bi bi-database"></i> <?php echo $lang3236; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" onclick="quickAddRule('5432', 'PostgreSQL')">
-                                    <i class="bi bi-database"></i> Allow PostgreSQL
+                                    <i class="bi bi-database"></i> <?php echo $lang3237; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn-apple-outline w-100 quick-action-btn" style="border-color: #ff9500; color: #c47a00;" onclick="quickBlockIP()">
-                                    <i class="bi bi-ban"></i> Block IP
+                                    <i class="bi bi-ban"></i> <?php echo $lang3238; ?>
                                 </button>
                             </div>
                             <div class="col-md-3">
                                 <button class="btn btn-outline-danger w-100 quick-action-btn" onclick="resetAllRules()">
-                                    <i class="bi bi-trash3"></i> Reset All
+                                    <i class="bi bi-trash3"></i> <?php echo $lang3239; ?>
                                 </button>
                             </div>
                         </div>
@@ -945,35 +962,35 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold" id="ruleModalTitle"><i class="bi bi-plus-circle me-2"></i>Add Rule</h5>
+                <h5 class="modal-title fw-semibold" id="ruleModalTitle"><i class="bi bi-plus-circle me-2"></i><?php echo $lang3240; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="ruleForm">
                     <input type="hidden" id="ruleId" value="">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Direction</label>
+                        <label class="form-label fw-semibold"><?php echo $lang3241; ?></label>
                         <select id="ruleDirection" class="form-select form-select-apple" required>
-                            <option value="in">Incoming (IN) - from network to server</option>
-                            <option value="out">Outgoing (OUT) - from server to network</option>
+                            <option value="in"><?php echo $lang3242; ?></option>
+                            <option value="out"><?php echo $lang3243; ?></option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Action</label>
+                        <label class="form-label fw-semibold"><?php echo $lang3244; ?></label>
                         <select id="ruleAction" class="form-select form-select-apple" required>
-                            <option value="allow">Allow</option>
-                            <option value="deny">Deny</option>
-                            <option value="reject">Reject</option>
-                            <option value="limit">Limit (rate limiting)</option>
+                            <option value="allow"><?php echo $lang3245; ?></option>
+                            <option value="deny"><?php echo $lang3246; ?></option>
+                            <option value="reject"><?php echo $lang3247; ?></option>
+                            <option value="limit"><?php echo $lang3248; ?></option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Port</label>
+                        <label class="form-label fw-semibold"><?php echo $lang3249; ?></label>
                         <input type="text" id="rulePort" class="form-control form-control-apple" placeholder="e.g., 22, 80, 443, 3000:3010" required>
-                        <small class="text-muted">Single port or range (start:end)</small>
+                        <small class="text-muted"><?php echo $lang3250; ?></small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Protocol</label>
+                        <label class="form-label fw-semibold"><?php echo $lang3251; ?></label>
                         <select id="ruleProtocol" class="form-select form-select-apple">
                             <option value="tcp">TCP</option>
                             <option value="udp">UDP</option>
@@ -981,7 +998,7 @@ $menu = require_once 'menu.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">IP Version</label>
+                        <label class="form-label fw-semibold"><?php echo $lang3252; ?></label>
                         <select id="ipVersion" class="form-select form-select-apple">
                             <option value="both">IPv4 and IPv6 (both)</option>
                             <option value="ipv4">IPv4 only</option>
@@ -989,19 +1006,19 @@ $menu = require_once 'menu.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">From IP (optional)</label>
-                        <input type="text" id="ruleFrom" class="form-control form-control-apple" placeholder="e.g., 192.168.1.0/24 (leave empty for all)">
-                        <small class="text-muted">Leave empty for all addresses</small>
+                        <label class="form-label fw-semibold"><?php echo $lang3253; ?></label>
+                        <input type="text" id="ruleFrom" class="form-control form-control-apple" placeholder="e.g., 192.168.1.0/24 <?php echo $lang3254; ?>">
+                        <small class="text-muted"><?php echo $lang3255; ?></small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Comment</label>
-                        <input type="text" id="ruleComment" class="form-control form-control-apple" placeholder="Description">
+                        <label class="form-label fw-semibold"><?php echo $lang3256; ?></label>
+                        <input type="text" id="ruleComment" class="form-control form-control-apple" placeholder="<?php echo $lang3257; ?>">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-apple" onclick="saveRule()">Save Rule</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3258; ?></button>
+                <button type="button" class="btn-apple" onclick="saveRule()"><?php echo $lang3259; ?></button>
             </div>
         </div>
     </div>
@@ -1012,26 +1029,26 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-apple me-2"></i>Add Rule from Service</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-apple me-2"></i><?php echo $lang3260; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Select Service</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3261; ?></label>
                     <select id="appSelect" class="form-select form-select-apple">
-                        <option value="">Loading services...</option>
+                        <option value=""><?php echo $lang3262; ?></option>
                     </select>
-                    <small class="text-muted">Services with predefined ports</small>
+                    <small class="text-muted"><?php echo $lang3263; ?></small>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Action</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3264; ?></label>
                     <select id="appAction" class="form-select form-select-apple">
-                        <option value="allow">Allow</option>
-                        <option value="deny">Deny</option>
+                        <option value="allow"><?php echo $lang3265; ?></option>
+                        <option value="deny"><?php echo $lang3266; ?></option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">IP Version</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3267; ?></label>
                     <select id="appIpVersion" class="form-select form-select-apple">
                         <option value="both">IPv4 and IPv6 (both)</option>
                         <option value="ipv4">IPv4 only</option>
@@ -1040,8 +1057,8 @@ $menu = require_once 'menu.php';
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-apple" onclick="addAppRule()">Add Rule</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3268; ?></button>
+                <button type="button" class="btn-apple" onclick="addAppRule()"><?php echo $lang3269; ?></button>
             </div>
         </div>
     </div>
@@ -1052,24 +1069,24 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-ban me-2"></i>Block IP Address</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-ban me-2"></i><?php echo $lang3270; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">IP Address</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3271; ?></label>
                     <input type="text" id="blockIP" class="form-control form-control-apple" placeholder="e.g., 192.168.1.100">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Port (optional)</label>
-                    <input type="text" id="blockPort" class="form-control form-control-apple" placeholder="Leave empty for all ports">
+                    <label class="form-label fw-semibold"><?php echo $lang3272; ?></label>
+                    <input type="text" id="blockPort" class="form-control form-control-apple" placeholder="<?php echo $lang3273; ?>">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Comment</label>
-                    <input type="text" id="blockComment" class="form-control form-control-apple" placeholder="Reason for blocking">
+                    <label class="form-label fw-semibold"><?php echo $lang3274; ?></label>
+                    <input type="text" id="blockComment" class="form-control form-control-apple" placeholder="<?php echo $lang3275; ?>">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">IP Version</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3276; ?></label>
                     <select id="blockIpVersion" class="form-select form-select-apple">
                         <option value="both">IPv4 and IPv6 (both)</option>
                         <option value="ipv4">IPv4 only</option>
@@ -1078,8 +1095,8 @@ $menu = require_once 'menu.php';
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-apple-danger btn" onclick="blockIP()">Block IP</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3277; ?></button>
+                <button type="button" class="btn-apple-danger btn" onclick="blockIP()"><?php echo $lang3278; ?></button>
             </div>
         </div>
     </div>
@@ -1163,7 +1180,7 @@ function loadUfwStatus() {
                         success: function(res) {
                             hideLoading();
                             if (res.success) {
-                                showToast(`UFW ${enabled ? 'enabled' : 'disabled'}`, 'success');
+                                showToast(`UFW ${enabled ? '<?php echo $lang3280; ?>' : '<?php echo $lang3281; ?>'}`, 'success');
                                 loadUfwStatus();
                                 refreshRules();
                             } else {
@@ -1173,7 +1190,7 @@ function loadUfwStatus() {
                         },
                         error: function(xhr, status, error) {
                             hideLoading();
-                            showToast('Error changing UFW status: ' + error, 'error');
+                            showToast('<?php echo $lang3279; ?> ' + error, 'error');
                             $('#ufwToggle').prop('checked', !enabled);
                         }
                     });
@@ -1182,7 +1199,7 @@ function loadUfwStatus() {
         },
         error: function(xhr, status, error) {
             console.error('Load UFW status error:', error);
-            $('#ufwStatusWidget').html('<div class="text-danger">Error loading status</div>');
+            $('#ufwStatusWidget').html('<div class="text-danger"><?php echo $lang3282; ?></div>');
         }
     });
 }
@@ -1207,13 +1224,13 @@ function refreshRules() {
                 $('#rulesCount').text(currentRules.length);
                 filterRules();
             } else {
-                $('#rulesList').html('<div class="text-center text-danger py-4">Error loading rules</div>');
+                $('#rulesList').html('<div class="text-center text-danger py-4"><?php echo $lang3283; ?></div>');
             }
         },
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Refresh rules error:', error);
-            $('#rulesList').html('<div class="text-center text-danger py-4">Connection error: ' + error + '</div>');
+            $('#rulesList').html('<div class="text-center text-danger py-4"><?php echo $lang3284; ?> ' + error + '</div>');
         }
     });
 }
@@ -1253,7 +1270,7 @@ function renderRulesList(rules) {
         $('#rulesList').html(`
             <div class="empty-state">
                 <i class="bi bi-shield-slash"></i>
-                <p class="text-muted">No rules found</p>
+                <p class="text-muted"><?php echo $lang3285; ?></p>
             </div>
         `);
         return;
@@ -1270,7 +1287,7 @@ function renderRulesList(rules) {
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="d-flex align-items-center flex-wrap gap-2">
                         <span class="rule-badge ${actionClass}">${rule.action.toUpperCase()}</span>
-                        <span class="rule-badge ${directionClass}">${rule.direction === 'in' ? 'IN' : 'OUT'}</span>
+                        <span class="rule-badge ${directionClass}">${rule.direction === 'in' ? '<?php echo $lang3286; ?>' : '<?php echo $lang3287; ?>'}</span>
                         <code class="bg-light p-1 rounded">${rule.port}/${rule.protocol}</code>
                         <span class="badge" style="background: #5856d6;">${ipVersionText}</span>
                         ${rule.from !== 'anywhere' && rule.from !== 'any' ? `<span class="text-muted"><i class="bi bi-arrow-right"></i> ${escapeHtml(rule.from)}</span>` : ''}
@@ -1292,7 +1309,7 @@ function renderRulesList(rules) {
 }
 
 function openAddRuleModal() {
-    $('#ruleModalTitle').html('<i class="bi bi-plus-circle me-2"></i>Add Rule');
+    $('#ruleModalTitle').html('<i class="bi bi-plus-circle me-2"></i><?php echo $lang3288; ?>');
     $('#ruleId').val('');
     $('#ruleForm')[0].reset();
     $('#ruleDirection').val('in');
@@ -1309,7 +1326,7 @@ function editRule(ruleId) {
     const rule = currentRules.find(r => r.id === ruleId);
     if (!rule) return;
     
-    $('#ruleModalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Rule');
+    $('#ruleModalTitle').html('<i class="bi bi-pencil-square me-2"></i><?php echo $lang3289; ?>');
     $('#ruleId').val(rule.id);
     $('#ruleDirection').val(rule.direction);
     $('#ruleAction').val(rule.action);
@@ -1332,7 +1349,7 @@ function saveRule() {
     const ipVersion = $('#ipVersion').val();
     
     if (!port) {
-        showToast('Port is required', 'error');
+        showToast('<?php echo $lang3290; ?>', 'error');
         return;
     }
     
@@ -1355,7 +1372,7 @@ function saveRule() {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast(ruleId ? 'Rule updated' : 'Rule added', 'success');
+                showToast(ruleId ? '<?php echo $lang3291; ?>' : '<?php echo $lang3292; ?>', 'success');
                 $('#ruleModal').modal('hide');
                 refreshRules();
             } else {
@@ -1365,13 +1382,13 @@ function saveRule() {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Save rule error:', error);
-            showToast('Error saving rule: ' + error, 'error');
+            showToast('<?php echo $lang3294; ?> ' + error, 'error');
         }
     });
 }
 
 function deleteRule(ruleId) {
-    if (confirm('Delete this rule?')) {
+    if (confirm('<?php echo $lang3293; ?>')) {
         showLoading();
         
         const headers = {
@@ -1389,7 +1406,7 @@ function deleteRule(ruleId) {
             success: function(response) {
                 hideLoading();
                 if (response.success) {
-                    showToast('Rule deleted', 'success');
+                    showToast('<?php echo $lang3295; ?>', 'success');
                     refreshRules();
                 } else {
                     showToast(response.error, 'error');
@@ -1398,14 +1415,14 @@ function deleteRule(ruleId) {
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('Delete rule error:', error);
-                showToast('Error deleting rule: ' + error, 'error');
+                showToast('<?php echo $lang3296; ?> ' + error, 'error');
             }
         });
     }
 }
 
 function resetAllRules() {
-    if (confirm('WARNING! This will delete ALL UFW rules. Continue?')) {
+    if (confirm('<?php echo $lang3297; ?>')) {
         showLoading();
         
         const headers = {};
@@ -1420,7 +1437,7 @@ function resetAllRules() {
             success: function(response) {
                 hideLoading();
                 if (response.success) {
-                    showToast('All rules reset', 'success');
+                    showToast('<?php echo $lang3298; ?>', 'success');
                     refreshRules();
                 } else {
                     showToast(response.error, 'error');
@@ -1429,7 +1446,7 @@ function resetAllRules() {
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('Reset rules error:', error);
-                showToast('Error resetting rules: ' + error, 'error');
+                showToast('<?php echo $lang3299; ?> ' + error, 'error');
             }
         });
     }
@@ -1478,7 +1495,7 @@ function filterAndRenderConnections() {
 
 function renderConnections(connections, containerId, type) {
     if (connections.length === 0) {
-        $(containerId).html(`<div class="empty-state"><i class="bi bi-plug"></i><p class="text-muted">No ${type} connections</p></div>`);
+        $(containerId).html(`<div class="empty-state"><i class="bi bi-plug"></i><p class="text-muted"><?php echo $lang3300; ?> ${type} <?php echo $lang3301; ?></p></div>`);
         return;
     }
     
@@ -1497,7 +1514,7 @@ function renderConnections(connections, containerId, type) {
                         ${conn.process ? `<span class="badge bg-info ms-2"><i class="bi bi-cpu"></i> ${escapeHtml(conn.process)}</span>` : ''}
                     </div>
                     <button class="btn btn-danger btn-sm kill-connection-btn" style="border-radius: 8px;" onclick="killConnection('${conn.remote_ip}', '${conn.remote_port}', '${conn.protocol}')">
-                        <i class="bi bi-x-lg"></i> Kill
+                        <i class="bi bi-x-lg"></i> <?php echo $lang3302; ?>
                     </button>
                 </div>
             </div>
@@ -1507,7 +1524,7 @@ function renderConnections(connections, containerId, type) {
 }
 
 function killConnection(ip, port, protocol) {
-    if (confirm(`Terminate connection ${ip}:${port}?`)) {
+    if (confirm(`<?php echo $lang3303; ?> ${ip}:${port}?`)) {
         showLoading();
         
         const headers = {
@@ -1525,7 +1542,7 @@ function killConnection(ip, port, protocol) {
             success: function(response) {
                 hideLoading();
                 if (response.success) {
-                    showToast(`Connection ${ip}:${port} terminated`, 'success');
+                    showToast(`<?php echo $lang3304; ?> ${ip}:${port} <?php echo $lang3305; ?>`, 'success');
                     refreshConnections();
                 } else {
                     showToast(response.error, 'error');
@@ -1534,7 +1551,7 @@ function killConnection(ip, port, protocol) {
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('Kill connection error:', error);
-                showToast('Error terminating connection: ' + error, 'error');
+                showToast('<?php echo $lang3306; ?> ' + error, 'error');
             }
         });
     }
@@ -1568,20 +1585,20 @@ function refreshLogs() {
                 let filtered = typeFilter === 'all' ? currentLogs : currentLogs.filter(log => log.action === typeFilter);
                 renderLogs(filtered);
             } else {
-                $('#logsList').html('<div class="text-center text-danger py-4">Error loading logs</div>');
+                $('#logsList').html('<div class="text-center text-danger py-4"><?php echo $lang3307; ?></div>');
             }
         },
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Refresh logs error:', error);
-            $('#logsList').html('<div class="text-center text-danger py-4">Connection error: ' + error + '</div>');
+            $('#logsList').html('<div class="text-center text-danger py-4"><?php echo $lang3308; ?> ' + error + '</div>');
         }
     });
 }
 
 function renderLogs(logs) {
     if (logs.length === 0) {
-        $('#logsList').html(`<div class="empty-state"><i class="bi bi-file-text"></i><p class="text-muted">No log entries</p></div>`);
+        $('#logsList').html(`<div class="empty-state"><i class="bi bi-file-text"></i><p class="text-muted"><?php echo $lang3309; ?></p></div>`);
         return;
     }
     
@@ -1655,13 +1672,13 @@ function loadSettings() {
                 $('#ufwInfo').html(`
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="info-box"><strong>Status:</strong> ${status.active ? 'Active' : 'Inactive'}</div>
-                            <div class="info-box"><strong>Logging:</strong> ${status.logging}</div>
-                            <div class="info-box"><strong>Default Incoming:</strong> ${status.default_incoming}</div>
+                            <div class="info-box"><strong><?php echo $lang3310; ?></strong> ${status.active ? 'Active' : 'Inactive'}</div>
+                            <div class="info-box"><strong><?php echo $lang3311; ?></strong> ${status.logging}</div>
+                            <div class="info-box"><strong><?php echo $lang3312; ?></strong> ${status.default_incoming}</div>
                         </div>
                         <div class="col-md-6">
-                            <div class="info-box"><strong>Default Outgoing:</strong> ${status.default_outgoing}</div>
-                            <div class="info-box"><strong>Default Routed:</strong> ${status.default_routed}</div>
+                            <div class="info-box"><strong><?php echo $lang3313; ?></strong> ${status.default_outgoing}</div>
+                            <div class="info-box"><strong><?php echo $lang3314; ?></strong> ${status.default_routed}</div>
                         </div>
                     </div>
                 `);
@@ -1669,14 +1686,14 @@ function loadSettings() {
         },
         error: function(xhr, status, error) {
             console.error('Load settings error:', error);
-            $('#ufwInfo').html('<div class="text-danger">Error loading firewall status</div>');
+            $('#ufwInfo').html('<div class="text-danger"><?php echo $lang3315; ?></div>');
         }
     });
 }
 
 // App Rules
 function openAddAppRuleModal() {
-    $('#appSelect').html('<option value="">Loading...</option>');
+    $('#appSelect').html('<option value=""><?php echo $lang3316; ?></option>');
     $('#appRuleModal').modal('show');
     
     const headers = {};
@@ -1690,18 +1707,18 @@ function openAddAppRuleModal() {
         headers: headers,
         success: function(response) {
             if (response.success && response.data.length > 0) {
-                let options = '<option value="">Select service...</option>';
+                let options = '<option value=""><?php echo $lang3317; ?></option>';
                 response.data.forEach(app => {
                     options += `<option value="${escapeHtml(app)}">${escapeHtml(app)}</option>`;
                 });
                 $('#appSelect').html(options);
             } else {
-                $('#appSelect').html('<option value="">No services available</option>');
+                $('#appSelect').html('<option value=""><?php echo $lang3318; ?></option>');
             }
         },
         error: function(xhr, status, error) {
             console.error('Load app profiles error:', error);
-            $('#appSelect').html('<option value="">Error loading services</option>');
+            $('#appSelect').html('<option value=""><?php echo $lang3319; ?></option>');
         }
     });
 }
@@ -1712,7 +1729,7 @@ function addAppRule() {
     const ipVersion = $('#appIpVersion').val();
     
     if (!appName) {
-        showToast('Select a service', 'error');
+        showToast('<?php echo $lang3320; ?>', 'error');
         return;
     }
     
@@ -1733,7 +1750,7 @@ function addAppRule() {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast(`Rule for ${appName} added (${ipVersion})`, 'success');
+                showToast(`<?php echo $lang3321; ?> ${appName} <?php echo $lang3322; ?> (${ipVersion})`, 'success');
                 $('#appRuleModal').modal('hide');
                 refreshRules();
             } else {
@@ -1743,7 +1760,7 @@ function addAppRule() {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Add app rule error:', error);
-            showToast('Error adding rule: ' + error, 'error');
+            showToast('<?php echo $lang3323; ?> ' + error, 'error');
         }
     });
 }
@@ -1758,7 +1775,7 @@ function quickAddRule(port, serviceName) {
     $('#ruleFrom').val('');
     $('#ipVersion').val('both');
     $('#ruleId').val('');
-    $('#ruleModalTitle').html(`<i class="bi bi-plus-circle me-2"></i>Add Rule: ${serviceName} (port ${port})`);
+    $('#ruleModalTitle').html(`<i class="bi bi-plus-circle me-2"></i><?php echo $lang3324; ?> ${serviceName} (port ${port})`);
     $('#ruleModal').modal('show');
 }
 
@@ -1777,7 +1794,7 @@ function blockIP() {
     const ipVersion = $('#blockIpVersion').val();
     
     if (!ip) {
-        showToast('Enter IP address', 'error');
+        showToast('<?php echo $lang3325; ?>', 'error');
         return;
     }
     
@@ -1809,7 +1826,7 @@ function blockIP() {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast(`IP ${ip} blocked`, 'success');
+                showToast(`<?php echo $lang3326; ?> ${ip} <?php echo $lang3327; ?>`, 'success');
                 $('#blockIPModal').modal('hide');
                 refreshRules();
             } else {
@@ -1819,7 +1836,7 @@ function blockIP() {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Block IP error:', error);
-            showToast('Error blocking IP: ' + error, 'error');
+            showToast('<?php echo $lang3328; ?> ' + error, 'error');
         }
     });
 }
@@ -1844,7 +1861,7 @@ $('#defaultPoliciesForm').on('submit', function(e) {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast('Default policies updated', 'success');
+                showToast('<?php echo $lang3329; ?>', 'success');
                 loadSettings();
             } else {
                 showToast(response.error, 'error');
@@ -1853,7 +1870,7 @@ $('#defaultPoliciesForm').on('submit', function(e) {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Update policies error:', error);
-            showToast('Error updating policies: ' + error, 'error');
+            showToast('<?php echo $lang3330; ?> ' + error, 'error');
         }
     });
 });
@@ -1877,7 +1894,7 @@ $('#loggingForm').on('submit', function(e) {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast('Logging level updated', 'success');
+                showToast('<?php echo $lang3331; ?>', 'success');
                 loadSettings();
             } else {
                 showToast(response.error, 'error');
@@ -1886,7 +1903,7 @@ $('#loggingForm').on('submit', function(e) {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Update logging error:', error);
-            showToast('Error updating logging: ' + error, 'error');
+            showToast('<?php echo $lang3332; ?> ' + error, 'error');
         }
     });
 });

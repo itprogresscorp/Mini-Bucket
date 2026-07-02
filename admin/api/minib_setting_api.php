@@ -81,6 +81,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('APACHE_SITES_AVAILABLE', '/etc/apache2/sites-available/');
 define('APACHE_SITES_ENABLED', '/etc/apache2/sites-enabled/');
@@ -225,7 +227,7 @@ function getCurrentConfig() {
     }
     
     return [
-        'enabled' => file_exists(MINIB_CONFIG_ENABLED), // Включен если есть симлинк
+        'enabled' => file_exists(MINIB_CONFIG_ENABLED),
         'port' => $port,
         'document_root' => $documentRoot,
         'ssl_enabled' => $sslEnabled,
@@ -404,6 +406,7 @@ switch ($action) {
         break;
         
     case 'apply_config':
+		global $lang3964, $lang3965, $lang3966, $lang3967, $lang3968, $lang3969, $lang3970, $lang3971, $lang3972, $lang3973;
         $enabled = isset($_POST['enabled']) && $_POST['enabled'] == '1';
         $port = (int)($_POST['port'] ?? 1488);
         $documentRoot = $_POST['document_root'] ?? '/var/www/html/admin';
@@ -413,22 +416,22 @@ switch ($action) {
         $sslChain = $_POST['ssl_chain'] ?? '';
         
         if ($port < 1 || $port > 65535) {
-            echo json_encode(['success' => false, 'error' => 'Invalid port number']);
+            echo json_encode(['success' => false, 'error' => $lang3964]);
             break;
         }
         
         if ($sslEnabled && (empty($sslCert) || empty($sslKey))) {
-            echo json_encode(['success' => false, 'error' => 'SSL certificate and key are required when HTTPS is enabled']);
+            echo json_encode(['success' => false, 'error' => $lang3965]);
             break;
         }
         
         if ($sslEnabled && !empty($sslCert) && !file_exists($sslCert)) {
-            echo json_encode(['success' => false, 'error' => 'SSL certificate file not found: ' . $sslCert]);
+            echo json_encode(['success' => false, 'error' => $lang3966 . $sslCert]);
             break;
         }
         
         if ($sslEnabled && !empty($sslKey) && !file_exists($sslKey)) {
-            echo json_encode(['success' => false, 'error' => 'SSL key file not found: ' . $sslKey]);
+            echo json_encode(['success' => false, 'error' => $lang3967 . $sslKey]);
             break;
         }
         
@@ -444,18 +447,18 @@ switch ($action) {
         $config = generateApacheConfig($port, $documentRoot, $sslEnabled, $sslCert, $sslKey, $sslChain);
         
         if (!saveApacheConfig($config)) {
-            echo json_encode(['success' => false, 'error' => 'Failed to save configuration file']);
+            echo json_encode(['success' => false, 'error' => $lang3968]);
             break;
         }
         
         if ($enabled) {
             if (!enableSite()) {
-                echo json_encode(['success' => false, 'error' => 'Failed to enable site']);
+                echo json_encode(['success' => false, 'error' => $lang3969]);
                 break;
             }
         } else {
             if (!disableSite()) {
-                echo json_encode(['success' => false, 'error' => 'Failed to disable site']);
+                echo json_encode(['success' => false, 'error' => $lang3970]);
                 break;
             }
         }
@@ -464,7 +467,7 @@ switch ($action) {
         if (!$testResult['success']) {
             echo json_encode([
                 'success' => false,
-                'error' => 'Apache configuration test failed',
+                'error' => $lang3971,
                 'details' => $testResult['output']
             ]);
             break;
@@ -474,26 +477,29 @@ switch ($action) {
         
         echo json_encode([
             'success' => true,
-            'message' => $enabled ? 'Configuration applied and site enabled' : 'Site disabled successfully',
+            'message' => $enabled ? $lang3972 : $lang3973,
             'config_test' => $testResult['output']
         ]);
         break;
         
     case 'service_action':
-        $actionType = $_POST['action'] ?? '';
-        
-        if ($actionType === 'restart') {
-            restartApache();
-            echo json_encode(['success' => true, 'message' => 'Apache restarted successfully']);
-        } elseif ($actionType === 'reload') {
-            reloadApache();
-            echo json_encode(['success' => true, 'message' => 'Apache reloaded successfully']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Invalid action']);
-        }
-        break;
+		global $lang3974, $lang3975, $lang3976;
+		
+		$actionType = $_POST['sub_action'] ?? $_POST['action'] ?? '';
+		
+		if ($actionType === 'restart') {
+			restartApache();
+			echo json_encode(['success' => true, 'message' => $lang3974]);
+		} elseif ($actionType === 'reload') {
+			reloadApache();
+			echo json_encode(['success' => true, 'message' => $lang3975]);
+		} else {
+			echo json_encode(['success' => false, 'error' => $lang3976]);
+		}
+		break;
         
     case 'restore_default':
+		global $lang3977, $lang3978, $lang3979;
         $defaultPort = 1488;
         $defaultDocRoot = '/var/www/html/admin';
         $config = generateApacheConfig($defaultPort, $defaultDocRoot, false, '', '', '');
@@ -503,12 +509,12 @@ switch ($action) {
             $testResult = testApacheConfig();
             if ($testResult['success']) {
                 reloadApache();
-                echo json_encode(['success' => true, 'message' => 'Default configuration restored and site enabled']);
+                echo json_encode(['success' => true, 'message' => $lang3977]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Default config test failed: ' . $testResult['output']]);
+                echo json_encode(['success' => false, 'error' => $lang3978 . $testResult['output']]);
             }
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to restore default configuration']);
+            echo json_encode(['success' => false, 'error' => $lang3979]);
         }
         break;
         
@@ -527,18 +533,19 @@ switch ($action) {
 		break;
 		
 	case 'save_rotation_settings':
+		global $lang3980, $lang3981, $lang3982;
 		$enabled = isset($_POST['enabled']) && ($_POST['enabled'] == '1' || $_POST['enabled'] === true);
 		$days = (int)($_POST['days'] ?? 30);
 		
 		if ($enabled && ($days < 1 || $days > 365)) {
-			echo json_encode(['success' => false, 'error' => 'Days must be between 1 and 365']);
+			echo json_encode(['success' => false, 'error' => $lang3980]);
 			break;
 		}
 		
 		if (saveRotationSetting($enabled, $days)) {
-			echo json_encode(['success' => true, 'message' => 'Rotation settings saved']);
+			echo json_encode(['success' => true, 'message' => $lang3981]);
 		} else {
-			echo json_encode(['success' => false, 'error' => 'Failed to save settings']);
+			echo json_encode(['success' => false, 'error' => $lang3982]);
 		}
 		break;
 		
@@ -549,10 +556,11 @@ switch ($action) {
 		break;
 		
 	case 'process_rotation':
+		global $lang3983, $lang3984;
 		$settings = getRotationSetting();
 		
 		if (!$settings['enabled'] || $settings['days'] <= 0) {
-			echo json_encode(['success' => false, 'message' => 'Rotation is disabled (setId=4 is 0)']);
+			echo json_encode(['success' => false, 'message' => $lang3983]);
 			break;
 		}
 		
@@ -598,7 +606,7 @@ switch ($action) {
 		
 		echo json_encode([
 			'success' => true,
-			'message' => 'Rotation processed',
+			'message' => $lang3984,
 			'tasks_created' => $tasksCreated,
 			'cutoff_date' => $cutoffDate,
 			'rotation_days' => $rotationDays,
@@ -606,6 +614,60 @@ switch ($action) {
 		]);
 		break;
     
+		case 'save_language':
+			global $lang4367, $lang4368, $lang4369, $lang4370, $lang4371;
+			
+			$lang = $_POST['lang'] ?? $_GET['lang'] ?? '';
+			$lang = trim($lang);
+			
+			if (empty($lang)) {
+				echo json_encode(['success' => false, 'error' => $lang4367]);
+				break;
+			}
+			
+			$lang_dir = dirname(dirname(__FILE__)) . '/lang/';
+			if (!file_exists($lang_dir . $lang . '.php')) {
+				echo json_encode(['success' => false, 'error' => $lang4368 . $lang]);
+				break;
+			}
+			
+			$config_path = dirname(dirname(__FILE__)) . '/config.php';
+			if (!file_exists($config_path)) {
+				echo json_encode(['success' => false, 'error' => $lang4369]);
+				break;
+			}
+			
+			$config_content = file_get_contents($config_path);
+			
+			if (preg_match('/\$set_lang\s*=\s*["\']([^"\']+)["\']/', $config_content, $matches)) {
+				$new_content = str_replace(
+					'$set_lang = "' . $matches[1] . '"',
+					'$set_lang = "' . $lang . '"',
+					$config_content
+				);
+				$new_content = str_replace(
+					'$set_lang = \'' . $matches[1] . '\'',
+					'$set_lang = \'' . $lang . '\'',
+					$new_content
+				);
+			} else {
+				$new_content = "<?php\n\$set_lang = \"" . $lang . "\";\n" . substr($config_content, 5);
+			}
+			
+			$temp_file = '/tmp/config_temp.php';
+			file_put_contents($temp_file, $new_content);
+			
+			exec("sudo cp $temp_file $config_path 2>&1", $output, $returnCode);
+			unlink($temp_file);
+			
+			if ($returnCode !== 0) {
+				echo json_encode(['success' => false, 'error' => $lang4370]);
+				break;
+			}
+    
+		echo json_encode(['success' => true, 'message' => $lang4371, 'lang' => $lang]);
+		break;
+	
     default:
         echo json_encode(['success' => false, 'error' => 'Unknown action']);
 }

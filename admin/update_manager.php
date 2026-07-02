@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $db = getDB();
 
@@ -71,6 +72,7 @@ $js_config = [
     'apiKey' => $api_key,
     'isLocalhost' => ($current_host_id == 1)
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,6 +89,22 @@ $js_config = [
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
 	window.hostsList = <?php echo json_encode($hosts); ?>;
@@ -385,7 +403,7 @@ $js_config = [
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -396,10 +414,10 @@ $js_config = [
 	<i class="bi bi-cloud-upload"></i> Update Manager
         <div class="host-selector">
             <select id="hostSelector">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang4105; ?>"></i>
     </div>
 </div>
 
@@ -417,44 +435,44 @@ $js_config = [
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
                                     <i class="bi bi-tag me-2 text-primary"></i>
-                                    <strong>Current Version:</strong>
-                                    <span id="currentVersion" class="ms-2">Loading...</span>
+                                    <strong><?php echo $lang4106; ?></strong>
+                                    <span id="currentVersion" class="ms-2"><?php echo $lang4107; ?></span>
                                 </div>
                                 <div>
                                     <i class="bi bi-package me-2 text-primary"></i>
-                                    <strong>Type:</strong>
-                                    <span id="typePro" class="ms-2">Loading...</span>
+                                    <strong><?php echo $lang4108; ?></strong>
+                                    <span id="typePro" class="ms-2"><?php echo $lang4109; ?></span>
                                 </div>
                             </div>
                             <div class="mt-2">
                                 <i class="bi bi-hdd-stack me-2 text-primary"></i>
-                                <strong>System:</strong>
-                                <span id="systemInfo" class="ms-2">Loading...</span>
+                                <strong><?php echo $lang4110; ?></strong>
+                                <span id="systemInfo" class="ms-2"><?php echo $lang4111; ?></span>
                             </div>
                         </div>
                 <!-- Update Info Card -->
                 <div class="apple-card" id="updateInfoCard" style="display: none;">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-gift-fill"></i> Update Available</h3>
+                        <h3><i class="bi bi-gift-fill"></i> <?php echo $lang4112; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <div class="info-box">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong>New Version:</strong>
+                                <strong><?php echo $lang4113; ?></strong>
                                 <span id="newVersion" class="version-badge version-new"></span>
                             </div>
                             <div class="mb-2">
-                                <strong>Release Date:</strong>
+                                <strong><?php echo $lang4114; ?></strong>
                                 <span id="releaseDate"></span>
                             </div>
                             <div>
-                                <strong>What's New:</strong>
+                                <strong><?php echo $lang4115; ?></strong>
                                 <div id="versionInfo" class="mt-2 small"></div>
                             </div>
                         </div>
                         
                         <button type="button" class="btn btn-success w-100" id="updateNowBtn" onclick="startUpdate()">
-                            <i class="bi bi-cloud-download me-2"></i>Update Now
+                            <i class="bi bi-cloud-download me-2"></i><?php echo $lang4116; ?>
                         </button>
                     </div>
                 </div>
@@ -462,12 +480,12 @@ $js_config = [
                 <!-- Update Process Card -->
                 <div class="apple-card" id="updateProcessCard" style="display: none;">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-arrow-repeat spin"></i> Update in Progress</h3>
+                        <h3><i class="bi bi-arrow-repeat spin"></i> <?php echo $lang4117; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-1">
-                                <span>Update Progress</span>
+                                <span><?php echo $lang4118; ?></span>
                                 <span id="progressPercent">0%</span>
                             </div>
                             <div class="progress">
@@ -476,7 +494,7 @@ $js_config = [
                         </div>
                         
                         <div id="updateLog" class="log-console">
-                            <div class="log-line info">Waiting to start...</div>
+                            <div class="log-line info"><?php echo $lang4119; ?></div>
                         </div>
                     </div>
                 </div>
@@ -486,7 +504,7 @@ $js_config = [
             <div class="col-md-4">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-cloud-check"></i> Check for Updates</h3>
+                        <h3><i class="bi bi-cloud-check"></i> <?php echo $lang4120; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <!-- System Status -->
@@ -495,17 +513,17 @@ $js_config = [
                         <!-- Update Server Status -->
                         <div id="serverStatusBox" class="status-box mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong><i class="bi bi-globe2"></i> Update Server Status</strong>
+                                <strong><i class="bi bi-globe2"></i> <?php echo $lang4121; ?></strong>
                                 <i class="bi bi-arrow-repeat" id="refreshStatusIcon" style="cursor:pointer;" onclick="loadServerStatus()"></i>
                             </div>
                             <div class="status-grid">
                                 <div class="status-item">
                                     <span class="status-badge" id="urlStatusBadge"></span>
-                                    <span id="urlStatusText">Checking...</span>
+                                    <span id="urlStatusText"><?php echo $lang4122; ?></span>
                                 </div>
                                 <div class="status-item">
                                     <span class="status-badge" id="sslStatusBadge"></span>
-                                    <span id="sslStatusText">Checking...</span>
+                                    <span id="sslStatusText"><?php echo $lang4123; ?></span>
                                 </div>
                             </div>
                             <div class="small text-muted mt-2" id="serverUrlDisplay"></div>
@@ -514,12 +532,12 @@ $js_config = [
                         <!-- Last Check Info -->
                         <div class="last-check-badge mb-3" id="lastCheckBox">
                             <i class="bi bi-clock-history me-1"></i>
-                            Last check: <span id="lastCheckDate">Never</span>
+                            <?php echo $lang4124; ?> <span id="lastCheckDate"><?php echo $lang4125; ?></span>
                         </div>
                         
                         <!-- Check Button -->
                         <button type="button" class="btn-apple w-100" id="checkUpdateBtn" onclick="checkForUpdates()">
-                            <i class="bi bi-search me-2"></i>Check for Updates
+                            <i class="bi bi-search me-2"></i><?php echo $lang4126; ?>
                         </button>
                     </div>
                 </div>
@@ -611,18 +629,18 @@ function loadServerStatus() {
             
             if (status.available) {
                 $('#urlStatusBadge').removeClass().addClass('status-badge green');
-                $('#urlStatusText').html('<i class="bi bi-check-circle-fill text-success me-1"></i> Available');
+                $('#urlStatusText').html('<i class="bi bi-check-circle-fill text-success me-1"></i> <?php echo $lang4127; ?>');
             } else {
                 $('#urlStatusBadge').removeClass().addClass('status-badge red');
-                $('#urlStatusText').html('<i class="bi bi-x-circle-fill text-danger me-1"></i> Unavailable');
+                $('#urlStatusText').html('<i class="bi bi-x-circle-fill text-danger me-1"></i> <?php echo $lang4128; ?>');
             }
             
             if (status.ssl_verified) {
                 $('#sslStatusBadge').removeClass().addClass('status-badge green');
-                $('#sslStatusText').html('<i class="bi bi-shield-check text-success me-1"></i> Verified');
+                $('#sslStatusText').html('<i class="bi bi-shield-check text-success me-1"></i> <?php echo $lang4129; ?>');
             } else {
                 $('#sslStatusBadge').removeClass().addClass('status-badge orange');
-                $('#sslStatusText').html('<i class="bi bi-shield-exclamation text-warning me-1"></i> Not Verified');
+                $('#sslStatusText').html('<i class="bi bi-shield-exclamation text-warning me-1"></i> <?php echo $lang4130; ?>');
             }
             
             $('#serverUrlDisplay').html('<i class="bi bi-link me-1"></i>' + escapeHtml(status.url));
@@ -637,8 +655,8 @@ function loadServerStatus() {
             }
         },
         function(error) {
-            $('#urlStatusText').html('<i class="bi bi-question-circle text-secondary me-1"></i> Check failed');
-            $('#sslStatusText').html('<i class="bi bi-question-circle text-secondary me-1"></i> Check failed');
+            $('#urlStatusText').html('<i class="bi bi-question-circle text-secondary me-1"></i> <?php echo $lang4131; ?>');
+            $('#sslStatusText').html('<i class="bi bi-question-circle text-secondary me-1"></i> <?php echo $lang4132; ?>');
             $('#serverStatusBox').removeClass('success warning').addClass('error');
         }
     );
@@ -672,7 +690,7 @@ function loadLastCheckDate() {
 
 function checkForUpdates() {
     const $btn = $('#checkUpdateBtn');
-    $btn.prop('disabled', true).html('<span class="loading-spinner-sm"></span> Checking...');
+    $btn.prop('disabled', true).html('<span class="loading-spinner-sm"></span> <?php echo $lang4133; ?>');
     
     $('#updateInfoCard').hide();
     updateData = null;
@@ -691,38 +709,38 @@ function checkForUpdates() {
                 updateData = response;
                 $('#newVersion').html(escapeHtml(response.new_version));
                 $('#releaseDate').html(escapeHtml(response.release_date || 'Unknown'));
-                $('#versionInfo').html(response.version_info || '<em>No description provided</em>');
+                $('#versionInfo').html(response.version_info || '<em><?php echo $lang4134; ?></em>');
                 $('#updateInfoCard').fadeIn();
-                showAlert(`New version ${response.new_version} is available!`, 'success');
+                showAlert(`<?php echo $lang4135; ?> ${response.new_version} <?php echo $lang4136; ?>`, 'success');
             } else {
-                showAlert('You have the latest version! No updates available.', 'success');
+                showAlert('<?php echo $lang4137; ?>', 'success');
             }
             
-            $btn.prop('disabled', false).html('<i class="bi bi-search me-2"></i>Check for Updates');
+            $btn.prop('disabled', false).html('<i class="bi bi-search me-2"></i><?php echo $lang4138; ?>');
         },
         function(error) {
-            $btn.prop('disabled', false).html('<i class="bi bi-search me-2"></i>Check for Updates');
-            showAlert('Failed to check updates: ' + error, 'danger');
+            $btn.prop('disabled', false).html('<i class="bi bi-search me-2"></i><?php echo $lang4139; ?>');
+            showAlert('<?php echo $lang4140; ?> ' + error, 'danger');
         }
     );
 }
 
 function startUpdate() {
     if (!updateData || !updateData.download_url) {
-        showAlert('Update information not available. Please check for updates first.', 'danger');
+        showAlert('<?php echo $lang4141; ?>', 'danger');
         return;
     }
     
-    if (!confirm(`Are you sure you want to update from ${updateData.current_version} to ${updateData.new_version}?\n\nThis will restart services.`)) {
+    if (!confirm(`<?php echo $lang4142; ?> ${updateData.current_version} <?php echo $lang4143; ?> ${updateData.new_version}?\n\n<?php echo $lang4144; ?>`)) {
         return;
     }
     
     $('#updateProcessCard').show();
-    $('#updateNowBtn').prop('disabled', true).html('<span class="loading-spinner-sm"></span> Updating...');
+    $('#updateNowBtn').prop('disabled', true).html('<span class="loading-spinner-sm"></span> <?php echo $lang4145; ?>');
     updateProgress(0);
-    addLog('Starting update process...', 'info');
+    addLog('<?php echo $lang4146; ?>', 'info');
     
-    addLog(`Downloading version ${updateData.new_version}...`, 'info');
+    addLog(`<?php echo $lang4147; ?> ${updateData.new_version}...`, 'info');
     updateProgress(10);
     
     apiCall('download_update', 'POST', {
@@ -730,17 +748,17 @@ function startUpdate() {
         version: updateData.new_version
     },
     function(response) {
-        addLog('Download completed successfully!', 'success');
+        addLog('<?php echo $lang4148; ?>', 'success');
         updateProgress(30);
         
-        addLog('Extracting archive...', 'info');
+        addLog('<?php echo $lang4149; ?>', 'info');
         
         apiCall('extract_update', 'POST', { archive_path: response.path },
         function(extractResponse) {
-            addLog('Extraction completed!', 'success');
+            addLog('<?php echo $lang4150; ?>', 'success');
             updateProgress(50);
             
-            addLog('Running update script...', 'info');
+            addLog('<?php echo $lang4151; ?>', 'info');
             updateProgress(60);
             
             apiCall('run_update_background', 'POST', { 
@@ -749,7 +767,7 @@ function startUpdate() {
             },
             function(runResponse) {
                 if (runResponse.success) {
-                    addLog('Update script started in background', 'success');
+                    addLog('<?php echo $lang4152; ?>', 'success');
                     
                     let checkInterval;
                     let attempts = 0;
@@ -776,9 +794,9 @@ function startUpdate() {
                                     clearInterval(checkInterval);
                                     updateProgress(100);
                                     addLog('========================================', 'success');
-                                    addLog('UPDATE COMPLETED SUCCESSFULLY!', 'success');
+                                    addLog('<?php echo $lang4153; ?>', 'success');
                                     addLog('========================================', 'success');
-                                    addLog('Redirecting to system check page in 5 seconds...', 'info');
+                                    addLog('<?php echo $lang4154; ?>', 'info');
                                     
                                     // Cleanup
                                     apiCall('cleanup', 'POST', { extract_dir: extractResponse.extract_dir }, function() {});
@@ -790,17 +808,17 @@ function startUpdate() {
                                 
                                 if (statusResponse.error) {
                                     clearInterval(checkInterval);
-                                    addLog('ERROR: ' + statusResponse.error, 'error');
+                                    addLog('<?php echo $lang4155; ?> ' + statusResponse.error, 'error');
                                     updateProgress(0);
-                                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
-                                    showAlert('Update failed: ' + statusResponse.error, 'danger');
+                                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4156; ?>');
+                                    showAlert('<?php echo $lang4157; ?> ' + statusResponse.error, 'danger');
                                 }
                             },
                             function(error) {
                                 if (attempts >= maxAttempts) {
                                     clearInterval(checkInterval);
-                                    addLog('Update status check timeout', 'error');
-                                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
+                                    addLog('<?php echo $lang4158; ?>', 'error');
+                                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4159; ?>');
                                 }
                             }
                         );
@@ -811,31 +829,31 @@ function startUpdate() {
                     setTimeout(() => {
                         if (checkInterval) {
                             clearInterval(checkInterval);
-                            addLog('Update process timeout (5 minutes)', 'error');
-                            $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
+                            addLog('<?php echo $lang4160; ?>', 'error');
+                            $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4161; ?>');
                         }
                     }, 300000);
                     
                 } else {
-                    addLog('Failed to start update script: ' + (runResponse.error || 'Unknown error'), 'error');
-                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
+                    addLog('<?php echo $lang4162; ?> ' + (runResponse.error || 'Unknown error'), 'error');
+                    $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4163; ?>');
                 }
             },
             function(error) {
-                addLog('Failed to start update script: ' + error, 'error');
-                $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
+                addLog('<?php echo $lang4164; ?> ' + error, 'error');
+                $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4165; ?>');
             });
         },
         function(error) {
-            addLog('Extraction failed: ' + error, 'error');
-            $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
-            showAlert('Extraction failed: ' + error, 'danger');
+            addLog('<?php echo $lang4166; ?> ' + error, 'error');
+            $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4167; ?>');
+            showAlert('<?php echo $lang4168; ?> ' + error, 'danger');
         });
     },
     function(error) {
-        addLog('Download failed: ' + error, 'error');
-        $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i>Update Now');
-        showAlert('Download failed: ' + error, 'danger');
+        addLog('<?php echo $lang4169; ?> ' + error, 'error');
+        $('#updateNowBtn').prop('disabled', false).html('<i class="bi bi-cloud-download me-2"></i><?php echo $lang4170; ?>');
+        showAlert('<?php echo $lang4171; ?> ' + error, 'danger');
     });
 }
 

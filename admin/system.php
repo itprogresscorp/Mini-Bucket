@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $db = getDB();
 $message = '';
@@ -103,9 +104,25 @@ $menu = require_once 'menu.php';
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 
 	window.hostsList = <?php echo json_encode($hosts); ?>;
 	window.currentHostId = <?php echo (int)$current_host_id; ?>;
@@ -461,7 +478,7 @@ $menu = require_once 'menu.php';
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -469,13 +486,13 @@ $menu = require_once 'menu.php';
         <h1><i class="fas fa-bucket"></i> Mini-B</h1>
     </div>
     <div class="top-bar-right">
-        
+	<i class="fas fa-sliders-h"></i> System setting
         <div class="host-selector">
             <select id="hostSelector">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang3707; ?>"></i>
     </div>
 </div>
 
@@ -490,22 +507,22 @@ $menu = require_once 'menu.php';
         <ul class="nav nav-tabs-apple" id="systemTab" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button" role="tab">
-                    <i class="bi bi-gear-fill me-2"></i>Services
+                    <i class="bi bi-gear-fill me-2"></i><?php echo $lang3708; ?>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="datetime-tab" data-bs-toggle="tab" data-bs-target="#datetime" type="button" role="tab">
-                    <i class="bi bi-calendar3 me-2"></i>Date & Time
+                    <i class="bi bi-calendar3 me-2"></i><?php echo $lang3709; ?>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="network-tab" data-bs-toggle="tab" data-bs-target="#network" type="button" role="tab">
-                    <i class="bi bi-wifi me-2"></i>Network
+                    <i class="bi bi-wifi me-2"></i><?php echo $lang3710; ?>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="systeminfo-tab" data-bs-toggle="tab" data-bs-target="#systeminfo" type="button" role="tab">
-                    <i class="bi bi-motherboard me-2"></i>System Info
+                    <i class="bi bi-motherboard me-2"></i><?php echo $lang3711; ?>
                 </button>
             </li>
         </ul>
@@ -518,27 +535,27 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-5">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-power"></i> Power Management</h3>
+                                <h3><i class="bi bi-power"></i> <?php echo $lang3712; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="d-flex gap-3 mb-4">
                                     <button type="button" class="btn-apple-warning btn" onclick="powerAction('reboot')" style="background: #ff9500; color: white;">
-                                        <i class="bi bi-arrow-repeat me-2"></i>Reboot
+                                        <i class="bi bi-arrow-repeat me-2"></i><?php echo $lang3713; ?>
                                     </button>
                                     <button type="button" class="btn-apple-danger btn" onclick="powerAction('shutdown')">
-                                        <i class="bi bi-power me-2"></i>Shutdown
+                                        <i class="bi bi-power me-2"></i><?php echo $lang3714; ?>
                                     </button>
                                 </div>
                                 
                                 <div class="info-box">
                                     <i class="bi bi-clock-history me-2 text-primary"></i>
-                                    <strong>System Uptime</strong><br>
+                                    <strong><?php echo $lang3715; ?></strong><br>
                                     <span class="fs-5 fw-semibold" id="systemUptime">-</span>
                                 </div>
                                 
                                 <div class="info-box">
                                     <i class="bi bi-graph-up me-2 text-primary"></i>
-                                    <strong>Load Average</strong><br>
+                                    <strong><?php echo $lang3716; ?></strong><br>
                                     <span id="loadAverage">-</span>
                                 </div>
                             </div>
@@ -548,35 +565,35 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-7">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-pie-chart"></i> System Resources</h3>
+                                <h3><i class="bi bi-pie-chart"></i> <?php echo $lang3717; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="mb-4">
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span class="small fw-semibold"><i class="bi bi-memory"></i> Memory Usage</span>
+                                        <span class="small fw-semibold"><i class="bi bi-memory"></i> <?php echo $lang3718; ?></span>
                                         <span class="small text-secondary" id="memoryPercent">0%</span>
                                     </div>
                                     <div class="progress-apple">
                                         <div class="progress-bar" id="memoryBar" style="width: 0%"></div>
                                     </div>
                                     <div class="d-flex justify-content-between mt-2 small text-secondary">
-                                        <span>Used: <span id="memoryUsed">0</span> GB</span>
-                                        <span>Total: <span id="memoryTotal">0</span> GB</span>
+                                        <span><?php echo $lang3719; ?> <span id="memoryUsed">0</span> GB</span>
+                                        <span><?php echo $lang3720; ?> <span id="memoryTotal">0</span> GB</span>
                                     </div>
                                 </div>
                                 
                                 <div>
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span class="small fw-semibold"><i class="bi bi-hdd-stack"></i> Disk Usage (/)</span>
+                                        <span class="small fw-semibold"><i class="bi bi-hdd-stack"></i> <?php echo $lang3721; ?></span>
                                         <span class="small text-secondary" id="diskPercent">0%</span>
                                     </div>
                                     <div class="progress-apple">
                                         <div class="progress-bar" id="diskBar" style="width: 0%"></div>
                                     </div>
                                     <div class="d-flex justify-content-between mt-2 small text-secondary">
-                                        <span>Used: <span id="diskUsed">0</span> GB</span>
-                                        <span>Free: <span id="diskFree">0</span> GB</span>
-                                        <span>Total: <span id="diskTotal">0</span> GB</span>
+                                        <span><?php echo $lang3722; ?> <span id="diskUsed">0</span> GB</span>
+                                        <span><?php echo $lang3723; ?> <span id="diskFree">0</span> GB</span>
+                                        <span><?php echo $lang3724; ?> <span id="diskTotal">0</span> GB</span>
                                     </div>
                                 </div>
                             </div>
@@ -587,12 +604,12 @@ $menu = require_once 'menu.php';
                 <!-- Services Grid -->
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-grid-3x3-gap-fill"></i> Services Management</h3>
+                        <h3><i class="bi bi-grid-3x3-gap-fill"></i> <?php echo $lang3725; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <div class="row g-3" id="servicesGrid">
                             <div class="col-12 text-center py-4">
-                                <div class="loading-spinner-sm"></div> Loading services...
+                                <div class="loading-spinner-sm"></div> <?php echo $lang3726; ?>
                             </div>
                         </div>
                     </div>
@@ -605,42 +622,42 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-globe2"></i> Timezone Settings</h3>
+                                <h3><i class="bi bi-globe2"></i> <?php echo $lang3727; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Current Timezone</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3728; ?></label>
                                     <div class="info-box">
                                         <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
                                         <span id="currentTimezone">-</span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Change Timezone</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3729; ?></label>
                                     <select id="timezoneSelect" class="form-select rounded-3" style="padding: 10px;">
-                                        <option value="">Select timezone...</option>
+                                        <option value=""><?php echo $lang3730; ?></option>
                                     </select>
                                 </div>
                                 <button type="button" class="btn-apple" onclick="setTimezone()">
-                                    <i class="bi bi-save me-2"></i>Apply Timezone
+                                    <i class="bi bi-save me-2"></i><?php echo $lang3731; ?>
                                 </button>
                             </div>
                         </div>
                         
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-clock"></i> NTP Settings</h3>
+                                <h3><i class="bi bi-clock"></i> <?php echo $lang3732; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-semibold">Automatic Time Sync (NTP)</span>
+                                    <span class="fw-semibold"><?php echo $lang3733; ?></span>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="ntpToggle" onchange="toggleNtp()">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
                                 <div class="alert alert-info small rounded-3" style="background: #e3f2fd; border: none;">
-                                    <i class="bi bi-info-circle me-2"></i>NTP automatically synchronizes your system time with network time servers.
+                                    <i class="bi bi-info-circle me-2"></i><?php echo $lang3734; ?>
                                 </div>
                             </div>
                         </div>
@@ -649,26 +666,26 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card" id="manualTimeCard">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-calendar-event"></i> Manual Date & Time</h3>
+                                <h3><i class="bi bi-calendar-event"></i> <?php echo $lang3735; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Current System Time</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3736; ?></label>
                                     <div class="info-box">
                                         <i class="bi bi-clock me-2 text-primary"></i>
                                         <span id="currentDateTime">-</span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Set Date</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3737; ?></label>
                                     <input type="date" id="manualDate" class="form-control rounded-3" value="<?php echo date('Y-m-d'); ?>">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Set Time</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3738; ?></label>
                                     <input type="time" id="manualTime" class="form-control rounded-3" value="<?php echo date('H:i:s'); ?>">
                                 </div>
                                 <button type="button" class="btn-apple-warning btn" id="setManualTimeBtn" style="background: #ff9500; color: white;" onclick="setManualDateTime()">
-                                    <i class="bi bi-save me-2"></i>Set Manual Time
+                                    <i class="bi bi-save me-2"></i><?php echo $lang3739; ?>
                                 </button>
                             </div>
                         </div>
@@ -678,59 +695,76 @@ $menu = require_once 'menu.php';
             
             <!-- ==================== NETWORK TAB ==================== -->
             <div class="tab-pane fade" id="network" role="tabpanel">
-                <div class="row g-4">
-                    <div class="col-lg-6">
-                        <div class="apple-card">
-                            <div class="card-header-apple">
-                                <h3><i class="bi bi-server"></i> Hostname</h3>
-                            </div>
-                            <div class="card-body-apple">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Current Hostname</label>
-                                    <div class="info-box">
-                                        <i class="bi bi-desktop me-2 text-primary"></i>
-                                        <span id="currentHostname">-</span>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">New Hostname</label>
-                                    <input type="text" id="newHostname" class="form-control rounded-3" placeholder="Enter new hostname">
-                                    <small class="text-muted mt-1">Letters, numbers, dots, and hyphens only</small>
-                                </div>
-                                <button type="button" class="btn-apple" onclick="setHostname()">
-                                    <i class="bi bi-save me-2"></i>Change Hostname
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+				<div class="row g-4">
+					<div class="col-lg-6">
+						<div class="apple-card">
+							<div class="card-header-apple">
+								<h3><i class="bi bi-server"></i> <?php echo $lang3740; ?></h3>
+							</div>
+							<div class="card-body-apple">
+								<div class="mb-3">
+									<label class="form-label fw-semibold"><?php echo $lang3741; ?></label>
+									<div class="info-box">
+										<i class="bi bi-desktop me-2 text-primary"></i>
+										<span id="currentHostname">-</span>
+									</div>
+								</div>
+								
+								<div class="mb-3">
+									<label class="form-label fw-semibold"><?php echo $lang3742; ?></label>
+									<input type="text" id="newHostname" class="form-control rounded-3" placeholder="<?php echo $lang3743; ?>">
+									<small class="text-muted mt-1"><?php echo $lang3744; ?></small>
+								</div>
+								
+								<div class="mb-3">
+									<label class="form-label fw-semibold"><?php echo $lang4782; ?></label>
+									<input type="text" id="newDomain" class="form-control rounded-3" placeholder="example.local">
+									<small class="text-muted mt-1"><?php echo $lang4783; ?></small>
+								</div>
+								
+								<div class="mb-3">
+									<label class="form-label fw-semibold"><?php echo $lang4784; ?></label>
+									<div class="info-box" style="background: #e3f2fd; border-color: #90caf9;">
+										<i class="bi bi-globe2 me-2 text-primary"></i>
+										<span id="fqdnPreview">-</span>
+										<small class="text-muted ms-2"><?php echo $lang4785; ?></small>
+									</div>
+								</div>
+								
+								<button type="button" class="btn-apple" onclick="setHostname()">
+									<i class="bi bi-save me-2"></i><?php echo $lang3745; ?>
+								</button>
+							</div>
+						</div>
+					</div>
                     
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-hdd-network"></i> Network Configuration</h3>
+                                <h3><i class="bi bi-hdd-network"></i> <?php echo $lang3746; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Interface</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3747; ?></label>
                                     <select id="networkInterface" class="form-select rounded-3" required>
-                                        <option value="">Select interface...</option>
+                                        <option value=""><?php echo $lang3748; ?></option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">IP Method</label>
+                                    <label class="form-label fw-semibold"><?php echo $lang3749; ?></label>
                                     <select id="ipMethod" class="form-select rounded-3" onchange="toggleStaticFields()">
-                                        <option value="dhcp">DHCP (Automatic)</option>
-                                        <option value="static">Static (Manual)</option>
+                                        <option value="dhcp"><?php echo $lang3750; ?></option>
+                                        <option value="static"><?php echo $lang3751; ?></option>
                                     </select>
                                 </div>
                                 
                                 <div id="staticFields" style="display: none;">
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">IP Address</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3752; ?></label>
                                         <input type="text" id="ipAddress" class="form-control rounded-3" placeholder="192.168.1.100">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Netmask</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3753; ?></label>
                                         <select id="netmask" class="form-select rounded-3">
 											<option value="128.0.0.0">128.0.0.0 (/1)</option>
 											<option value="192.0.0.0">192.0.0.0 (/2)</option>
@@ -766,20 +800,20 @@ $menu = require_once 'menu.php';
 										</select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Gateway</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3754; ?></label>
                                         <input type="text" id="gateway" class="form-control rounded-3" placeholder="192.168.1.1">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">DNS Servers</label>
+                                        <label class="form-label fw-semibold"><?php echo $lang3755; ?></label>
                                         <input type="text" id="dns" class="form-control rounded-3" placeholder="8.8.8.8, 8.8.4.4">
                                     </div>
                                 </div>
                                 
                                 <div class="alert alert-warning rounded-3 small">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>Changes may disconnect your session!
+                                    <i class="bi bi-exclamation-triangle me-2"></i><?php echo $lang3756; ?>
                                 </div>
                                 <button type="button" class="btn-apple" onclick="setNetworkConfig()">
-                                    <i class="bi bi-save me-2"></i>Apply Settings
+                                    <i class="bi bi-save me-2"></i><?php echo $lang3757; ?>
                                 </button>
                             </div>
                         </div>
@@ -788,16 +822,16 @@ $menu = require_once 'menu.php';
                 
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-diagram-3"></i> Network Status</h3>
+                        <h3><i class="bi bi-diagram-3"></i> <?php echo $lang3758; ?></h3>
                     </div>
                     <div class="card-body-apple">
                         <div class="table-responsive">
                             <table class="table table-borderless">
                                 <thead>
-                                    <tr><th>Interface</th><th>IP Address</th><th>Method</th><th>Status</th></tr>
+                                    <tr><th><?php echo $lang3759; ?></th><th><?php echo $lang3760; ?></th><th><?php echo $lang3761; ?></th><th><?php echo $lang3762; ?></th></tr>
                                 </thead>
                                 <tbody id="networkStatusTable">
-                                    <tr><td colspan="4" class="text-center"><div class="loading-spinner-sm"></div> Loading...</td></tr>
+                                    <tr><td colspan="4" class="text-center"><div class="loading-spinner-sm"></div> <?php echo $lang3763; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -811,48 +845,54 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-info-circle"></i> System Information</h3>
+                                <h3><i class="bi bi-info-circle"></i> <?php echo $lang3764; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="info-box" id="sysinfoHostname">
-                                    <i class="bi bi-server me-2 text-primary"></i>
-                                    <strong>Hostname:</strong><br>-
-                                </div>
+									<i class="bi bi-server me-2 text-primary"></i>
+									<strong><?php echo $lang3765; ?></strong><br>
+									<span id="sysinfoHostnameValue">-</span>
+								</div>
+								<div class="info-box" id="sysinfoFqdn" style="background: #e3f2fd; border-color: #90caf9;">
+									<i class="bi bi-globe2 me-2 text-primary"></i>
+									<strong>FQDN (Full domain name)</strong><br>
+									<span id="sysinfoFqdnValue">-</span>
+								</div>
                                 <div class="info-box" id="sysinfoOs">
                                     <i class="bi bi-ubuntu me-2 text-primary"></i>
-                                    <strong>Operating System:</strong><br>-
+                                    <strong><?php echo $lang3766; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="sysinfoKernel">
                                     <i class="bi bi-box me-2 text-primary"></i>
-                                    <strong>Kernel:</strong><br>-
+                                    <strong><?php echo $lang3767; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="sysinfoCpu">
                                     <i class="bi bi-cpu-fill me-2 text-primary"></i>
-                                    <strong>CPU:</strong><br>-
+                                    <strong><?php echo $lang3768; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="sysinfoPhp">
                                     <i class="bi bi-code-slash me-2 text-primary"></i>
-                                    <strong>PHP Version:</strong><br>-
+                                    <strong><?php echo $lang3769; ?></strong><br>-
                                 </div>
                             </div>
                         </div>
 						
 						<div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-info-circle"></i> System Information</h3>
+                                <h3><i class="bi bi-info-circle"></i> <?php echo $lang3770; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="info-box" id="">
                                     <i class="bi bi-disc me-2 text-primary"></i>
-                                    <strong>Product:</strong><br>Mini-Bucket - NAS Control Panel
+                                    <strong><?php echo $lang3771; ?></strong><br>Mini-Bucket - NAS Control Panel
                                 </div>
                                 <div class="info-box" id="">
                                     <i class="bi bi-archive me-2 text-primary"></i>
-                                    <strong>Version:</strong><br><?php echo $version; ?>
+                                    <strong><?php echo $lang3772; ?></strong><br><?php echo $version; ?>
                                 </div>
                                 <div class="info-box" id="">
                                     <i class="fas fa-balance-scale me-2 text-primary"></i>
-                                    <strong>License:</strong><br> GNU Affero General Public License "AGPLv3+"
+                                    <strong><?php echo $lang3773; ?></strong><br> GNU Affero General Public License "AGPLv3+"
                                 </div>
                                 <div class="info-box" id="">
                                     <i class="bi bi-c-circle me-2 text-primary"></i>
@@ -860,7 +900,7 @@ $menu = require_once 'menu.php';
                                 </div>
                                 <div class="info-box" id="">
                                     <i class="bi bi-currency-dollar me-2 text-primary"></i>
-                                    <strong>Donation</strong><br> Donation methods: <a href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer">Donation</a>
+                                    <strong><?php echo $lang3774; ?></strong><br> <?php echo $lang3775; ?> <a href="https://mini-bucket.ru/donation/" target="_blank" rel="noopener noreferrer"><?php echo $lang3776; ?></a>
                                 </div>
                             </div>
                         </div>
@@ -870,24 +910,24 @@ $menu = require_once 'menu.php';
                     <div class="col-lg-6">
                         <div class="apple-card">
                             <div class="card-header-apple">
-                                <h3><i class="bi bi-bar-chart-steps"></i> Resource Details</h3>
+                                <h3><i class="bi bi-bar-chart-steps"></i> <?php echo $lang3777; ?></h3>
                             </div>
                             <div class="card-body-apple">
                                 <div class="info-box" id="resMemory">
                                     <i class="bi bi-memory me-2 text-primary"></i>
-                                    <strong>Memory Details</strong><br>-
+                                    <strong><?php echo $lang3778; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="resDisk">
                                     <i class="bi bi-hdd-stack me-2 text-primary"></i>
-                                    <strong>Disk Details (/)</strong><br>-
+                                    <strong><?php echo $lang3779; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="resUptime">
                                     <i class="bi bi-clock-history me-2 text-primary"></i>
-                                    <strong>System Uptime</strong><br>-
+                                    <strong><?php echo $lang3780; ?></strong><br>-
                                 </div>
                                 <div class="info-box" id="resTimezone">
                                     <i class="bi bi-calendar3 me-2 text-primary"></i>
-                                    <strong>Timezone & Date</strong><br>-
+                                    <strong><?php echo $lang3781; ?></strong><br>-
                                 </div>
                             </div>
                         </div>
@@ -895,10 +935,10 @@ $menu = require_once 'menu.php';
                         <div class="apple-card text-center">
                             <div class="card-body-apple">
                                 <button type="button" class="btn diagnostic-btn" onclick="window.openSystemChecker()">
-                                    <i class="bi bi-shield-check me-2"></i> Run System Diagnostics
+                                    <i class="bi bi-shield-check me-2"></i> <?php echo $lang3782; ?>
                                 </button>
                                 <p class="text-muted small mt-3 mb-0">
-                                    <i class="bi bi-info-circle"></i> Check and repair system configuration, packages, and services
+                                    <i class="bi bi-info-circle"></i> <?php echo $lang3783; ?>
                                 </p>
                             </div>
                         </div>
@@ -917,6 +957,7 @@ $menu = require_once 'menu.php';
 
 <script>
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
+
 // ========== Утилиты ==========
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-3" role="alert">
@@ -1002,14 +1043,14 @@ function escapeHtml(str) {
 
 // ========== Power Actions ==========
 async function powerAction(action) {
-    if (!confirm(`${action === 'reboot' ? 'Reboot' : 'Shutdown'} system?`)) return;
+    if (!confirm(`${action === 'reboot' ? '<?php echo $lang3784; ?>' : '<?php echo $lang3785; ?>'} <?php echo $lang3786; ?>`)) return;
     
     const result = await apiCall('power_action', 'POST', { power_action: action });
     if (result.success) {
         showAlert(result.message, 'warning');
         setTimeout(() => { window.location.reload(); }, 5000);
     } else {
-        showAlert(result.error || 'Action failed', 'danger');
+        showAlert(result.error || '<?php echo $lang3787; ?>', 'danger');
     }
 }
 
@@ -1075,8 +1116,8 @@ async function loadServices() {
                             </div>
                             <div class="mb-2">
                                 ${service.running ? 
-                                    '<span class="badge-running"><i class="bi bi-play-fill me-1"></i>Running</span>' : 
-                                    '<span class="badge-stopped"><i class="bi bi-stop-fill me-1"></i>Stopped</span>'}
+                                    '<span class="badge-running"><i class="bi bi-play-fill me-1"></i><?php echo $lang3788; ?></span>' : 
+                                    '<span class="badge-stopped"><i class="bi bi-stop-fill me-1"></i><?php echo $lang3789; ?></span>'}
                             </div>
                             <div class="d-flex gap-2 mt-2">
                                 <button type="button" class="service-action-btn" onclick="serviceAction('${key}', 'start')" ${service.running ? 'disabled' : ''} title="Start">
@@ -1085,15 +1126,15 @@ async function loadServices() {
                                 <button type="button" class="service-action-btn" onclick="serviceAction('${key}', 'stop')" ${!service.running ? 'disabled' : ''} title="Stop">
                                     <i class="bi bi-stop-fill"></i>
                                 </button>
-                                <button type="button" class="service-action-btn" onclick="serviceAction('${key}', 'restart')" title="Restart">
+                                <button type="button" class="service-action-btn" onclick="serviceAction('${key}', 'restart')" title="<?php echo $lang3790; ?>">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
                             </div>
                             <div class="mt-2">
                                 <small class="text-muted">
-                                    <i class="bi bi-toggle2-on"></i> Autostart: ${service.enabled ? 'Enabled' : 'Disabled'}
+                                    <i class="bi bi-toggle2-on"></i> <?php echo $lang3791; ?> ${service.enabled ? '<?php echo $lang3792; ?>' : '<?php echo $lang3793; ?>'}
                                 </small>
-                                ${service.pid ? `<br><small class="text-muted"><i class="bi bi-cpu"></i> PID: ${service.pid}</small>` : ''}
+                               <!-- ${service.pid ? `<br><small class="text-muted"><i class="bi bi-cpu"></i> PID: ${service.pid}</small>` : ''}-->
                             </div>
                         </div>
                     </div>
@@ -1102,22 +1143,22 @@ async function loadServices() {
             
             $('#servicesGrid').html(html);
         } else {
-            $('#servicesGrid').html('<div class="col-12 text-center py-4 text-danger">Failed to load services</div>');
+            $('#servicesGrid').html('<div class="col-12 text-center py-4 text-danger"><?php echo $lang3794; ?></div>');
         }
     } catch (error) {
         console.error('loadServices error:', error);
-        $('#servicesGrid').html('<div class="col-12 text-center py-4 text-danger">Error loading services</div>');
+        $('#servicesGrid').html('<div class="col-12 text-center py-4 text-danger"><?php echo $lang3795; ?></div>');
     }
 }
 
 async function serviceAction(service, action) {
     const result = await apiCall('service_action', 'POST', { service: service, service_action: action });
     if (result.success) {
-        showAlert(`Service ${action}ed`, 'success');
+        showAlert(`<?php echo $lang3796; ?> ${service} ${action} <?php echo $lang3797; ?>`, 'success');
         loadServices();
         loadResources();
     } else {
-        showAlert(`Error: ${result.error || 'Action failed'}`, 'danger');
+        showAlert(`<?php echo $lang3798; ?> ${result.error || '<?php echo $lang3799; ?>'}`, 'danger');
     }
 }
 
@@ -1126,7 +1167,7 @@ async function loadTimezones() {
     const result = await apiCall('get_timezones');
     if (result.success) {
         const timezones = result.data;
-        let html = '<option value="">Select timezone...</option>';
+        let html = '<option value=""><?php echo $lang3800; ?></option>';
         for (const [region, zones] of Object.entries(timezones)) {
             html += `<optgroup label="${escapeHtml(region)}">`;
             zones.forEach(tz => {
@@ -1150,7 +1191,7 @@ async function loadCurrentTimezone() {
 async function setTimezone() {
     const timezone = $('#timezoneSelect').val();
     if (!timezone) {
-        showAlert('Select timezone', 'warning');
+        showAlert('<?php echo $lang3801; ?>', 'warning');
         return;
     }
     
@@ -1199,7 +1240,7 @@ async function setManualDateTime() {
     const time = $('#manualTime').val();
     
     if (!date || !time) {
-        showAlert('Enter date and time', 'warning');
+        showAlert('<?php echo $lang3802; ?>', 'warning');
         return;
     }
     
@@ -1218,20 +1259,52 @@ async function loadHostname() {
     const result = await apiCall('get_hostname');
     if (result.success) {
         $('#currentHostname').text(result.hostname);
+        updateFqdnPreview();
     }
 }
 
+async function loadDomain() {
+    const result = await apiCall('get_domain');
+    if (result.success) {
+        $('#newDomain').val(result.domain || '');
+        updateFqdnPreview();
+    }
+}
+
+function updateFqdnPreview() {
+    const hostname = $('#currentHostname').text();
+    const domain = $('#newDomain').val() || '';
+    const fqdn = domain ? `${hostname}.${domain}` : hostname;
+    $('#fqdnPreview').text(fqdn);
+    
+    $('#newDomain').off('input').on('input', function() {
+        const currentHostname = $('#currentHostname').text();
+        const currentDomain = $(this).val() || '';
+        const preview = currentDomain ? `${currentHostname}.${currentDomain}` : currentHostname;
+        $('#fqdnPreview').text(preview);
+    });
+}
+
+
+
 async function setHostname() {
     const hostname = $('#newHostname').val();
+    const domain = $('#newDomain').val();
+    
     if (!hostname) {
-        showAlert('Enter hostname', 'warning');
+        showAlert('<?php echo $lang3803; ?>', 'warning');
         return;
     }
     
-    const result = await apiCall('set_hostname', 'POST', { hostname: hostname });
+    const result = await apiCall('set_hostname', 'POST', { 
+        hostname: hostname,
+        domain: domain 
+    });
+    
     if (result.success) {
         showAlert(result.message, 'success');
         loadHostname();
+        loadDomain();
         loadSystemInfo();
         $('#newHostname').val('');
     } else {
@@ -1248,24 +1321,24 @@ async function loadNetwork() {
         if (result.success) {
             const interfaces = result.interfaces;
             
-            let selectHtml = '<option value="">Select interface...</option>';
+            let selectHtml = '<option value=""><?php echo $lang3804; ?></option>';
             let tableHtml = '';
             
             if (Object.keys(interfaces).length === 0) {
-                tableHtml = '<tr><td colspan="4" class="text-center text-muted">No network interfaces found</td></tr>';
+                tableHtml = '<tr><td colspan="4" class="text-center text-muted"><?php echo $lang3805; ?></td></tr>';
             } else {
                 for (const [iface, info] of Object.entries(interfaces)) {
                     const selectedAttr = (iface === savedInterface) ? 'selected' : '';
                     selectHtml += `<option value="${escapeHtml(iface)}" ${selectedAttr}>${escapeHtml(iface)} - ${escapeHtml(info.ip)}</option>`;
                     
                     const statusBadge = info.ip !== 'No IP' ? 
-                        '<span class="badge-running"><i class="bi bi-check-circle-fill me-1"></i>Active</span>' : 
-                        '<span class="badge-stopped"><i class="bi bi-x-circle-fill me-1"></i>Down</span>';
+                        '<span class="badge-running"><i class="bi bi-check-circle-fill me-1"></i><?php echo $lang3806; ?></span>' : 
+                        '<span class="badge-stopped"><i class="bi bi-x-circle-fill me-1"></i><?php echo $lang3807; ?></span>';
                     
                     tableHtml += `<tr>
                         <td><strong>${escapeHtml(iface)}</strong></td>
                         <td>${escapeHtml(info.ip)}</td>
-                        <td>${info.method === 'static' ? 'Static' : 'DHCP'}</td>
+                        <td>${info.method === 'static' ? '<?php echo $lang3808; ?>' : '<?php echo $lang3809; ?>'}</td>
                         <td>${statusBadge}</td>
                     </tr>`;
                 }
@@ -1274,11 +1347,11 @@ async function loadNetwork() {
             $('#networkInterface').html(selectHtml);
             $('#networkStatusTable').html(tableHtml);
         } else {
-            $('#networkStatusTable').html('<tr><td colspan="4" class="text-center text-danger">Failed to load network info</td></tr>');
+            $('#networkStatusTable').html('<tr><td colspan="4" class="text-center text-danger"><?php echo $lang3810; ?></td></tr>');
         }
     } catch (error) {
         console.error('loadNetwork error:', error);
-        $('#networkStatusTable').html('<tr><td colspan="4" class="text-center text-danger">Error loading network</td></tr>');
+        $('#networkStatusTable').html('<tr><td colspan="4" class="text-center text-danger"><?php echo $lang3811; ?></td></tr>');
     }
 }
 
@@ -1292,7 +1365,7 @@ async function setNetworkConfig() {
     const ipMethod = $('#ipMethod').val();
     
     if (!interface_) {
-        showAlert('Select interface', 'warning');
+        showAlert('<?php echo $lang3812; ?>', 'warning');
         return;
     }
     
@@ -1308,7 +1381,7 @@ async function setNetworkConfig() {
         data.dns = $('#dns').val();
         
         if (!data.ip_address || !data.gateway) {
-            showAlert('Fill IP address and gateway', 'warning');
+            showAlert('<?php echo $lang3813; ?>', 'warning');
             return;
         }
     }
@@ -1327,25 +1400,26 @@ async function loadSystemInfo() {
     const result = await apiCall('get_system_info');
     if (result.success) {
         const data = result.data;
+        $('#sysinfoHostnameValue').text(data.hostname);
+        $('#sysinfoFqdnValue').text(data.fqdn || data.hostname);
+        $('#sysinfoHostname').html(`<i class="bi bi-server me-2 text-primary"></i><strong><?php echo $lang3814; ?></strong><br>${escapeHtml(data.hostname)}`);
+        $('#sysinfoOs').html(`<i class="bi bi-ubuntu me-2 text-primary"></i><strong><?php echo $lang3815; ?></strong><br>${escapeHtml(data.os)}`);
+        $('#sysinfoKernel').html(`<i class="bi bi-cpu me-2 text-primary"></i><strong><?php echo $lang3816; ?></strong><br>${escapeHtml(data.kernel)}`);
+        $('#sysinfoPhp').html(`<i class="bi bi-code-slash me-2 text-primary"></i><strong><?php echo $lang3817; ?></strong><br>${escapeHtml(data.php_version)}`);
         
-        $('#sysinfoHostname').html(`<i class="bi bi-server me-2 text-primary"></i><strong>Hostname:</strong><br>${escapeHtml(data.hostname)}`);
-        $('#sysinfoOs').html(`<i class="bi bi-ubuntu me-2 text-primary"></i><strong>Operating System:</strong><br>${escapeHtml(data.os)}`);
-        $('#sysinfoKernel').html(`<i class="bi bi-cpu me-2 text-primary"></i><strong>Kernel:</strong><br>${escapeHtml(data.kernel)}`);
-        $('#sysinfoPhp').html(`<i class="bi bi-code-slash me-2 text-primary"></i><strong>PHP Version:</strong><br>${escapeHtml(data.php_version)}`);
-        
-        $('#resTimezone').html(`<i class="bi bi-calendar3 me-2 text-primary"></i><strong>Timezone & Date</strong><br>Timezone: ${escapeHtml(data.timezone.replace(/_/g, ' '))}<br>System Time: ${escapeHtml(data.datetime)}<br>NTP: ${data.ntp_enabled ? '<span class="badge-running">Enabled</span>' : '<span class="badge-stopped">Disabled</span>'}`);
+        $('#resTimezone').html(`<i class="bi bi-calendar3 me-2 text-primary"></i><strong><?php echo $lang3818; ?></strong><br><?php echo $lang3819; ?> ${escapeHtml(data.timezone.replace(/_/g, ' '))}<br><?php echo $lang3820; ?> ${escapeHtml(data.datetime)}<br><?php echo $lang3821; ?> ${data.ntp_enabled ? '<span class="badge-running"><?php echo $lang3822; ?></span>' : '<span class="badge-stopped"><?php echo $lang3823; ?></span>'}`);
     }
     
     const resources = await apiCall('get_resources');
     if (resources.success) {
         const cpu = resources.data.cpu;
-        $('#sysinfoCpu').html(`<i class="bi bi-microchip me-2 text-primary"></i><strong>CPU:</strong><br>${escapeHtml(cpu.model)} (${cpu.cores} cores)`);
+        $('#sysinfoCpu').html(`<i class="bi bi-microchip me-2 text-primary"></i><strong><?php echo $lang3824; ?></strong><br>${escapeHtml(cpu.model)} (${cpu.cores} <?php echo $lang3825; ?>)`);
         
-        $('#resMemory').html(`<i class="bi bi-memory me-2 text-primary"></i><strong>Memory Details</strong><br>Total: ${resources.data.memory.total} GB<br>Used: ${resources.data.memory.used} GB<br>Available: ${resources.data.memory.available} GB<br>Usage: ${resources.data.memory.usage_percent}%`);
+        $('#resMemory').html(`<i class="bi bi-memory me-2 text-primary"></i><strong><?php echo $lang3826; ?></strong><br><?php echo $lang3827; ?> ${resources.data.memory.total} GB<br><?php echo $lang3828; ?> ${resources.data.memory.used} GB<br><?php echo $lang3829; ?> ${resources.data.memory.available} GB<br><?php echo $lang3830; ?> ${resources.data.memory.usage_percent}%`);
         
-        $('#resDisk').html(`<i class="bi bi-hdd-stack me-2 text-primary"></i><strong>Disk Details (/)</strong><br>Total: ${resources.data.disk.total} GB<br>Used: ${resources.data.disk.used} GB<br>Free: ${resources.data.disk.free} GB<br>Usage: ${resources.data.disk.usage_percent}%`);
+        $('#resDisk').html(`<i class="bi bi-hdd-stack me-2 text-primary"></i><strong><?php echo $lang3831; ?></strong><br><?php echo $lang3832; ?> ${resources.data.disk.total} GB<br><?php echo $lang3833; ?> ${resources.data.disk.used} GB<br><?php echo $lang3834; ?> ${resources.data.disk.free} GB<br><?php echo $lang3835; ?> ${resources.data.disk.usage_percent}%`);
         
-        $('#resUptime').html(`<i class="bi bi-clock-history me-2 text-primary"></i><strong>System Uptime</strong><br>${escapeHtml(resources.data.uptime)}`);
+        $('#resUptime').html(`<i class="bi bi-clock-history me-2 text-primary"></i><strong><?php echo $lang3836; ?></strong><br>${escapeHtml(resources.data.uptime)}`);
     }
 }
 
@@ -1354,7 +1428,7 @@ let isRefreshing = false;
 
 async function refreshAllData() {
     if (isRefreshing) {
-        showAlert('Refresh already in progress...', 'info');
+        showAlert('<?php echo $lang3837; ?>', 'info');
         return;
     }
     
@@ -1375,10 +1449,10 @@ async function refreshAllData() {
             loadSystemInfo()
         ]);
         
-        showAlert('Data updated successfully', 'success');
+        showAlert('<?php echo $lang3838; ?>', 'success');
     } catch (error) {
         console.error('Refresh error:', error);
-        showAlert('Error loading data: ' + error.message, 'danger');
+        showAlert('<?php echo $lang3839; ?> ' + error.message, 'danger');
     } finally {
         hideLoadingIndicators();
         refreshIcon.removeClass('fa-spin');
@@ -1388,8 +1462,8 @@ async function refreshAllData() {
 
 function showLoadingIndicators() {
     $('.apple-card').addClass('loading');
-    $('#servicesGrid').html('<div class="col-12 text-center py-4"><div class="loading-spinner-sm"></div> Loading services...</div>');
-    $('#networkStatusTable').html('<tr><td colspan="4" class="text-center"><div class="loading-spinner-sm"></div> Loading...</td></tr>');
+    $('#servicesGrid').html('<div class="col-12 text-center py-4"><div class="loading-spinner-sm"></div> <?php echo $lang3840; ?></div>');
+    $('#networkStatusTable').html('<tr><td colspan="4" class="text-center"><div class="loading-spinner-sm"></div> <?php echo $lang3841; ?></td></tr>');
     $('#currentTimezone').text('Loading...');
     $('#currentHostname').text('Loading...');
     $('#systemUptime').text('Loading...');
@@ -1408,18 +1482,18 @@ function openSystemChecker() {
                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-                            <h5 class="modal-title"><i class="bi bi-laptop me-2"></i>System Diagnostics</h5>
+                            <h5 class="modal-title"><i class="bi bi-laptop me-2"></i><?php echo $lang3842; ?></h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body" id="globalModalBody">
                             <div class="text-center py-5">
                                 <div class="spinner-border text-primary mb-3" role="status"></div>
-                                <p>Running diagnostics...</p>
+                                <p><?php echo $lang3843; ?></p>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button class="btn" id="globalFixAllBtn2" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">Fix All</button>
+                            <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3844; ?></button>
+                            <button class="btn" id="globalFixAllBtn2" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><?php echo $lang3845; ?></button>
                         </div>
                     </div>
                 </div>
@@ -1430,7 +1504,7 @@ function openSystemChecker() {
     const modal = new bootstrap.Modal($('#globalCheckModal')[0]);
     modal.show();
     
-    $('#globalModalBody').html('<div class="text-center py-5"><div class="spinner-border text-primary mb-3"></div><p>Checking system...</p></div>');
+    $('#globalModalBody').html('<div class="text-center py-5"><div class="spinner-border text-primary mb-3"></div><p><?php echo $lang3846; ?></p></div>');
     
     const headers = {};
     if (window.apiConfig && window.apiConfig.apiKey) {
@@ -1446,11 +1520,11 @@ function openSystemChecker() {
             if (data.success) {
                 renderQuickCheckResults(data.results);
             } else {
-                $('#globalModalBody').html('<div class="alert alert-danger m-3">API Error</div>');
+                $('#globalModalBody').html('<div class="alert alert-danger m-3"><?php echo $lang3847; ?></div>');
             }
         })
         .catch(() => {
-            $('#globalModalBody').html('<div class="alert alert-danger m-3">Network Error</div>');
+            $('#globalModalBody').html('<div class="alert alert-danger m-3"><?php echo $lang3848; ?></div>');
         });
     
     function renderQuickCheckResults(results) {
@@ -1462,13 +1536,13 @@ function openSystemChecker() {
                 html += `<div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center p-2 rounded border" style="background: #f8f9fa;">
                         <span><span style="color:${color}">${item.status ? '✓' : '✗'}</span> ${item.name}</span>
-                        ${!item.status ? `<button class="btn btn-sm btn-link fix-modal-item" data-cat="${catKey}" data-item="${itemKey}">Fix</button>` : ''}
+                        ${!item.status ? `<button class="btn btn-sm btn-link fix-modal-item" data-cat="${catKey}" data-item="${itemKey}"><?php echo $lang3849; ?></button>` : ''}
                     </div>
                 </div>`;
             }
             html += '</div>';
         }
-        html += '<div class="alert alert-info mt-3 small">Use "Fix All" to resolve all issues automatically</div></div>';
+        html += '<div class="alert alert-info mt-3 small"><?php echo $lang3850; ?></div></div>';
         $('#globalModalBody').html(html);
         
         $('.fix-modal-item').off('click').on('click', async function() {
@@ -1497,8 +1571,8 @@ function openSystemChecker() {
     }
     
     $('#globalFixAllBtn2').off('click').on('click', async function() {
-        if (!confirm('Fix all issues? This may take a few moments.')) return;
-        $(this).text('Fixing...').prop('disabled', true);
+        if (!confirm('<?php echo $lang3851; ?>')) return;
+        $(this).text('<?php echo $lang3852; ?>').prop('disabled', true);
         const formData = new URLSearchParams();
         formData.append('action', 'fix_all');
         formData.append('confirm', 'yes');
@@ -1513,7 +1587,7 @@ function openSystemChecker() {
         });
         const newData = await resp.json();
         if (newData.success) renderQuickCheckResults(newData.results);
-        $(this).text('Fix All').prop('disabled', false);
+        $(this).text('<?php echo $lang3853; ?>').prop('disabled', false);
     });
 }
 

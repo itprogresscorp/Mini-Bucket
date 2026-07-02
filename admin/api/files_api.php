@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json');
 
+require_once '../lang/loader.php';
 
 // ========== ПРОВЕРКА API КЛЮЧА ==========
 function validateApiKey() {
@@ -512,23 +513,24 @@ function getSystemGroups() {
 }
 
 function uploadErrorCode($code) {
+	global $lang155, $lang156, $lang157, $lang158, $lang159, $lang160, $lang161, $lang162;
     switch ($code) {
         case UPLOAD_ERR_INI_SIZE:
-            return 'File exceeds upload_max_filesize directive in php.ini';
+            return $lang155;
         case UPLOAD_ERR_FORM_SIZE:
-            return 'File exceeds MAX_FILE_SIZE directive in HTML form';
+            return $lang156;
         case UPLOAD_ERR_PARTIAL:
-            return 'File was only partially uploaded';
+            return $lang157;
         case UPLOAD_ERR_NO_FILE:
-            return 'No file was uploaded';
+            return $lang158;
         case UPLOAD_ERR_NO_TMP_DIR:
-            return 'Missing temporary folder';
+            return $lang159;
         case UPLOAD_ERR_CANT_WRITE:
-            return 'Failed to write file to disk';
+            return $lang160;
         case UPLOAD_ERR_EXTENSION:
-            return 'File upload stopped by extension';
+            return $lang161;
         default:
-            return 'Unknown upload error';
+            return $lang162;
     }
 }
 
@@ -580,8 +582,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $fullPath = $drive . ($dir ? '/' . ltrim($dir, '/') : '');
             $validPath = validatePath($fullPath, $drive);
             
+			global $lang163;
             if (!$validPath || !is_dir($validPath)) {
-                sendJsonResponse(['success' => false, 'error' => 'Invalid directory path']);
+                sendJsonResponse(['success' => false, 'error' => $lang163]);
                 break;
             }
             
@@ -592,7 +595,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'check_progress':
             $operationId = isset($_GET['operation_id']) ? $_GET['operation_id'] : null;
             if (!$operationId) {
-                sendJsonResponse(['success' => false, 'error' => 'Operation ID required']);
+                global $lang164;
+				sendJsonResponse(['success' => false, 'error' => $lang164]);
                 break;
             }
             
@@ -768,8 +772,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             }
             
+			global $lang165;
             $operationId = startBackgroundOperation('copy', $sourceDir, $targetDir, $validFiles);
-            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => 'Copy operation started in background']);
+            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => $lang165]);
             break;
             
         case 'move_to_other':
@@ -794,8 +799,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             }
             
+			global $lang166;
             $operationId = startBackgroundOperation('move', $sourceDir, $targetDir, $validFiles);
-            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => 'Move operation started in background']);
+            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => $lang166]);
             break;
             
         case 'copy_to_clipboard':
@@ -861,8 +867,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($clipboard['operation'] === 'cut') {
                 $_SESSION['filemanager_clipboard'] = null;
             }
-            
-            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => ucfirst($operation) . ' operation started in background']);
+            global $lang168;
+            sendJsonResponse(['success' => true, 'operation_id' => $operationId, 'message' => ucfirst($operation) . $lang168]);
             break;
             
         case 'clear_clipboard':
@@ -909,11 +915,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sendJsonResponse(['success' => false, 'error' => 'Missing parameters']);
                 break;
             }
-            
+            global $lang167;
             $newDir = $targetDir . '/' . $dirname;
             if (!file_exists($newDir)) {
                 if (@mkdir($newDir, 0755, true)) {
-                    sendJsonResponse(['success' => true, 'message' => 'Folder created']);
+                    sendJsonResponse(['success' => true, 'message' => $lang167]);
                 } else {
                     sendJsonResponse(['success' => false, 'error' => 'Failed to create folder']);
                 }

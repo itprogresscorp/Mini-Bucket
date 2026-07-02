@@ -82,6 +82,8 @@ function validateApiKey() {
 
 validateApiKey();
 
+require_once '../lang/loader.php';
+
 // ========== КОНСТАНТЫ ==========
 define('NFS_EXPORTS_FILE', '/etc/exports');
 
@@ -540,6 +542,7 @@ switch ($action) {
         break;
         
     case 'save_config':
+		global $lang2429, $lang2430;
         $config = [
             'threads' => $_POST['threads'] ?? '8',
             'nfsv4_lease_time' => $_POST['nfsv4_lease_time'] ?? '90',
@@ -555,7 +558,7 @@ switch ($action) {
         if ($result) {
             restartNfsService();
         }
-        echo json_encode(['success' => $result, 'message' => $result ? 'Конфигурация сохранена' : 'Ошибка сохранения']);
+        echo json_encode(['success' => $result, 'message' => $result ? $lang2429 : $lang2430]);
         break;
         
     case 'get_exports':
@@ -563,18 +566,19 @@ switch ($action) {
         break;
         
     case 'create_export':
+		global $lang2431, $lang2432, $lang2433, $lang2434, $lang2435, $lang2436;
 		$path = normalizePath(trim($_POST['export_path'] ?? ''));
 		$client = trim($_POST['client'] ?? '');
 		$options = trim($_POST['options'] ?? '');
 		
 		if (empty($path)) {
-			echo json_encode(['success' => false, 'error' => 'Укажите путь']);
+			echo json_encode(['success' => false, 'error' => $lang2431]);
 		} elseif (!file_exists($path)) {
-			echo json_encode(['success' => false, 'error' => 'Путь не существует']);
+			echo json_encode(['success' => false, 'error' => $lang2432]);
 		} elseif (empty($client)) {
-			echo json_encode(['success' => false, 'error' => 'Укажите клиента']);
+			echo json_encode(['success' => false, 'error' => $lang2433]);
 		} elseif (empty($options)) {
-			echo json_encode(['success' => false, 'error' => 'Укажите опции']);
+			echo json_encode(['success' => false, 'error' => $lang2434]);
 		} else {
 			$exports = getNfsExports();
 			$exports[] = [
@@ -583,14 +587,15 @@ switch ($action) {
 				'options' => $options
 			];
 			if (saveNfsExports($exports)) {
-				echo json_encode(['success' => true, 'message' => 'NFS экспорт создан']);
+				echo json_encode(['success' => true, 'message' => $lang2435]);
 			} else {
-				echo json_encode(['success' => false, 'error' => 'Ошибка сохранения']);
+				echo json_encode(['success' => false, 'error' => $lang2436]);
 			}
 		}
 		break;
         
     case 'update_export':
+		global $lang2437, $lang2438, $lang2439;
 		$old_path = normalizePath($_POST['old_path'] ?? '');
 		$old_client = $_POST['old_client'] ?? '';
 		$path = normalizePath(trim($_POST['export_path'] ?? ''));
@@ -598,7 +603,7 @@ switch ($action) {
 		$options = trim($_POST['options'] ?? '');
 		
 		if (empty($path) || empty($client) || empty($options)) {
-			echo json_encode(['success' => false, 'error' => 'Заполните все поля']);
+			echo json_encode(['success' => false, 'error' => $lang2437]);
 		} else {
 			$exports = getNfsExports();
 			$updated = false;
@@ -614,26 +619,27 @@ switch ($action) {
 			}
 			
 			if ($updated && saveNfsExports($exports)) {
-				echo json_encode(['success' => true, 'message' => 'NFS экспорт обновлен']);
+				echo json_encode(['success' => true, 'message' => $lang2438]);
 			} else {
-				echo json_encode(['success' => false, 'error' => 'Ошибка обновления']);
+				echo json_encode(['success' => false, 'error' => $lang2439]);
 			}
 		}
 		break;
         
     case 'delete_export':
+		global $lang2440, $lang2441, $lang2442;
         $index = intval($_POST['index'] ?? -1);
         $exports = getNfsExports();
         
         if (isset($exports[$index])) {
             unset($exports[$index]);
             if (saveNfsExports(array_values($exports))) {
-                echo json_encode(['success' => true, 'message' => 'NFS экспорт удален']);
+                echo json_encode(['success' => true, 'message' => $lang2440]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Ошибка удаления']);
+                echo json_encode(['success' => false, 'error' => $lang2441]);
             }
         } else {
-            echo json_encode(['success' => false, 'error' => 'Экспорт не найден']);
+            echo json_encode(['success' => false, 'error' => $lang2442]);
         }
         break;
         
@@ -660,19 +666,20 @@ switch ($action) {
         break;
         
     case 'create_folder':
+		global $lang2443, $lang2444, $lang2445, $lang2446;
         $path = $_POST['path'] ?? '';
         $name = trim($_POST['name'] ?? '');
         
         if (empty($name)) {
-            echo json_encode(['success' => false, 'error' => 'Введите имя папки']);
+            echo json_encode(['success' => false, 'error' => $lang2443]);
         } elseif (!preg_match('/^[a-zA-Z0-9_\-\.\s]+$/', $name)) {
-            echo json_encode(['success' => false, 'error' => 'Недопустимые символы']);
+            echo json_encode(['success' => false, 'error' => $lang2444]);
         } else {
             $fullPath = rtrim($path, '/') . '/' . $name;
             if (createDirectory($fullPath)) {
-                echo json_encode(['success' => true, 'message' => 'Папка создана', 'path' => $fullPath]);
+                echo json_encode(['success' => true, 'message' => $lang2445, 'path' => $fullPath]);
             } else {
-                echo json_encode(['success' => false, 'error' => 'Не удалось создать папку']);
+                echo json_encode(['success' => false, 'error' => $lang2446]);
             }
         }
         break;

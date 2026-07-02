@@ -22,6 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $db = getDB();
 $message = '';
@@ -77,6 +78,10 @@ $js_config = [
     'currentHostId' => $current_host_id,
     'currentHostName' => $host_name
 ];
+
+// Переключение языка
+$current_lang_display = $current_lang;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,6 +98,22 @@ $js_config = [
     <link rel="shortcut icon" href="css/icon.ico" type="image/x-icon">
     <script src="js/hosts_load.js"></script>
     <script src="js/crt_checker.js"></script>
+	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
     <script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
 	window.hostsList = <?php echo json_encode($hosts); ?>;
@@ -385,7 +406,7 @@ $js_config = [
 		}
 
 		.sidebar-tabs {
-			width: 80px;
+			width: 90px;
 			flex-shrink: 0;
 			position: sticky;
 			top: 80px;
@@ -467,7 +488,7 @@ $js_config = [
 <body>
 <div id="applePreloader" class="apple-preloader">
     <div class="apple-spinner"></div>
-    <div class="apple-spinner-text">Loading...</div>
+    <div class="apple-spinner-text"><?php echo $lang12; ?></div>
 </div>
 
 <div class="top-bar">
@@ -477,10 +498,10 @@ $js_config = [
     <div class="top-bar-right">
         <div class="host-selector">
             <select id="hostSelector">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
-        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="Refresh"></i>
+        <i class="fas fa-sync-alt refresh-btn text-muted" onclick="refreshAllData()" title="<?php echo $lang3869; ?>"></i>
     </div>
 </div>
 
@@ -500,13 +521,13 @@ $js_config = [
                                  <div class="col-lg-6">
 									<div class="apple-card">
 										<div class="card-header-apple">
-											<h3><i class="bi bi-globe2"></i> Web Interface Settings</h3>
+											<h3><i class="bi bi-globe2"></i> <?php echo $lang3870; ?></h3>
 										</div>
 										<div class="card-body-apple">
 											<div class="mb-4 d-flex justify-content-between align-items-center">
 												<div>
-													<span class="fw-semibold">Enable Web Interface</span>
-													<div class="small text-muted">Enable/disable Mini-B web interface in Apache</div>
+													<span class="fw-semibold"><?php echo $lang3871; ?></span>
+													<div class="small text-muted"><?php echo $lang3872; ?></div>
 												</div>
 												<label class="toggle-switch">
 													<input type="checkbox" id="enableWebInterface" onchange="toggleWebInterface()">
@@ -515,15 +536,15 @@ $js_config = [
 											</div>
 											
 											<div class="mb-3">
-												<label class="form-label fw-semibold">Listen Port</label>
+												<label class="form-label fw-semibold"><?php echo $lang3873; ?></label>
 												<input type="number" class="form-control form-control-apple" id="listenPort" placeholder="1488" min="1" max="65535">
-												<small class="text-muted">Port on which Apache will listen (requires restart)</small>
+												<small class="text-muted"><?php echo $lang3874; ?></small>
 											</div>
 											
 											<div class="mb-3">
-												<label class="form-label fw-semibold">Document Root</label>
+												<label class="form-label fw-semibold"><?php echo $lang3875; ?></label>
 												<input type="text" class="form-control form-control-apple" id="documentRoot" placeholder="/var/www/html/admin">
-												<small class="text-muted">Path to Mini-B admin directory</small>
+												<small class="text-muted"><?php echo $lang3876; ?></small>
 											</div>
 										</div>
 									</div>
@@ -531,13 +552,13 @@ $js_config = [
 									<!-- SSL Configuration Card -->
 									<div class="apple-card">
 										<div class="card-header-apple">
-											<h3><i class="bi bi-lock-fill"></i> HTTPS / SSL Configuration</h3>
+											<h3><i class="bi bi-lock-fill"></i> <?php echo $lang3877; ?></h3>
 										</div>
 										<div class="card-body-apple">
 											<div class="mb-4 d-flex justify-content-between align-items-center">
 												<div>
-													<span class="fw-semibold">Enable HTTPS</span>
-													<div class="small text-muted">Enable SSL/TLS encryption for web interface</div>
+													<span class="fw-semibold"><?php echo $lang3878; ?></span>
+													<div class="small text-muted"><?php echo $lang3879; ?></div>
 												</div>
 												<label class="toggle-switch">
 													<input type="checkbox" id="enableHttps" onchange="toggleHttps()">
@@ -547,24 +568,24 @@ $js_config = [
 											
 											<div id="sslSettings" style="display: none;">
 												<div class="mb-3">
-													<label class="form-label fw-semibold">SSL Certificate</label>
+													<label class="form-label fw-semibold"><?php echo $lang3880; ?></label>
 													<div class="d-flex gap-2">
 														<input type="text" class="form-control form-control-apple" id="sslCertFile" placeholder="/path/to/certificate.crt" readonly>
 														<button type="button" class="btn-apple-outline" onclick="openCertificateSelector()">
-															<i class="bi bi-search"></i> Select
+															<i class="bi bi-search"></i> <?php echo $lang3881; ?>
 														</button>
 													</div>
 												</div>
 												<div class="mb-3">
-													<label class="form-label fw-semibold">SSL Key File</label>
+													<label class="form-label fw-semibold"><?php echo $lang3882; ?></label>
 													<input type="text" class="form-control form-control-apple" id="sslKeyFile" placeholder="/path/to/private.key" readonly>
 												</div>
 												<div class="mb-3">
-													<label class="form-label fw-semibold">SSL Chain File (optional)</label>
+													<label class="form-label fw-semibold"><?php echo $lang3883; ?></label>
 													<input type="text" class="form-control form-control-apple" id="sslChainFile" placeholder="/path/to/chain.pem" readonly>
 												</div>
 												<div class="alert alert-info small rounded-3" style="background: #e3f2fd; border: none;">
-													<i class="bi bi-info-circle me-2"></i>HTTPS will be configured on the same port with SSL.
+													<i class="bi bi-info-circle me-2"></i><?php echo $lang3884; ?>
 												</div>
 											</div>
 										</div>
@@ -574,78 +595,121 @@ $js_config = [
 								<div class="col-lg-6">
 									<div class="apple-card">
 										<div class="card-header-apple">
-											<h3><i class="bi bi-info-circle"></i> Apache Status</h3>
+											<h3><i class="bi bi-info-circle"></i> <?php echo $lang3885; ?></h3>
 										</div>
 										<div class="card-body-apple">
 											<div class="info-box d-flex justify-content-between align-items-center">
 												<div>
 													<i class="bi bi-server me-2 text-primary"></i>
-													<strong>Apache Status:</strong>
+													<strong><?php echo $lang3886; ?></strong>
 													<span id="apacheStatus" class="ms-2">-</span>
 												</div>
 												<div class="btn-group">
 													<button class="btn-apple-outline btn-sm" onclick="serviceAction('restart')" style="padding: 5px 12px;">
-														<i class="bi bi-arrow-repeat"></i> Restart
+														<i class="bi bi-arrow-repeat"></i> <?php echo $lang3887; ?>
 													</button>
 													<button class="btn-apple-outline btn-sm" onclick="serviceAction('reload')" style="padding: 5px 12px;">
-														<i class="bi bi-arrow-repeat"></i> Reload
+														<i class="bi bi-arrow-repeat"></i> <?php echo $lang3888; ?>
 													</button>
 												</div>
 											</div>
 											
 											<div class="info-box">
 												<i class="bi bi-file-text me-2 text-primary"></i>
-												<strong>Config File:</strong>
+												<strong><?php echo $lang3889; ?></strong>
 												<code id="configPath">/etc/apache2/sites-available/minib.conf</code>
 											</div>
 											
 											<div class="info-box">
 												<i class="bi bi-calendar me-2 text-primary"></i>
-												<strong>Last Config Change:</strong>
+												<strong><?php echo $lang3890; ?></strong>
 												<span id="lastModified">-</span>
 											</div>
 										</div>
 									</div>
-									
+
 									<!-- Actions Card -->
 									<div class="apple-card">
 										<div class="card-header-apple">
-											<h3><i class="bi bi-tools"></i> Actions</h3>
+											<h3><i class="bi bi-tools"></i> <?php echo $lang3891; ?></h3>
 										</div>
 										<div class="card-body-apple">
 											<div class="d-flex gap-3 flex-wrap mb-4">
-												<button type="button" class="btn-apple" onclick="applyConfig()">
-													<i class="bi bi-check-lg me-2"></i>Apply & Test Config
+												<button type="button" class="btn-apple sm" onclick="applyConfig()">
+													<i class="bi bi-check-lg me-2"></i><?php echo $lang3892; ?>
 												</button>
-												<button type="button" class="btn-apple-outline" onclick="loadCurrentConfig()">
-													<i class="bi bi-arrow-repeat me-2"></i>Load Current Config
+												<button type="button" class="btn-apple-outline sm" onclick="loadCurrentConfig()">
+													<i class="bi bi-arrow-repeat me-2"></i><?php echo $lang3893; ?>
 												</button>
-												<button type="button" class="btn-apple-danger" onclick="restoreDefaultConfig()">
-													<i class="bi bi-arrow-counterclockwise me-2"></i>Restore Default
+												<button type="button" class="btn btn-danger sm" onclick="restoreDefaultConfig()">
+													<i class="bi bi-arrow-counterclockwise me-2"></i><?php echo $lang3894; ?>
 												</button>
 											</div>
 											
 											<div class="alert alert-warning rounded-3 small">
 												<i class="bi bi-exclamation-triangle me-2"></i>
-												<strong>Warning:</strong> Changes will restart Apache. Make sure you have alternative access if SSH/remote.
+												<strong><?php echo $lang3895; ?></strong> <?php echo $lang3896; ?>
 											</div>
 										</div>
 									</div>
 								</div>
 								<div class="apple-card">
 									<div class="card-header-apple d-flex justify-content-between align-items-center">
-										<h3><i class="bi bi-file-code"></i> Configuration Preview</h3>
+										<h3><i class="bi bi-file-code"></i> <?php echo $lang3897; ?></h3>
 										<button class="btn-apple-outline btn-sm" onclick="copyConfigToClipboard()">
-											<i class="bi bi-clipboard"></i> Copy
+											<i class="bi bi-clipboard"></i> <?php echo $lang3898; ?>
 										</button>
 									</div>
 									<div class="card-body-apple">
-										<pre id="configPreview" class="config-preview">Loading configuration...</pre>
+										<pre id="configPreview" class="config-preview"><?php echo $lang3899; ?></pre>
 									</div>
 								</div>
                         </div>
                     </div>
                     
+					<!-- INTERFACE TAB -->
+                    <div class="tab-pane fade" id="interfaceContent" role="tabpanel">
+                        <div id="hostsContainer" class="row">
+                            <div class="col-12">
+                                <div id="rotationContainer">						
+									<div class="row">
+										<!-- Info Card -->
+											<div class="apple-card">
+												<div class="card-header-apple">
+													<h3><i class="fas fa-sliders-h"></i> <?php echo $lang4359; ?></h3>
+												</div>
+												<div class="card-body-apple col-lg-5">
+													<div class="apple-card">
+														<div class="card-header-apple">
+															<h3><i class="fa fa-language"></i> <?php echo $lang4355; ?></h3>
+														</div>
+														<div class="card-body-apple">
+														<p><?php echo $lang4360; ?></p>
+															<div class="language-selector" style="margin-left: 15px;">
+																<?php echo $lang4361; ?>  <select id="languageSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 15px; font-size: 14px; cursor: pointer;">
+																	<?php foreach ($available_langs as $code => $lang): ?>
+																		<option value="<?php echo $code; ?>" <?php echo $code === $current_lang ? 'selected' : ''; ?>>
+																			<?php echo $lang['name']; ?>
+																		</option>
+																	<?php endforeach; ?>
+																</select>
+																<button id="saveLanguageBtn" class="btn-apple btn-sm" style="padding: 4px 12px; margin-left: 8px; border-radius: 20px;">
+																	<i class="bi bi-save"></i> <?php echo $lang4356; ?>
+																</button>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+									</div>
+								</div>
+								
+								
+								
+                            </div>
+                        </div>
+                    </div>
+					
                     <!-- INCOMING REQUESTS TAB -->
                     <div class="tab-pane fade" id="apiceycontent" role="tabpanel">
                         <div id="incomingContainer" class="row">
@@ -656,25 +720,25 @@ $js_config = [
 										<div class="col-lg-8">
 											<div class="apple-card">
 												<div class="card-header-apple">
-													<h3><i class="bi bi-clock-history"></i> Rotation History</h3>
+													<h3><i class="bi bi-clock-history"></i> <?php echo $lang4358; ?></h3>
 												</div>
 												<div class="card-body-apple">
 													<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
 														<table class="table table-sm" id="rotationHistoryTable">
 															<thead>
 																<tr>
-																	<th>ID</th>
-																	<th>Host</th>
-																	<th>Old Key</th>
-																	<th>New Key</th>
-																	<th>Created</th>
-																	<th>Completed</th>
-																	<th>Status</th>
+																	<th><?php echo $lang3901; ?></th>
+																	<th><?php echo $lang3902; ?></th>
+																	<th><?php echo $lang3903; ?></th>
+																	<th><?php echo $lang3904; ?></th>
+																	<th><?php echo $lang3905; ?></th>
+																	<th><?php echo $lang3906; ?></th>
+																	<th><?php echo $lang3907; ?></th>
 																</tr>
 															</thead>
 															<tbody>
 																<tr>
-																	<td colspan="7" class="text-center text-muted">Loading...</td>
+																	<td colspan="7" class="text-center text-muted"><?php echo $lang3908; ?></td>
 																</tr>
 															</tbody>
 														</table>
@@ -687,13 +751,13 @@ $js_config = [
 										<div class="col-lg-4">
 											<div class="apple-card">
 												<div class="card-header-apple">
-													<h3><i class="bi bi-sliders2"></i> API Key Auto-Generation</h3>
+													<h3><i class="bi bi-sliders2"></i> <?php echo $lang3909; ?></h3>
 												</div>
 												<div class="card-body-apple">
 													<div class="mb-4 d-flex justify-content-between align-items-center">
 														<div>
-															<span class="fw-semibold">Enable Auto-Generation</span>
-															<div class="small text-muted">Automatically generate new API keys for hosts</div>
+															<span class="fw-semibold"><?php echo $lang3910; ?></span>
+															<div class="small text-muted"><?php echo $lang3911; ?></div>
 														</div>
 														<label class="toggle-switch">
 															<input type="checkbox" id="enableRotation" onchange="toggleRotation()">
@@ -703,24 +767,24 @@ $js_config = [
 													
 													<div id="rotationDaysSettings" style="display: none;">
 														<div class="mb-3">
-															<label class="form-label fw-semibold">Generation Period (days)</label>
+															<label class="form-label fw-semibold"><?php echo $lang3912; ?></label>
 															<input type="number" class="form-control form-control-apple" id="rotationDays" 
 																   placeholder="30" min="1" max="365">
-															<small class="text-muted">Generate new API keys for hosts older than this many days</small>
+															<small class="text-muted"><?php echo $lang3913; ?></small>
 														</div>
 														<div class="alert alert-info small rounded-3" style="background: #e3f2fd; border: none;">
 															<i class="bi bi-info-circle me-2"></i>
-															When enabled, new API keys will be automatically generated for hosts whose keys haven't been updated 
-															in more than the specified number of days. Set to 0 or disable to turn off auto-generation.
+															<?php echo $lang3914; ?>
+															<?php echo $lang3915; ?>
 														</div>
 													</div>
 													
 													<div class="d-flex gap-3 mt-4">
 														<button type="button" class="btn-apple" onclick="saveRotationSettings()">
-															<i class="bi bi-save me-2"></i>Save Settings
+															<i class="bi bi-save me-2"></i><?php echo $lang3916; ?>
 														</button>
 														<button type="button" class="btn-apple-outline" onclick="loadRotationSettings()">
-															<i class="bi bi-arrow-repeat me-2"></i>Reload
+															<i class="bi bi-arrow-repeat me-2"></i><?php echo $lang3917; ?>
 														</button>
 													</div>
 												</div>
@@ -742,11 +806,15 @@ $js_config = [
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                     <button class="nav-link active" id="hosts-tab" data-bs-toggle="pill" data-bs-target="#apacheContent" type="button" role="tab">
                         <i class="bi bi-card-checklist"></i>
-                        <span class="tab-label">Interface</span>
+                        <span class="tab-label"><?php echo $lang4357; ?></span>
+                    </button>
+					<button class="nav-link" id="interface-tab" data-bs-toggle="pill" data-bs-target="#interfaceContent" type="button" role="tab">
+                        <i class="bi bi-sliders"></i>
+                        <span class="tab-label"><?php echo $lang3918; ?></span>
                     </button>
                     <button class="nav-link" id="incoming-tab" data-bs-toggle="pill" data-bs-target="#apiceycontent" type="button" role="tab">
                         <i class="bi bi-code"></i>
-                        <span class="tab-label">API</span>
+                        <span class="tab-label"><?php echo $lang3919; ?></span>
                     </button>
                 </div>
             </div>
@@ -759,21 +827,21 @@ $js_config = [
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-shield-check"></i> Select SSL Certificate</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-shield-check"></i> <?php echo $lang3920; ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <input type="text" class="form-control form-control-apple" id="certSearchInput" placeholder="Search certificates..." onkeyup="filterCertificates()">
+                    <input type="text" class="form-control form-control-apple" id="certSearchInput" placeholder="<?php echo $lang3921; ?>" onkeyup="filterCertificates()">
                 </div>
                 <div id="certListContainer" class="row g-2" style="max-height: 400px; overflow-y: auto;">
                     <div class="text-center py-5">
-                        <div class="loading-spinner-sm"></div> Loading certificates...
+                        <div class="loading-spinner-sm"></div> <?php echo $lang3922; ?>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal"><?php echo $lang3923; ?></button>
             </div>
         </div>
     </div>
@@ -788,6 +856,47 @@ const API_BASE = window.apiConfig.apiBaseUrl || '/api/';
 let certificatesList = [];
 
 // ========== Utility Functions ==========
+$('#saveLanguageBtn').on('click', function() {
+    var newLang = $('#languageSelector').val();
+    
+    if (!newLang) {
+        showAlert('<?php echo $lang4362; ?>', 'danger');
+        return;
+    }
+    
+    showAlert('<?php echo $lang4363; ?>', 'info');
+    $('#applePreloader').fadeIn(200);
+    
+    $.ajax({
+        url: window.apiConfig.apiBaseUrl + 'minib_setting_api.php',
+        method: 'POST',
+        data: { 
+            action: 'save_language',
+            lang: newLang 
+        },
+        headers: {
+            'X-API-Key': window.apiConfig.apiKey
+        },
+        dataType: 'json',
+        success: function(response) {
+            $('#applePreloader').fadeOut(500);
+            if (response.success) {
+                showAlert('<?php echo $lang4364; ?>', 'success');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert('<?php echo $lang4365; ?> ' + (response.error || 'Unknown error'), 'danger');
+            }
+        },
+        error: function(xhr) {
+            $('#applePreloader').fadeOut(500);
+            showAlert('<?php echo $lang4366; ?>', 'danger');
+            console.error('Language save error:', xhr.responseText);
+        }
+    });
+});
+
 function showAlert(message, type = 'success') {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show mb-3" role="alert">
         <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i> 
@@ -810,9 +919,9 @@ async function toggleWebInterface() {
     
     if (!enabled) {
         const confirmed = confirm(
-            '⚠️ ВНИМАНИЕ! Отключение веб-интерфейса сделает панель недоступной через браузер.\n\n' +
-            'У вас есть SSH доступ для повторного включения?\n\n' +
-            'Нажмите "OK" для подтверждения или "Cancel" для отмены.'
+            '⚠️ <?php echo $lang3924; ?>\n\n' +
+            '<?php echo $lang3925; ?>\n\n' +
+            '<?php echo $lang3926; ?>'
         );
         
         if (!confirmed) {
@@ -846,7 +955,7 @@ function apiCall(action, method, data, onSuccess, onError) {
             }
         },
         error: function(xhr) {
-            const error = xhr.responseJSON?.error || 'Network error';
+            const error = xhr.responseJSON?.error || '<?php echo $lang3927; ?>';
             if (onError) onError(error);
             else showAlert(error, 'danger');
         }
@@ -896,20 +1005,20 @@ function loadApacheStatus() {
     apiCall('get_status', 'GET', null,
         function(response) {
             if (response.running) {
-                $('#apacheStatus').html('<span class="status-badge status-success"><i class="bi bi-check-circle-fill"></i> Running</span>');
+                $('#apacheStatus').html('<span class="status-badge status-success"><i class="bi bi-check-circle-fill"></i> <?php echo $lang3928; ?></span>');
             } else {
-                $('#apacheStatus').html('<span class="status-badge status-danger"><i class="bi bi-x-circle-fill"></i> Stopped</span>');
+                $('#apacheStatus').html('<span class="status-badge status-danger"><i class="bi bi-x-circle-fill"></i> <?php echo $lang3929; ?></span>');
             }
         },
         function(error) {
-            $('#apacheStatus').html('<span class="status-badge status-warning">Unknown</span>');
+            $('#apacheStatus').html('<span class="status-badge status-warning"><?php echo $lang3930; ?></span>');
         }
     );
 }
 
 // ========== Load Current Config ==========
 function loadCurrentConfig() {
-    $('#configPreview').html('<div class="text-center"><div class="loading-spinner-sm"></div> Loading...</div>');
+    $('#configPreview').html('<div class="text-center"><div class="loading-spinner-sm"></div> <?php echo $lang3931; ?></div>');
     
     apiCall('get_config', 'GET', null, 
         function(response) {
@@ -932,7 +1041,7 @@ function loadCurrentConfig() {
             $('#lastModified').text(response.last_modified || 'Unknown');
         },
         function(error) {
-            $('#configPreview').text('Error loading config: ' + error);
+            $('#configPreview').text('<?php echo $lang3932; ?> ' + error);
         }
     );
 }
@@ -951,11 +1060,11 @@ function applyConfig() {
     };
     
     if (data.ssl_enabled === '1' && (!data.ssl_cert || !data.ssl_key)) {
-        showAlert('SSL Certificate and Key are required when HTTPS is enabled', 'danger');
+        showAlert('<?php echo $lang3933; ?>', 'danger');
         return;
     }
     
-    showAlert('Applying configuration...', 'info');
+    showAlert('<?php echo $lang3934; ?>', 'info');
     $('#applePreloader').fadeIn(200);
     
     apiCall('apply_config', 'POST', data,
@@ -967,31 +1076,31 @@ function applyConfig() {
         },
         function(error) {
             $('#applePreloader').fadeOut(500);
-            showAlert('Error: ' + error, 'danger');
+            showAlert('<?php echo $lang3935; ?> ' + error, 'danger');
         }
     );
 }
 
 // ========== Service Actions ==========
 function serviceAction(action) {
-    showAlert(`${action}ing Apache...`, 'info');
+    showAlert(`${action} <?php echo $lang3936; ?>`, 'info');
     
-    apiCall('service_action', 'POST', { action: action },
+    apiCall('service_action', 'POST', { sub_action: action },
         function(response) {
             showAlert(response.message, 'success');
             loadApacheStatus();
         },
         function(error) {
-            showAlert('Error: ' + error, 'danger');
+            showAlert('<?php echo $lang3937; ?> ' + error, 'danger');
         }
     );
 }
 
 // ========== Restore Default ==========
 function restoreDefaultConfig() {
-    if (!confirm('Restore default Apache configuration? This will reset all settings.')) return;
+    if (!confirm('<?php echo $lang3938; ?>')) return;
     
-    showAlert('Restoring default configuration...', 'info');
+    showAlert('<?php echo $lang3939; ?>', 'info');
     $('#applePreloader').fadeIn(200);
     
     apiCall('restore_default', 'POST', null,
@@ -1003,7 +1112,7 @@ function restoreDefaultConfig() {
         },
         function(error) {
             $('#applePreloader').fadeOut(500);
-            showAlert('Error: ' + error, 'danger');
+            showAlert('<?php echo $lang3940; ?> ' + error, 'danger');
         }
     );
 }
@@ -1030,7 +1139,7 @@ function toggleHttps() {
 
 // ========== Certificate Selector ==========
 function openCertificateSelector() {
-    $('#certListContainer').html('<div class="text-center py-5"><div class="loading-spinner-sm"></div> Loading certificates...</div>');
+    $('#certListContainer').html('<div class="text-center py-5"><div class="loading-spinner-sm"></div> <?php echo $lang3941; ?></div>');
     new bootstrap.Modal(document.getElementById('certSelectorModal')).show();
     
     apiCall('list_certificates', 'GET', null,
@@ -1039,7 +1148,7 @@ function openCertificateSelector() {
             renderCertificateList();
         },
         function(error) {
-            $('#certListContainer').html('<div class="alert alert-danger">Error loading certificates: ' + error + '</div>');
+            $('#certListContainer').html('<div class="alert alert-danger"><?php echo $lang3942; ?> ' + error + '</div>');
         }
     );
 }
@@ -1054,8 +1163,8 @@ function renderCertificateList() {
     if (filtered.length === 0) {
         $('#certListContainer').html(`<div class="empty-state text-center py-5">
             <i class="bi bi-shield-slash" style="font-size: 48px; color: #c6c6c8;"></i>
-            <p class="mt-2 text-muted">No certificates found</p>
-            <small class="text-muted">Create certificates in SSL Manager first</small>
+            <p class="mt-2 text-muted"><?php echo $lang3943; ?></p>
+            <small class="text-muted"><?php echo $lang3944; ?></small>
         </div>`);
         return;
     }
@@ -1079,8 +1188,8 @@ function renderCertificateList() {
                     </div>
                 </div>
                 <div class="small text-muted mt-2">
-                    <div><i class="bi bi-file-earmark-lock"></i> CRT: ${escapeHtml(cert.crt_path || 'Not found')}</div>
-                    <div><i class="bi bi-key"></i> KEY: ${cert.has_key ? 'Available' : 'Missing'}</div>
+                    <div><i class="bi bi-file-earmark-lock"></i> <?php echo $lang3945; ?> ${escapeHtml(cert.crt_path || '<?php echo $lang3946; ?>')}</div>
+                    <div><i class="bi bi-key"></i> <?php echo $lang3947; ?> ${cert.has_key ? '<?php echo $lang3948; ?>' : '<?php echo $lang3949; ?>'}</div>
                 </div>
             </div>
         </div>`;
@@ -1113,13 +1222,13 @@ function selectCertificate(name, crtPath, keyPath, chainPath) {
     }
     
     bootstrap.Modal.getInstance(document.getElementById('certSelectorModal')).hide();
-    showAlert(`Selected certificate: ${name}`, 'success');
+    showAlert(`<?php echo $lang3950; ?> ${name}`, 'success');
 }
 
 function copyConfigToClipboard() {
     const configText = $('#configPreview').text();
     navigator.clipboard.writeText(configText);
-    showAlert('Configuration copied to clipboard!', 'success');
+    showAlert('<?php echo $lang3951; ?>', 'success');
 }
 
 function refreshAllData() {
@@ -1178,14 +1287,14 @@ function saveRotationSettings() {
             $('#rotationDays').val(30);
         }
         if (days > 365) {
-            showAlert('Maximum rotation period is 365 days', 'danger');
+            showAlert('<?php echo $lang3952; ?>', 'danger');
             return;
         }
     } else {
         days = 0;
     }
     
-    showAlert('Saving rotation settings...', 'info');
+    showAlert('<?php echo $lang3953; ?>', 'info');
     $('#applePreloader').fadeIn(200);
     
     $.ajax({
@@ -1200,15 +1309,15 @@ function saveRotationSettings() {
         success: function(response) {
             $('#applePreloader').fadeOut(500);
             if (response.success) {
-                showAlert('Rotation settings saved successfully!', 'success');
+                showAlert('<?php echo $lang3954; ?>', 'success');
                 loadRotationHistory();
             } else {
-                showAlert('Error: ' + response.error, 'danger');
+                showAlert('<?php echo $lang3955; ?> ' + response.error, 'danger');
             }
         },
         error: function(xhr) {
             $('#applePreloader').fadeOut(500);
-            showAlert('Network error while saving settings', 'danger');
+            showAlert('<?php echo $lang3956; ?>', 'danger');
         }
     });
 }
@@ -1223,19 +1332,19 @@ function loadRotationHistory() {
             if (response.success && response.history) {
                 renderRotationHistory(response.history);
             } else {
-                $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-muted">No rotation history found</td></tr>');
+                $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-muted"><?php echo $lang3957; ?></td></tr>');
             }
         },
         error: function(xhr) {
             console.error('Error loading rotation history:', xhr.responseText);
-            $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-danger">Error loading history</td></tr>');
+            $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-danger"><?php echo $lang3958; ?></td></tr>');
         }
     });
 }
 
 function renderRotationHistory(history) {
     if (!history || history.length === 0) {
-        $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-muted">No rotation history found</td></tr>');
+        $('#rotationHistoryTable tbody').html('<tr><td colspan="7" class="text-center text-muted"><?php echo $lang3959; ?></td></tr>');
         return;
     }
     
@@ -1247,19 +1356,19 @@ function renderRotationHistory(history) {
         switch(task.status) {
             case 'completed':
                 statusClass = 'status-success';
-                statusText = '✓ Completed';
+                statusText = '✓ <?php echo $lang3960; ?>';
                 break;
             case 'pending':
                 statusClass = 'status-warning';
-                statusText = '⏳ Pending';
+                statusText = '⏳ <?php echo $lang3961; ?>';
                 break;
             case 'in_progress':
                 statusClass = 'status-warning';
-                statusText = '🔄 In Progress';
+                statusText = '🔄 <?php echo $lang3962; ?>';
                 break;
             case 'failed':
                 statusClass = 'status-danger';
-                statusText = '✗ Failed';
+                statusText = '✗ <?php echo $lang3963; ?>';
                 break;
             default:
                 statusClass = 'status-info';

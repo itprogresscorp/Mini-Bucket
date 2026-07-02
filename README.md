@@ -101,22 +101,22 @@ It works only with built-in PHP 7.0, HTML, JavaScript, and standard Linux utilit
 
 ---
 
-🔌 12. Plugin System (NEW in 3.6.4)
-Mini Bucket now supports plugins — extend the panel with your own functionality!
+### 🔌 12. Plugin System (NEW in 3.6.4)
+ Mini Bucket now supports plugins — extend the panel with your own functionality!
 
-What plugins can do:
+ What plugins can do:
 
-Run on local host (where Mini-B is installed)
+- Run on local host (where Mini-B is installed)
 
-Run on remote hosts via API
+- Run on remote hosts via API
 
-Auto-install from main server repository to remote hosts
+- Auto-install from main server repository to remote hosts
 
-Have their own SQLite database
+- Have their own SQLite database
 
-Use system APIs and authentication
+- Use system APIs and authentication
 
-First plugins available:
+- First plugins available:
 
 📋 Log Manager — view, search, and manage system logs without SSH. Live mode, export, log clearing, file browser.
 
@@ -131,6 +131,14 @@ Resources for developers:
 📦 All available plugins - https://mini-bucket.ru/plugins/
 
 Install plugins via: System → Plugins → Repository → Install
+
+---
+
+### 🌍 13. Multilingual interface (NEW in 3.6.6)
+
+- Available language packs: Russian, English
+- Built-in plugin for convenient management of installed language packs
+- Ability to edit and customize language packs
 
 ---
 
@@ -200,6 +208,8 @@ Website - https://mini-bucket.ru/
 Forum / Community — https://mini-bucket.ru/community/
 
 Wiki — https://mini-bucket.ru/wiki/
+
+Version history - https://mini-bucket.ru/updates/
 
 Installation -  https://mini-bucket.ru/install/
 

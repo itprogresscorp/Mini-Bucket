@@ -22,7 +22,7 @@
 
 require_once 'config.php';
 isAuthenticated();
-
+require_once 'lang/loader.php';
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
 try {
@@ -88,8 +88,24 @@ $menu = require_once 'menu.php';
     <script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
 
     <style>
@@ -538,10 +554,10 @@ $menu = require_once 'menu.php';
         <h1><i class="fas fa-bucket"></i> Mini-B</h1>
     </div>
     <div class="top-bar-right">
-        <span><i class="bi bi-stethoscope me-2"></i> Diagnostic Tools</span>
+        <span><i class="fa fa-bar-chart me-2"></i> Diagnostic Tools</span>
 		<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
     </div>
@@ -557,42 +573,42 @@ $menu = require_once 'menu.php';
             <div class="stat-card">
                 <i class="bi bi-cpu"></i>
                 <div class="stat-value" id="cpuUsage">0%</div>
-                <div class="stat-label">CPU Usage</div>
+                <div class="stat-label"><?php echo $lang3350; ?></div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-memory"></i>
                 <div class="stat-value" id="ramUsage">0%</div>
-                <div class="stat-label">RAM Usage</div>
+                <div class="stat-label"><?php echo $lang3351; ?></div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-hdd-stack"></i>
                 <div class="stat-value" id="diskUsage">0%</div>
-                <div class="stat-label">Disk Usage</div>
+                <div class="stat-label"><?php echo $lang3352; ?></div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-arrow-up-short"></i>
                 <div class="stat-value" id="uptime">0</div>
-                <div class="stat-label">Uptime (days)</div>
+                <div class="stat-label"><?php echo $lang3353; ?></div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-activity"></i>
                 <div class="stat-value" id="loadAvg">0</div>
-                <div class="stat-label">Load Average</div>
+                <div class="stat-label"><?php echo $lang3354; ?></div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-hdd-network"></i>
                 <div class="stat-value" id="connectionsCount">0</div>
-                <div class="stat-label">Active Connections</div>
+                <div class="stat-label"><?php echo $lang3355; ?></div>
             </div>
         </div>
         
         <!-- Network Traffic Graph -->
         <div class="apple-card">
             <div class="card-header-apple">
-                <h3><i class="bi bi-graph-up"></i> Network Traffic (Real-time)</h3>
+                <h3><i class="bi bi-graph-up"></i> <?php echo $lang3356; ?></h3>
                 <div class="d-flex gap-2">
                     <button class="btn-apple-outline btn-sm-apple" onclick="resetNetworkGraph()">
-                        <i class="bi bi-arrow-repeat"></i> Reset
+                        <i class="bi bi-arrow-repeat"></i> <?php echo $lang3357; ?>
                     </button>
                 </div>
             </div>
@@ -607,27 +623,27 @@ $menu = require_once 'menu.php';
         <div class="tool-grid">
             <div class="tool-btn" onclick="openPingModal()">
                 <i class="bi bi-wifi"></i>
-                <span>Ping</span>
+                <span><?php echo $lang3358; ?></span>
             </div>
             <div class="tool-btn" onclick="openTracerouteModal()">
                 <i class="bi bi-diagram-3"></i>
-                <span>Traceroute</span>
+                <span><?php echo $lang3359; ?></span>
             </div>
             <div class="tool-btn" onclick="openNetstatModal()">
                 <i class="bi bi-diagram-2"></i>
-                <span>Netstat</span>
+                <span><?php echo $lang3360; ?></span>
             </div>
             <div class="tool-btn" onclick="openNmapModal()">
                 <i class="bi bi-binoculars"></i>
-                <span>Port Scanner</span>
+                <span><?php echo $lang3361; ?></span>
             </div>
             <div class="tool-btn" onclick="openDnsModal()">
                 <i class="bi bi-question-diamond"></i>
-                <span>DNS Lookup</span>
+                <span><?php echo $lang3362; ?></span>
             </div>
             <div class="tool-btn" onclick="openBandwidthModal()">
                 <i class="bi bi-speedometer2"></i>
-                <span>Bandwidth Test</span>
+                <span><?php echo $lang3363; ?></span>
             </div>
         </div>
         
@@ -635,24 +651,24 @@ $menu = require_once 'menu.php';
         <ul class="nav nav-tabs-apple" id="diagTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#processesTab" type="button" role="tab">
-                    <i class="bi bi-cpu me-2"></i>Processes
+                    <i class="bi bi-cpu me-2"></i><?php echo $lang3364; ?>
                     <span id="processCount" class="badge bg-secondary ms-1" style="background: #8e8e93 !important;">0</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#connectionsTab" type="button" role="tab">
-                    <i class="bi bi-hdd-network me-2"></i>Network Connections
+                    <i class="bi bi-hdd-network me-2"></i><?php echo $lang3365; ?>
                     <span id="connCount" class="badge bg-secondary ms-1" style="background: #8e8e93 !important;">0</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#servicesTab" type="button" role="tab">
-                    <i class="bi bi-gear me-2"></i>Services
+                    <i class="bi bi-gear me-2"></i><?php echo $lang3366; ?>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logsTab" type="button" role="tab">
-                    <i class="bi bi-file-text me-2"></i>System Logs
+                    <i class="bi bi-file-text me-2"></i><?php echo $lang3367; ?>
                 </button>
             </li>
         </ul>
@@ -662,18 +678,18 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade show active" id="processesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-cpu"></i> Running Processes</h3>
+                        <h3><i class="bi bi-cpu"></i> <?php echo $lang3368; ?></h3>
                         <div class="d-flex gap-2">
                             <select id="processSort" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="cpu">Sort by CPU</option>
-                                <option value="mem">Sort by Memory</option>
-                                <option value="pid">Sort by PID</option>
+                                <option value="cpu"><?php echo $lang3369; ?></option>
+                                <option value="mem"><?php echo $lang3370; ?></option>
+                                <option value="pid"><?php echo $lang3371; ?></option>
                             </select>
                             <button class="btn-apple-outline btn-sm-apple" onclick="refreshProcesses()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3372; ?>
                             </button>
                             <button class="btn-apple-outline btn-sm-apple" onclick="killProcessModal()">
-                                <i class="bi bi-x-circle"></i> Kill Process
+                                <i class="bi bi-x-circle"></i> <?php echo $lang3373; ?>
                             </button>
                         </div>
                     </div>
@@ -682,16 +698,16 @@ $menu = require_once 'menu.php';
                             <table class="table table-sm process-table" id="processTable">
                                 <thead>
                                     <tr>
-                                        <th>PID</th>
-                                        <th>User</th>
-                                        <th>CPU%</th>
-                                        <th>MEM%</th>
-                                        <th>Command</th>
-                                        <th style="width: 60px">Action</th>
+                                        <th><?php echo $lang3374; ?></th>
+                                        <th><?php echo $lang3375; ?></th>
+                                        <th><?php echo $lang3376; ?></th>
+                                        <th><?php echo $lang3377; ?></th>
+                                        <th><?php echo $lang3378; ?></th>
+                                        <th style="width: 60px"><?php echo $lang3379; ?></th>
                                     </tr>
                                 </thead>
                                 <tbody id="processList">
-                                    <tr><td colspan="6" class="text-center text-muted">Loading processes...</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted"><?php echo $lang3380; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -703,16 +719,16 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade" id="connectionsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-hdd-network"></i> Active Network Connections</h3>
+                        <h3><i class="bi bi-hdd-network"></i> <?php echo $lang3381; ?></h3>
                         <div class="d-flex gap-2">
-                            <input type="text" id="connFilter" class="form-control form-control-sm" placeholder="Filter by IP/Port" style="width: 200px; border-radius: 10px;">
+                            <input type="text" id="connFilter" class="form-control form-control-sm" placeholder="<?php echo $lang3382; ?>" style="width: 200px; border-radius: 10px;">
                             <button class="btn-apple-outline btn-sm-apple" onclick="refreshConnections()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3383; ?>
                             </button>
                         </div>
                     </div>
                     <div class="card-body-apple" id="connectionsList">
-                        <div class="text-center text-muted py-4">Loading connections...</div>
+                        <div class="text-center text-muted py-4"><?php echo $lang3384; ?></div>
                     </div>
                 </div>
             </div>
@@ -721,15 +737,15 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade" id="servicesTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-gear"></i> System Services</h3>
+                        <h3><i class="bi bi-gear"></i> <?php echo $lang3385; ?></h3>
                         <div class="d-flex gap-2">
                             <select id="serviceFilter" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="all">All Services</option>
-                                <option value="running">Running</option>
-                                <option value="stopped">Stopped</option>
+                                <option value="all"><?php echo $lang3386; ?></option>
+                                <option value="running"><?php echo $lang3387; ?></option>
+                                <option value="stopped"><?php echo $lang3388; ?></option>
                             </select>
                             <button class="btn-apple-outline btn-sm-apple" onclick="refreshServices()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3389; ?>
                             </button>
                         </div>
                     </div>
@@ -738,15 +754,15 @@ $menu = require_once 'menu.php';
                             <table class="table table-sm">
                                 <thead>
                                     <tr>
-                                        <th>Service</th>
-                                        <th>Status</th>
-                                        <th>Load State</th>
-                                        <th>Description</th>
-                                        <th style="width: 100px">Action</th>
+                                        <th><?php echo $lang3390; ?></th>
+                                        <th><?php echo $lang3391; ?></th>
+                                        <th><?php echo $lang3392; ?></th>
+                                        <th><?php echo $lang3393; ?></th>
+                                        <th style="width: 100px"><?php echo $lang3394; ?></th>
                                     </tr>
                                 </thead>
                                 <tbody id="servicesList">
-                                    <tr><td colspan="5" class="text-center text-muted">Loading services...</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted"><?php echo $lang3395; ?></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -758,33 +774,33 @@ $menu = require_once 'menu.php';
             <div class="tab-pane fade" id="logsTab" role="tabpanel">
                 <div class="apple-card">
                     <div class="card-header-apple">
-                        <h3><i class="bi bi-file-text"></i> System Logs</h3>
+                        <h3><i class="bi bi-file-text"></i> <?php echo $lang3396; ?></h3>
                         <div class="d-flex gap-2">
                             <select id="logLines" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="50">50 lines</option>
-                                <option value="100" selected>100 lines</option>
-                                <option value="200">200 lines</option>
-                                <option value="500">500 lines</option>
+                                <option value="50">50 <?php echo $lang3397; ?></option>
+                                <option value="100" selected>100 <?php echo $lang3397; ?></option>
+                                <option value="200">200 <?php echo $lang3397; ?></option>
+                                <option value="500">500 <?php echo $lang3397; ?></option>
                             </select>
                             <select id="logType" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
-                                <option value="syslog">System Log</option>
-                                <option value="auth">Auth Log</option>
-                                <option value="kernel">Kernel Log</option>
+                                <option value="syslog"><?php echo $lang3398; ?></option>
+                                <option value="auth"><?php echo $lang3399; ?></option>
+                                <option value="kernel"><?php echo $lang3400; ?></option>
                             </select>
                             <button class="btn-apple-outline btn-sm-apple" onclick="refreshLogs()">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
+                                <i class="bi bi-arrow-repeat"></i> <?php echo $lang3401; ?>
                             </button>
                             <button class="btn-apple-outline btn-sm-apple" onclick="exportLogs()">
-                                <i class="bi bi-download"></i> Export
+                                <i class="bi bi-download"></i> <?php echo $lang3402; ?>
                             </button>
                         </div>
                     </div>
                     <div class="card-body-apple">
                         <div class="mb-3">
-                            <input type="text" id="logFilter" class="form-control" placeholder="Filter logs..." style="border-radius: 10px;">
+                            <input type="text" id="logFilter" class="form-control" placeholder="<?php echo $lang3403; ?>" style="border-radius: 10px;">
                         </div>
                         <div id="logsList" class="console-output" style="max-height: 400px;">
-                            <div class="text-center text-muted">Loading logs...</div>
+                            <div class="text-center text-muted"><?php echo $lang3404; ?></div>
                         </div>
                     </div>
                 </div>
@@ -798,21 +814,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-wifi me-2"></i>Ping Tool</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-wifi me-2"></i><?php echo $lang3405; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="input-group mb-3">
-                    <input type="text" id="pingTarget" class="form-control form-control-apple" placeholder="IP address or hostname (e.g., google.com, 8.8.8.8)">
+                    <input type="text" id="pingTarget" class="form-control form-control-apple" placeholder="<?php echo $lang3406; ?>">
                     <select id="pingCount" class="form-select" style="width: auto;">
-                        <option value="4">4 pings</option>
-                        <option value="10">10 pings</option>
-                        <option value="20">20 pings</option>
-                        <option value="0">Continuous</option>
+                        <option value="4">4 <?php echo $lang3407; ?></option>
+                        <option value="10">10 <?php echo $lang3407; ?></option>
+                        <option value="20">20 <?php echo $lang3407; ?></option>
+                        <option value="0"><?php echo $lang3408; ?></option>
                     </select>
-                    <button class="btn-apple" onclick="startPing()">Start Ping</button>
-                    <button class="btn-apple-outline" onclick="stopPing()">Stop</button>
-                    <button class="btn-apple-outline" onclick="clearPingOutput()">Clear</button>
+                    <button class="btn-apple" onclick="startPing()"><?php echo $lang3409; ?></button>
+                    <button class="btn-apple-outline" onclick="stopPing()"><?php echo $lang3410; ?></button>
+                    <button class="btn-apple-outline" onclick="clearPingOutput()"><?php echo $lang3411; ?></button>
                 </div>
                 <div id="pingOutput" class="console-output" style="height: 400px; font-family: monospace;"></div>
             </div>
@@ -825,15 +841,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-diagram-3 me-2"></i>Traceroute</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-diagram-3 me-2"></i><?php echo $lang3412; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="input-group mb-3">
-                    <input type="text" id="traceTarget" class="form-control form-control-apple" placeholder="IP address or hostname">
-                    <button class="btn-apple" onclick="startTraceroute()">Start Traceroute</button>
-                    <button class="btn-apple-outline" onclick="stopTraceroute()">Stop</button>
-                    <button class="btn-apple-outline" onclick="clearTraceOutput()">Clear</button>
+                    <input type="text" id="traceTarget" class="form-control form-control-apple" placeholder="<?php echo $lang3413; ?>">
+                    <button class="btn-apple" onclick="startTraceroute()"><?php echo $lang3414; ?></button>
+                    <button class="btn-apple-outline" onclick="stopTraceroute()"><?php echo $lang3415; ?></button>
+                    <button class="btn-apple-outline" onclick="clearTraceOutput()"><?php echo $lang3416; ?></button>
                 </div>
                 <div id="traceOutput" class="console-output" style="height: 400px;"></div>
             </div>
@@ -846,15 +862,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-diagram-2 me-2"></i>Network Statistics (netstat)</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-diagram-2 me-2"></i><?php echo $lang3417; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="btn-group mb-3" role="group">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('all')">All</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('all')"><?php echo $lang3418; ?></button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('tcp')">TCP</button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('udp')">UDP</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('listening')">Listening</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshNetstat('listening')"><?php echo $lang3419; ?></button>
                 </div>
                 <div id="netstatOutput" class="console-output" style="height: 400px; font-size: 11px;"></div>
             </div>
@@ -867,15 +883,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-binoculars me-2"></i>Port Scanner</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-binoculars me-2"></i><?php echo $lang3420; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="input-group mb-3">
-                    <input type="text" id="scanTarget" class="form-control form-control-apple" placeholder="IP address or hostname">
-                    <input type="text" id="scanPorts" class="form-control form-control-apple" placeholder="Ports (e.g., 22,80,443 or 1-1000)" value="22,80,443,3306,5432,8080">
-                    <button class="btn-apple" onclick="startPortScan()">Scan</button>
-                    <button class="btn-apple-outline" onclick="clearScanOutput()">Clear</button>
+                    <input type="text" id="scanTarget" class="form-control form-control-apple" placeholder="<?php echo $lang3421; ?>">
+                    <input type="text" id="scanPorts" class="form-control form-control-apple" placeholder="<?php echo $lang3422; ?>" value="22,80,443,3306,5432,8080">
+                    <button class="btn-apple" onclick="startPortScan()"><?php echo $lang3423; ?></button>
+                    <button class="btn-apple-outline" onclick="clearScanOutput()"><?php echo $lang3424; ?></button>
                 </div>
                 <div id="scanOutput" class="console-output" style="height: 400px;"></div>
             </div>
@@ -888,12 +904,12 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-question-diamond me-2"></i>DNS Lookup</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-question-diamond me-2"></i><?php echo $lang3425; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="input-group mb-3">
-                    <input type="text" id="dnsTarget" class="form-control form-control-apple" placeholder="Domain name (e.g., google.com)">
+                    <input type="text" id="dnsTarget" class="form-control form-control-apple" placeholder="<?php echo $lang3426; ?>">
                     <select id="dnsType" class="form-select" style="width: auto;">
                         <option value="A">A (IPv4)</option>
                         <option value="AAAA">AAAA (IPv6)</option>
@@ -902,7 +918,7 @@ $menu = require_once 'menu.php';
                         <option value="TXT">TXT</option>
                         <option value="CNAME">CNAME</option>
                     </select>
-                    <button class="btn-apple" onclick="startDnsLookup()">Lookup</button>
+                    <button class="btn-apple" onclick="startDnsLookup()"><?php echo $lang3427; ?></button>
                 </div>
                 <div id="dnsOutput" class="console-output" style="height: 300px;"></div>
             </div>
@@ -915,12 +931,12 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-speedometer2 me-2"></i>Bandwidth Test</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-speedometer2 me-2"></i><?php echo $lang3428; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    <button class="btn-apple" onclick="startBandwidthTest()">Start Speed Test</button>
+                    <button class="btn-apple" onclick="startBandwidthTest()"><?php echo $lang3429; ?></button>
                     <div id="bandwidthResult" class="mt-3"></div>
                 </div>
                 <canvas id="speedChart" style="height: 200px;"></canvas>
@@ -934,26 +950,26 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-x-circle me-2"></i>Kill Process</h5>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-x-circle me-2"></i><?php echo $lang3430; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Process ID (PID)</label>
-                    <input type="number" id="killPid" class="form-control form-control-apple" placeholder="Enter PID">
+                    <label class="form-label fw-semibold"><?php echo $lang3431; ?></label>
+                    <input type="number" id="killPid" class="form-control form-control-apple" placeholder="<?php echo $lang3432; ?>">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Signal</label>
+                    <label class="form-label fw-semibold"><?php echo $lang3433; ?></label>
                     <select id="killSignal" class="form-select form-select-apple">
-                        <option value="15">SIGTERM (15) - Graceful</option>
-                        <option value="9">SIGKILL (9) - Force</option>
-                        <option value="1">SIGHUP (1) - Reload</option>
+                        <option value="15">SIGTERM (15) - <?php echo $lang3434; ?></option>
+                        <option value="9">SIGKILL (9) - <?php echo $lang3435; ?></option>
+                        <option value="1">SIGHUP (1) - <?php echo $lang3436; ?></option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-apple-danger" onclick="killProcess()">Kill Process</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang3437; ?></button>
+                <button type="button" class="btn btn-danger" onclick="killProcess()"><?php echo $lang3438; ?></button>
             </div>
         </div>
     </div>
@@ -1048,7 +1064,7 @@ function initNetworkChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Download (KB/s)',
+                    label: '<?php echo $lang3439; ?> (KB/s)',
                     data: [],
                     borderColor: '#007aff',
                     backgroundColor: 'rgba(0, 122, 255, 0.1)',
@@ -1056,7 +1072,7 @@ function initNetworkChart() {
                     tension: 0.4
                 },
                 {
-                    label: 'Upload (KB/s)',
+                    label: '<?php echo $lang3440; ?> (KB/s)',
                     data: [],
                     borderColor: '#34c759',
                     backgroundColor: 'rgba(52, 199, 89, 0.1)',
@@ -1119,7 +1135,7 @@ function resetNetworkGraph() {
     networkChart.data.datasets[0].data = [];
     networkChart.data.datasets[1].data = [];
     networkChart.update();
-    showToast('Graph reset', 'success');
+    showToast('<?php echo $lang3441; ?>', 'success');
 }
 
 // ==================== Processes ====================
@@ -1154,7 +1170,7 @@ function refreshProcesses() {
 
 function renderProcesses(processes) {
     if (processes.length === 0) {
-        $('#processList').html('<tr><td colspan="6" class="text-center text-muted">No processes found</td></tr>');
+        $('#processList').html('<tr><td colspan="6" class="text-center text-muted"><?php echo $lang3442; ?></td></tr>');
         return;
     }
     
@@ -1174,7 +1190,7 @@ function renderProcesses(processes) {
                 <td>${proc.mem}%</td>
                 <td><small>${escapeHtml(proc.command.substring(0, 60))}</small></td>
                 <td>
-                    <button class="btn btn-sm btn-outline-danger kill-process-btn" onclick="killProcessById(${proc.pid})" title="Kill process">
+                    <button class="btn btn-sm btn-outline-danger kill-process-btn" onclick="killProcessById(${proc.pid})" title="<?php echo $lang3443; ?>">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </td>
@@ -1185,7 +1201,7 @@ function renderProcesses(processes) {
 }
 
 function killProcessById(pid) {
-    if (confirm(`Terminate process PID ${pid}?`)) {
+    if (confirm(`<?php echo $lang3444; ?> ${pid}?`)) {
         showLoading();
         
         const headers = {};
@@ -1201,7 +1217,7 @@ function killProcessById(pid) {
             success: function(response) {
                 hideLoading();
                 if (response.success) {
-                    showToast(`Process ${pid} terminated`, 'success');
+                    showToast(`<?php echo $lang3445; ?> ${pid} <?php echo $lang3446; ?>`, 'success');
                     refreshProcesses();
                 } else {
                     showToast(response.error, 'error');
@@ -1210,7 +1226,7 @@ function killProcessById(pid) {
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('Kill process error:', error);
-                showToast('Error killing process: ' + error, 'error');
+                showToast('<?php echo $lang3447; ?> ' + error, 'error');
             }
         });
     }
@@ -1226,7 +1242,7 @@ function killProcess() {
     const signal = $('#killSignal').val();
     
     if (!pid) {
-        showToast('Enter PID', 'error');
+        showToast('<?php echo $lang3448; ?>', 'error');
         return;
     }
     
@@ -1245,7 +1261,7 @@ function killProcess() {
         success: function(response) {
             hideLoading();
             if (response.success) {
-                showToast(`Process ${pid} terminated`, 'success');
+                showToast(`<?php echo $lang3449; ?> ${pid} <?php echo $lang3450; ?>`, 'success');
                 $('#killProcessModal').modal('hide');
                 refreshProcesses();
             } else {
@@ -1255,7 +1271,7 @@ function killProcess() {
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Kill process error:', error);
-            showToast('Error killing process: ' + error, 'error');
+            showToast('<?php echo $lang3451; ?> ' + error, 'error');
         }
     });
 }
@@ -1299,7 +1315,7 @@ function refreshConnections() {
 
 function renderConnections(connections) {
     if (connections.length === 0) {
-        $('#connectionsList').html('<div class="text-center text-muted py-4">No connections found</div>');
+        $('#connectionsList').html('<div class="text-center text-muted py-4"><?php echo $lang3452; ?></div>');
         return;
     }
     
@@ -1315,12 +1331,12 @@ function renderConnections(connections) {
                         <code class="text-primary">${escapeHtml(conn.local_addr)}</code>
                         <i class="bi bi-arrow-right mx-2 text-muted"></i>
                         <code class="text-success">${escapeHtml(conn.remote_addr)}</code>
-                        ${conn.pid !== '-' ? `<span class="badge bg-info ms-2"><i class="bi bi-cpu"></i> PID: ${conn.pid}</span>` : ''}
+                        ${conn.pid !== '-' ? `<span class="badge bg-info ms-2"><i class="bi bi-cpu"></i> <?php echo $lang3453; ?> ${conn.pid}</span>` : ''}
                         ${conn.process ? `<span class="badge bg-secondary ms-2">${escapeHtml(conn.process)}</span>` : ''}
                     </div>
                     ${conn.state === 'ESTABLISHED' ? `
                         <button class="btn btn-danger btn-sm kill-connection-btn" onclick="killConnectionById('${conn.remote_addr.split(':')[0]}', '${conn.remote_addr.split(':')[1]}', '${conn.protocol}')">
-                            <i class="bi bi-x-lg"></i> Kill
+                            <i class="bi bi-x-lg"></i> <?php echo $lang3454; ?>
                         </button>
                     ` : ''}
                 </div>
@@ -1331,7 +1347,7 @@ function renderConnections(connections) {
 }
 
 function killConnectionById(ip, port, protocol) {
-    if (confirm(`Terminate connection ${ip}:${port}?`)) {
+    if (confirm(`<?php echo $lang3455; ?> ${ip}:${port}?`)) {
         showLoading();
         
         const headers = {};
@@ -1347,7 +1363,7 @@ function killConnectionById(ip, port, protocol) {
             success: function(response) {
                 hideLoading();
                 if (response.success) {
-                    showToast(`Connection ${ip}:${port} terminated`, 'success');
+                    showToast(`<?php echo $lang3456; ?> ${ip}:${port} <?php echo $lang3457; ?>`, 'success');
                     refreshConnections();
                 } else {
                     showToast(response.error, 'error');
@@ -1356,7 +1372,7 @@ function killConnectionById(ip, port, protocol) {
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('Kill connection error:', error);
-                showToast('Error terminating connection: ' + error, 'error');
+                showToast('<?php echo $lang3458; ?> ' + error, 'error');
             }
         });
     }
@@ -1386,7 +1402,7 @@ function refreshServices() {
         },
         error: function(xhr, status, error) {
             console.error('Services refresh error:', error);
-            showToast('Failed to load services', 'error');
+            showToast('<?php echo $lang3459; ?>', 'error');
             renderServices([]);
         }
     });
@@ -1394,7 +1410,7 @@ function refreshServices() {
 
 function renderServices(services) {
     if (services.length === 0) {
-        $('#servicesList').html('<tr><td colspan="5" class="text-center text-muted">No services found</td></tr>');
+        $('#servicesList').html('<tr><td colspan="5" class="text-center text-muted"><?php echo $lang3460; ?></td></tr>');
         return;
     }
     
@@ -1409,7 +1425,7 @@ function renderServices(services) {
                 <td><small>${escapeHtml(service.description.substring(0, 60))}</small></td>
                 <td>
                     <button class="btn btn-sm ${service.active === 'running' ? 'btn-outline-danger' : 'btn-outline-success'}" onclick="serviceAction('${service.name}', '${service.active === 'running' ? 'stop' : 'start'}')">
-                        ${service.active === 'running' ? '<i class="bi bi-stop-circle"></i> Stop' : '<i class="bi bi-play-circle"></i> Start'}
+                        ${service.active === 'running' ? '<i class="bi bi-stop-circle"></i> <?php echo $lang3461; ?>' : '<i class="bi bi-play-circle"></i> <?php echo $lang3462; ?>'}
                     </button>
                 </td>
             </tr>
@@ -1447,13 +1463,13 @@ function serviceAction(service, action) {
                 showToast(message, 'success');
                 refreshServices();
             } else {
-                showToast(response.error || 'Action failed', 'error');
+                showToast(response.error || '<?php echo $lang3463; ?>', 'error');
             }
         },
         error: function(xhr, status, error) {
             hideLoading();
             console.error('Service action error:', error);
-            showToast(`Error ${action}ing ${service}: ${error}`, 'error');
+            showToast(`<?php echo $lang3464; ?> ${action}ing ${service}: ${error}`, 'error');
         }
     });
 }
@@ -1477,19 +1493,19 @@ function refreshLogs() {
             if (response.success) {
                 renderLogs(response.data);
             } else {
-                $('#logsList').html('<div class="text-center text-danger">Error loading logs</div>');
+                $('#logsList').html('<div class="text-center text-danger"><?php echo $lang3465; ?></div>');
             }
         },
         error: function(xhr, status, error) {
             console.error('Logs refresh error:', error);
-            $('#logsList').html('<div class="text-center text-danger">Failed to load logs: ' + error + '</div>');
+            $('#logsList').html('<div class="text-center text-danger"><?php echo $lang3466; ?> ' + error + '</div>');
         }
     });
 }
 
 function renderLogs(logs) {
     if (logs.length === 0) {
-        $('#logsList').html('<div class="text-center text-muted">No logs found</div>');
+        $('#logsList').html('<div class="text-center text-muted"><?php echo $lang3467; ?></div>');
         return;
     }
     
@@ -1513,7 +1529,7 @@ function exportLogs() {
     link.download = `system_logs_${new Date().toISOString().slice(0,19)}.txt`;
     link.click();
     URL.revokeObjectURL(link.href);
-    showToast('Logs exported', 'success');
+    showToast('<?php echo $lang3468; ?>', 'success');
 }
 
 // ==================== Ping Tool ====================
@@ -1530,7 +1546,7 @@ function startPing() {
     const count = $('#pingCount').val();
     
     if (!target) {
-        showToast('Enter target address', 'error');
+        showToast('<?php echo $lang3469; ?>', 'error');
         return;
     }
     
@@ -1617,7 +1633,7 @@ function openTracerouteModal() {
 function startTraceroute() {
     const target = $('#traceTarget').val();
     if (!target) {
-        showToast('Enter target address', 'error');
+        showToast('<?php echo $lang3470; ?>', 'error');
         return;
     }
     
@@ -1685,12 +1701,12 @@ function refreshNetstat(type) {
             if (response.success) {
                 $('#netstatOutput').html(response.data);
             } else {
-                $('#netstatOutput').html('<div class="alert alert-danger">Error: ' + response.error + '</div>');
+                $('#netstatOutput').html('<div class="alert alert-danger"><?php echo $lang3471; ?> ' + response.error + '</div>');
             }
         },
         error: function(xhr, status, error) {
             console.error('Netstat error:', error);
-            $('#netstatOutput').html('<div class="alert alert-danger">Failed to load netstat: ' + error + '</div>');
+            $('#netstatOutput').html('<div class="alert alert-danger"><?php echo $lang3472; ?> ' + error + '</div>');
         }
     });
 }
@@ -1708,7 +1724,7 @@ function startPortScan() {
     const ports = $('#scanPorts').val();
     
     if (!target) {
-        showToast('Enter target address', 'error');
+        showToast('<?php echo $lang3473; ?>', 'error');
         return;
     }
     
@@ -1755,7 +1771,7 @@ function startDnsLookup() {
     const type = $('#dnsType').val();
     
     if (!target) {
-        showToast('Enter domain name', 'error');
+        showToast('<?php echo $lang3474; ?>', 'error');
         return;
     }
     
@@ -1803,7 +1819,7 @@ function initSpeedChart() {
         data: {
             labels: [],
             datasets: [{
-                label: 'Speed (Mbps)',
+                label: '<?php echo $lang3475; ?> (Mbps)',
                 data: [],
                 borderColor: '#007aff',
                 backgroundColor: 'rgba(0, 122, 255, 0.1)',
@@ -1819,7 +1835,7 @@ function initSpeedChart() {
 }
 
 function startBandwidthTest() {
-    $('#bandwidthResult').html('<div class="spinner-border text-primary"></div> Testing bandwidth...');
+    $('#bandwidthResult').html('<div class="spinner-border text-primary"></div> <?php echo $lang3476; ?>');
     speedData = [];
     if (speedChart) {
         speedChart.data.labels = [];
@@ -1845,19 +1861,19 @@ function startBandwidthTest() {
                             <div class="stat-card" style="padding: 15px;">
                                 <i class="bi bi-arrow-down-circle text-primary"></i>
                                 <div class="stat-value" style="font-size: 24px;">${data.download_mbps} Mbps</div>
-                                <div class="stat-label">Download</div>
+                                <div class="stat-label"><?php echo $lang3477; ?></div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="stat-card" style="padding: 15px;">
                                 <i class="bi bi-arrow-up-circle text-success"></i>
                                 <div class="stat-value" style="font-size: 24px;">${data.upload_mbps} Mbps</div>
-                                <div class="stat-label">Upload</div>
+                                <div class="stat-label"><?php echo $lang3478; ?></div>
                             </div>
                         </div>
                     </div>
                     <div class="text-center mt-2">
-                        <small class="text-muted">Ping: ${data.ping_ms} ms | Jitter: ${data.jitter_ms} ms</small>
+                        <small class="text-muted"><?php echo $lang3479; ?> ${data.ping_ms} ms | Jitter: ${data.jitter_ms} ms</small>
                     </div>
                 `;
                 $('#bandwidthResult').html(html);
@@ -1869,11 +1885,11 @@ function startBandwidthTest() {
                     speedChart.update();
                 }
             } else {
-                $('#bandwidthResult').html('<div class="alert alert-danger">Error: ' + response.error + '</div>');
+                $('#bandwidthResult').html('<div class="alert alert-danger"><?php echo $lang3480; ?> ' + response.error + '</div>');
             }
         },
         error: function(xhr, status, error) {
-            $('#bandwidthResult').html('<div class="alert alert-danger">Error performing bandwidth test: ' + error + '</div>');
+            $('#bandwidthResult').html('<div class="alert alert-danger"><?php echo $lang3481; ?> ' + error + '</div>');
         }
     });
 }

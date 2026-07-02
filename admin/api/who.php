@@ -44,10 +44,13 @@ if (file_exists(ROOT_PATH . '/config.php')) {
 $db = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+require_once '../lang/loader.php';
+
 /**
  * Получить локальную информацию о сервере
  */
 function getLocalServerInfo($db) {
+	global $lang4538;
     $stmt = $db->prepare("SELECT hostSn, hostName, hostVersion FROM hosts WHERE idHost = 1");
     $result = $stmt->execute();
     $row = $result->fetchArray(SQLITE3_ASSOC);
@@ -61,7 +64,7 @@ function getLocalServerInfo($db) {
         ];
     }
     
-    return ['success' => false, 'message' => 'Server not found'];
+    return ['success' => false, 'message' => $lang4538];
 }
 
 /**

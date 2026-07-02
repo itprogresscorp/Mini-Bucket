@@ -465,6 +465,10 @@ else
     log "Файл auto_rotate_key.php не найден, пропускаем настройку cron"
 fi
 
+#SN Generation
+log "SN Generation..."
+php /var/www/minib/workers/gen_sn.php 2>&1 | tee -a "$LOG_FILE"
+
 # Настройка PHP параметров
 log "Настройка PHP параметров..."
 for php_ini in /etc/php/*/*/php.ini; do

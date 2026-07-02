@@ -23,6 +23,7 @@
 
 require_once 'config.php';
 isAuthenticated();
+require_once 'lang/loader.php';
 
 $current_host_id = $_SESSION['current_host_id'] ?? 1;
 
@@ -84,8 +85,24 @@ $menu = require_once 'menu.php';
 	<script src="js/hosts_load.js"></script>
 	<script src="js/crt_checker.js"></script>
 	<script>
+	window.lang = {
+		<?php
+		for ($i = 1; $i <= 100; $i++) {
+			$var_name = "lang$i";
+			if (isset($$var_name)) {
+				echo "'$i': '" . addslashes($$var_name) . "',\n";
+			}
+		}
+		?>
+	};
+	function __(num) {
+		return window.lang[num] || 'lang'+num;
+	}
+	console.log('Language loaded');
+	</script>
+	<script>
 	window.apiConfig = <?php echo json_encode($js_config); ?>;
-	console.log('API Config loaded:', window.apiConfig);
+	//console.log('API Config loaded:', window.apiConfig);
 	</script>
     <style>
         :root {
@@ -328,8 +345,8 @@ $menu = require_once 'menu.php';
     </style>
 </head>
 <body>
-<div id="applePreloader" class="apple-preloader"><div class="apple-spinner"></div><div class="mt-2">Loading...</div></div>
-<div id="globalLoader" class="loader-overlay"><div class="loader-content"><div class="apple-spinner mx-auto"></div><p class="mt-2">Operation in progress...</p></div></div>
+<div id="applePreloader" class="apple-preloader"><div class="apple-spinner"></div><div class="mt-2"><?php echo $lang12; ?></div></div>
+<div id="globalLoader" class="loader-overlay"><div class="loader-content"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1274; ?></p></div></div>
 
 <div class="top-bar">
     <div class="top-bar-left">
@@ -348,7 +365,7 @@ $menu = require_once 'menu.php';
     </div>-->
 	<div class="host-selector" style="margin-left: 20px;">
             <select id="hostSelector" style="background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 20px; padding: 6px 30px 6px 15px; font-size: 14px; cursor: pointer;">
-                <option value="">Loading...</option>
+                <option value=""><?php echo $lang12; ?></option>
             </select>
         </div>
 	<div class="btn-group">
@@ -356,11 +373,11 @@ $menu = require_once 'menu.php';
                     <i class="fas fa-bars"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="showBlockDiagram()"><i class="fas fa-project-diagram"></i> Scheme</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showSnapshotsList()"><i class="fas fa-camera-retro"></i> Snapshots</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info"></i> Legend</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showBlockDiagram()"><i class="fas fa-project-diagram me-2"></i> <?php echo $lang1700; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showSnapshotsList()"><i class="fas fa-camera-retro me-2"></i> <?php echo $lang1701; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showLegendModal()"><i class="fas fa-info me-2"></i> <?php echo $lang1702; ?></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i> Refresh</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i> <?php echo $lang1703; ?></a></li>
                 </ul>
             </div>	
                 <!-- <button class="btn btn-warning btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Обновить</button>-->
@@ -374,16 +391,16 @@ $menu = require_once 'menu.php';
         <div class="lvm-layout">
     <div class="disks-sidebar">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-hdd"></i> Disks and partitions</h5>
+            <h5 class="mb-0"><i class="fas fa-hdd"></i> <?php echo $lang1704; ?></h5>
             <div class="btn-group">
                 <button class="btn btn-sm btn-outline-apple dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-plus"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="showCreatePv(); return false;"><i class="fas fa-database me-2"></i> Create PV</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showCreateVg(); return false;"><i class="fas fa-layer-group me-2"></i> Create VG</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCreatePv(); return false;"><i class="fas fa-database me-2"></i> <?php echo $lang1705; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCreateVg(); return false;"><i class="fas fa-layer-group me-2"></i> <?php echo $lang1706; ?></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i> Refresh</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i> <?php echo $lang1707; ?></a></li>
                 </ul>
             </div>
         </div>
@@ -403,21 +420,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Legend</h5>
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> <?php echo $lang1708; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #4A90D9;"></div><span>Disk is a physical storage device.</span></div>
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #F5A623;"></div><span>Partition - part of a disk</span></div>
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #9013FE;"></div><span>PV - Physical Volume (том LVM)</span></div>
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #00BCD4;"></div><span>VG - Volume Group</span></div>
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #4CAF50;"></div><span>LV - Logical Volume</span></div>
-                <div class="legend-item mb-2"><div class="legend-color" style="background: #ff3b30;"></div><span>Red frame - mounted in the system</span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #4A90D9;"></div><span><?php echo $lang1709; ?></span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #F5A623;"></div><span><?php echo $lang1710; ?></span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #9013FE;"></div><span><?php echo $lang1711; ?></span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #00BCD4;"></div><span><?php echo $lang1712; ?></span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #4CAF50;"></div><span><?php echo $lang1713; ?></span></div>
+                <div class="legend-item mb-2"><div class="legend-color" style="background: #ff3b30;"></div><span><?php echo $lang1714; ?></span></div>
                 <hr>
-                <p class="small text-muted">Click on any block to view information or actions</p>
+                <p class="small text-muted"><?php echo $lang1715; ?></p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-apple" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-apple" data-bs-dismiss="modal"><?php echo $lang1716; ?></button>
             </div>
         </div>
     </div>
@@ -428,17 +445,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-project-diagram"></i> Scheme disks and LVM</h5>
+                <h5 class="modal-title"><i class="fas fa-project-diagram"></i> <?php echo $lang1717; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="max-height: 80vh; overflow-y: auto; background: #0f0f1a;">
                 <div id="blockDiagramContent" class="diagram-container">
-                    <div class="text-center p-4 text-white">Scheme loading...</div>
+                    <div class="text-center p-4 text-white"><?php echo $lang1718; ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple" onclick="refreshBlockDiagram()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1719; ?></button>
+                <button class="btn btn-apple" onclick="refreshBlockDiagram()"><i class="fas fa-sync-alt"></i> <?php echo $lang1720; ?></button>
             </div>
         </div>
     </div>
@@ -449,15 +466,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-microchip"></i> <span id="partitionInfoTitle">Partition information</span></h5>
+                <h5 class="modal-title"><i class="fas fa-microchip"></i> <span id="partitionInfoTitle"><?php echo $lang1721; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="partitionInfoContent">
-                <div class="text-center p-4">Loading...</div>
+                <div class="text-center p-4"><?php echo $lang1722; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple-success" id="createPvFromPartitionBtn" style="display: none;" onclick="createPvFromPartition()"><i class="fas fa-database"></i> Create PV</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1723; ?></button>
+                <button class="btn btn-apple-success" id="createPvFromPartitionBtn" style="display: none;" onclick="createPvFromPartition()"><i class="fas fa-database"></i> <?php echo $lang1724; ?></button>
             </div>
         </div>
     </div>
@@ -468,14 +485,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-layer-group"></i> <span id="vgInfoTitle">VG Information</span></h5>
+                <h5 class="modal-title"><i class="fas fa-layer-group"></i> <span id="vgInfoTitle"><?php echo $lang1725; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="vgInfoContent"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple" onclick="showExtendVgFromModal()">Expand VG</button>
-                <button class="btn btn-apple-warning" id="reduceVgBtn" onclick="showReduceVgFromModal()" style="display: none;">Delete PV in VG</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1726; ?></button>
+                <button class="btn btn-apple" onclick="showExtendVgFromModal()"><?php echo $lang1727; ?></button>
+                <button class="btn btn-apple-warning" id="reduceVgBtn" onclick="showReduceVgFromModal()" style="display: none;"><?php echo $lang1728; ?></button>
             </div>
         </div>
     </div>
@@ -486,15 +503,15 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-chart-line"></i> <span id="lvInfoTitle">Информация о LV</span></h5>
+                <h5 class="modal-title"><i class="fas fa-chart-line"></i> <span id="lvInfoTitle"><?php echo $lang1729; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="lvInfoContent"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button class="btn btn-apple" id="extendLvFromModalBtn" onclick="extendLvFromModal()">LV Information</button>
-                <button class="btn btn-apple-success" id="mountLvFromModalBtn" onclick="mountLvFromModal()">Mount</button>
-                <button class="btn btn-apple-secondary" id="umountLvFromModalBtn" onclick="umountLvFromModal()" style="display: none;">Umount</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1730; ?></button>
+                <button class="btn btn-apple" id="extendLvFromModalBtn" onclick="extendLvFromModal()"><?php echo $lang1731; ?></button>
+                <button class="btn btn-apple-success" id="mountLvFromModalBtn" onclick="mountLvFromModal()"><?php echo $lang1732; ?></button>
+                <button class="btn btn-apple-secondary" id="umountLvFromModalBtn" onclick="umountLvFromModal()" style="display: none;"><?php echo $lang1733; ?></button>
             </div>
         </div>
     </div>
@@ -505,14 +522,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-hdd"></i> <span id="diskInfoTitle">Disk information</span></h5>
+                <h5 class="modal-title"><i class="fas fa-hdd"></i> <span id="diskInfoTitle"><?php echo $lang1734; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="diskInfoContent">
-                <div class="text-center p-4">Loading...</div>
+                <div class="text-center p-4"><?php echo $lang1735; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1736; ?></button>
             </div>
         </div>
     </div>
@@ -523,21 +540,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-database"></i> Create Physical Volume</h5>
+                <h5 class="modal-title"><i class="fas fa-database"></i> <?php echo $lang1737; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning mb-3">
                     <i class="fas fa-exclamation-triangle"></i> 
-                    <strong>Attention!</strong> Data on the selected devices will be destroyed!
+                    <strong><?php echo $lang1738; ?></strong> <?php echo $lang1739; ?>
                 </div>
                 <div id="pvDevicesList" class="row g-2" style="max-height: 500px; overflow-y: auto;">
-                    <div class="col-12 text-center p-4">Loading devices...</div>
+                    <div class="col-12 text-center p-4"><?php echo $lang1740; ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple-danger" onclick="createPvFromSelected()">Create PV</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1741; ?></button>
+                <button class="btn btn-apple-danger" onclick="createPvFromSelected()"><?php echo $lang1742; ?></button>
             </div>
         </div>
     </div>
@@ -547,17 +564,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-layer-group"></i> Create Volume Group</h5>
+                <h5 class="modal-title"><i class="fas fa-layer-group"></i> <?php echo $lang1743; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control mb-2" id="vgName" placeholder="Name VG (Example: vg_data)">
-                <label class="form-label">Select PV:</label>
+                <input type="text" class="form-control mb-2" id="vgName" placeholder="<?php echo $lang1744; ?>">
+                <label class="form-label"><?php echo $lang1745; ?></label>
                 <div id="pvList" class="border rounded p-2" style="max-height:200px;overflow:auto"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple" onclick="createVg()">Create VG</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1746; ?></button>
+                <button class="btn btn-apple" onclick="createVg()"><?php echo $lang1747; ?></button>
             </div>
         </div>
     </div>
@@ -567,19 +584,19 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-chart-line"></i> Create Logical Volume</h5>
+                <h5 class="modal-title"><i class="fas fa-chart-line"></i> <?php echo $lang1748; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="lvVgName">
-                <input type="text" class="form-control mb-2" id="lvName" placeholder="Name LV (Example: lv_home)">
-                <input type="text" class="form-control mb-2" id="lvSize" placeholder="Size (10G, 100M, 50%FREE, 100%FREE)">
+                <input type="text" class="form-control mb-2" id="lvName" placeholder="<?php echo $lang1749; ?>">
+                <input type="text" class="form-control mb-2" id="lvSize" placeholder="<?php echo $lang1750; ?>">
                 <div class="form-check mb-2">
                     <input class="form-check-input" type="checkbox" id="lvFormat">
-                    <label class="form-check-label">Format after creation</label>
+                    <label class="form-check-label"><?php echo $lang1751; ?></label>
                 </div>
                 <div class="mb-2" id="lvFsTypeDiv" style="display: none;">
-                    <label class="form-label">File system:</label>
+                    <label class="form-label"><?php echo $lang1752; ?></label>
                     <select id="lvFsType" class="form-select">
                         <option value="ext4">ext4</option>
                         <option value="xfs">xfs</option>
@@ -588,11 +605,11 @@ $menu = require_once 'menu.php';
                         <option value="vfat">vfat</option>
                     </select>
                 </div>
-                <div class="text-muted small">Example: 10G, 512M, 50%FREE, 100%FREE</div>
+                <div class="text-muted small"><?php echo $lang1753; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="createLv()">Create LV</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1754; ?></button>
+                <button class="btn btn-apple" onclick="createLv()"><?php echo $lang1755; ?></button>
             </div>
         </div>
     </div>
@@ -602,17 +619,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-expand"></i> Expand VG</h5>
+                <h5 class="modal-title"><i class="fas fa-expand"></i> <?php echo $lang1756; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="extendVgName">
-                <label>Add PV:</label>
+                <label><?php echo $lang1757; ?></label>
                 <div id="extendPvList"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="extendVg()">Expand VG</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1758; ?></button>
+                <button class="btn btn-apple" onclick="extendVg()"><?php echo $lang1759; ?></button>
             </div>
         </div>
     </div>
@@ -622,18 +639,18 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-compress"></i> Delete PV from a VG</h5>
+                <h5 class="modal-title"><i class="fas fa-compress"></i> <?php echo $lang1760; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="reduceVgName">
-                <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Note: When deleting a PV from a VG, data will be moved to other PVs. If there is insufficient free space, the operation will fail..</div>
-                <label>ВSelect PV to delete:</label>
+                <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> <?php echo $lang1761; ?></div>
+                <label><?php echo $lang1762; ?></label>
                 <div id="reducePvList"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple-warning" onclick="reduceVg()">Delete selected PVs</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1763; ?></button>
+                <button class="btn btn-apple-warning" onclick="reduceVg()"><?php echo $lang1764; ?></button>
             </div>
         </div>
     </div>
@@ -643,19 +660,19 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-expand"></i> Expand LV</h5>
+                <h5 class="modal-title"><i class="fas fa-expand"></i> <?php echo $lang1765; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="extendLvVg">
                 <input type="hidden" id="extendLvName">
-                <div class="mb-3"><strong>Current size: <span id="extendLvCurrentSize"></span></strong></div>
+                <div class="mb-3"><strong><?php echo $lang1766; ?> <span id="extendLvCurrentSize"></span></strong></div>
                 <input type="text" class="form-control" id="extendLvSize" placeholder="+10G, 20G, +50%FREE">
-                <div class="text-muted small mt-2">Example: +5G (add), 15G (absolute), +50%FREE</div>
+                <div class="text-muted small mt-2"><?php echo $lang1767; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="extendLv()">Expand LV</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1768; ?></button>
+                <button class="btn btn-apple" onclick="extendLv()"><?php echo $lang1769; ?></button>
             </div>
         </div>
     </div>
@@ -665,16 +682,16 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rename VG</h5>
+                <h5 class="modal-title"><?php echo $lang1770; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="renameVgOldName">
-                <input type="text" class="form-control" id="renameVgNewName" placeholder="New name VG">
+                <input type="text" class="form-control" id="renameVgNewName" placeholder="<?php echo $lang1772; ?>">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="renameVg()">Rename</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1771; ?></button>
+                <button class="btn btn-apple" onclick="renameVg()"><?php echo $lang1773; ?></button>
             </div>
         </div>
     </div>
@@ -684,17 +701,17 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rename LV</h5>
+                <h5 class="modal-title"><?php echo $lang1774; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="renameLvVg">
                 <input type="hidden" id="renameLvOldName">
-                <input type="text" class="form-control" id="renameLvNewName" placeholder="New name LV">
+                <input type="text" class="form-control" id="renameLvNewName" placeholder="<?php echo $lang1775; ?>">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="renameLv()">Rename</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1776; ?></button>
+                <button class="btn btn-apple" onclick="renameLv()"><?php echo $lang1777; ?></button>
             </div>
         </div>
     </div>
@@ -704,14 +721,14 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-eject"></i> Mount LV</h5>
+                <h5 class="modal-title"><i class="fas fa-eject"></i> <?php echo $lang1778; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="mountDevice">
                 <input type="text" class="form-control mb-2" id="mountPoint" placeholder="/mnt/data">
                 <select id="mountFs" class="form-select mb-2">
-                    <option value="auto">auto</option>
+                    <option value="auto"><?php echo $lang1779; ?></option>
                     <option value="ext4">ext4</option>
                     <option value="xfs">xfs</option>
                     <option value="ext3">ext3</option>
@@ -720,12 +737,12 @@ $menu = require_once 'menu.php';
                 </select>
                 <div class="form-check mb-2">
                     <input class="form-check-input" type="checkbox" id="mountFstab">
-                    <label class="form-check-label">Add in /etc/fstab</label>
+                    <label class="form-check-label"><?php echo $lang1780; ?></label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="mountLv()"><i class="fas fa-eject"></i> Mount</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1781; ?></button>
+                <button class="btn btn-apple" onclick="mountLv()"><i class="fas fa-eject"></i> <?php echo $lang1782; ?></button>
             </div>
         </div>
     </div>
@@ -735,19 +752,19 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-eraser"></i> Formating Logical Volume</h5>
+                <h5 class="modal-title"><i class="fas fa-eraser"></i> <?php echo $lang1783; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="formatLvPath">
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle"></i> 
-                    ATTENTION: All data on LV will be destroyed!
+                    <?php echo $lang1784; ?>
                 </div>
-                <label class="form-label">Select file system:</label>
+                <label class="form-label"><?php echo $lang1785; ?></label>
                 <select id="formatFsType" class="form-select">
                     <optgroup label="Linux">
-                        <option value="ext4">ext4 (recommended)</option>
+                        <option value="ext4">ext4 <?php echo $lang1786; ?></option>
                         <option value="ext3">ext3</option>
                         <option value="ext2">ext2</option>
                         <option value="xfs">XFS</option>
@@ -760,8 +777,8 @@ $menu = require_once 'menu.php';
                 </select>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple-danger" onclick="confirmFormatLv()">Format</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1787; ?></button>
+                <button class="btn btn-apple-danger" onclick="confirmFormatLv()"><?php echo $lang1788; ?></button>
             </div>
         </div>
     </div>
@@ -772,30 +789,30 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-camera"></i> Create Snapshot</h5>
+                <h5 class="modal-title"><i class="fas fa-camera"></i> <?php echo $lang1789; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="snapshotVgName">
                 <input type="hidden" id="snapshotOriginLv">
                 <div class="mb-3">
-                    <label class="form-label">Snapshot name:</label>
+                    <label class="form-label"><?php echo $lang1790; ?></label>
                     <input type="text" class="form-control" id="snapshotName" placeholder="snap_2024_01_01">
-                    <div class="form-text">Use a unique name</div>
+                    <div class="form-text"><?php echo $lang1791; ?></div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Snapshot size:</label>
+                    <label class="form-label"><?php echo $lang1792; ?></label>
                     <input type="text" class="form-control" id="snapshotSize" value="10G">
-                    <div class="form-text">Example: 5G, 10G, 20% (from the original), 50%FREE</div>
+                    <div class="form-text"><?php echo $lang1793; ?></div>
                 </div>
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> 
-                    Snapshots preserve the LVs state at the time of creation. Recommended size: 10-30% of the original.
+                    <?php echo $lang1794; ?>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-apple" onclick="createSnapshot()">Create</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1795; ?></button>
+                <button class="btn btn-apple" onclick="createSnapshot()"><?php echo $lang1796; ?></button>
             </div>
         </div>
     </div>
@@ -806,16 +823,16 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-camera"></i> <span id="snapshotInfoTitle">Snapshot information</span></h5>
+                <h5 class="modal-title"><i class="fas fa-camera"></i> <span id="snapshotInfoTitle"><?php echo $lang1797; ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="snapshotInfoContent">
-                <div class="text-center p-4">Loading...</div>
+                <div class="text-center p-4"><?php echo $lang1798; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple-warning" id="restoreSnapshotBtn" onclick="restoreSnapshotFromModal()">Restore</button>
-                <button class="btn btn-apple-danger" id="deleteSnapshotBtn" onclick="deleteSnapshotFromModal()">Delete</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1799; ?></button>
+                <button class="btn btn-apple-warning" id="restoreSnapshotBtn" onclick="restoreSnapshotFromModal()"><?php echo $lang1800; ?></button>
+                <button class="btn btn-apple-danger" id="deleteSnapshotBtn" onclick="deleteSnapshotFromModal()"><?php echo $lang1801; ?></button>
             </div>
         </div>
     </div>
@@ -826,20 +843,21 @@ $menu = require_once 'menu.php';
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-camera-retro"></i> Snapshots</h5>
+                <h5 class="modal-title"><i class="fas fa-camera-retro"></i> <?php echo $lang1802; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="snapshotsListContent">
-                <div class="text-center p-4">Loading...</div>
+                <div class="text-center p-4"><?php echo $lang1803; ?></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-apple" onclick="refreshSnapshotsList()">Refresh</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $lang1804; ?></button>
+                <button class="btn btn-apple" onclick="refreshSnapshotsList()"><?php echo $lang1805; ?></button>
             </div>
         </div>
     </div>
 </div>
 
+<script src="lib/jquery-3.6.0-master/dist/jquery.min.js"></script>
 <script>
 const url = "<?php echo $current_host_id == 1 ? '/api/' : rtrim($host_url, '/') . '/'; ?>";
 let currentData = {};
@@ -916,7 +934,7 @@ async function confirmFormatLv() {
     const fsType = document.getElementById('formatFsType').value;
     
     if (!lvPath || !fsType) {
-        showToast('Error: Path or file system type not specified.', 'error');
+        showToast('<?php echo $lang1806; ?>', 'error');
         return;
     }
     
@@ -928,7 +946,7 @@ async function confirmFormatLv() {
     
     if (res.success) {
         await refreshAll();
-        showToast(`LV is formatted as ${fsType}`);
+        showToast(`<?php echo $lang1807; ?> ${fsType}`);
     } else {
         showToast(res.error, 'error');
     }
@@ -957,10 +975,10 @@ async function refreshAll() {
             renderDisks(data.disks);
             renderLvm(data);
         } else {
-            showToast(data.error || 'Loading error', 'error');
+            showToast(data.error || '<?php echo $lang1808; ?>', 'error');
         }
     } catch (e) {
-        showToast('Connection error: ' + e.message, 'error');
+        showToast('<?php echo $lang1809; ?>' + e.message, 'error');
     }
     
     if (preloader) preloader.style.display = 'none';
@@ -969,7 +987,7 @@ async function refreshAll() {
 function renderDisks(disks) {
     let html = '';
     if (!disks || disks.length === 0) {
-        html = '<div class="alert alert-warning">No disks found.</div>';
+        html = '<div class="alert alert-warning"><?php echo $lang1810; ?></div>';
     } else {
         for (const disk of disks) {
             const isPV = currentData.pvs?.some(pv => pv.name === disk.path);
@@ -977,10 +995,10 @@ function renderDisks(disks) {
                 <div class="disk-name"><i class="fas fa-hdd"></i> ${disk.name}</div>
                 <div class="disk-size">${disk.size_formatted}</div>
                 <div class="small">${disk.model || 'Unknown'}</div>
-                ${disk.is_system ? '<span class="badge bg-secondary mt-1">System</span>' : ''}
+                ${disk.is_system ? '<span class="badge bg-secondary mt-1"><?php echo $lang1811; ?></span>' : ''}
                 ${disk.partition_table_type ? `<span class="badge bg-info mt-1">${disk.partition_table_type.toUpperCase()}</span>` : ''}
-                ${isPV ? '<span class="badge bg-info mt-1">PV</span>' : ''}
-                <div class="small text-muted mt-1">${disk.partitions?.length || 0} partition</div>
+                ${isPV ? '<span class="badge bg-info mt-1"><?php echo $lang1812; ?></span>' : ''}
+                <div class="small text-muted mt-1">${disk.partitions?.length || 0} <?php echo $lang1813; ?></div>
             </div>`;
             
             if (disk.partitions && disk.partitions.length) {
@@ -1008,17 +1026,17 @@ function renderDisks(disks) {
                         html += `<div class="partition-item" style="border-left: 3px solid #4CAF50;" onclick="event.stopPropagation(); showLVInfoModal('${part.path}', '${lvInfo.vg_name}', '${lvInfo.name}')">
                             <i class="fas fa-chart-line" style="color: #4CAF50;"></i> ${part.name}
                             <span class="float-end">${part.size_formatted}</span>
-                            <div class="small">LV | ${lvInfo.filesystem || part.fstype || 'no fs'} | ${lvInfo.mount_point || part.mount_point || 'not mounted'}</div>
+                            <div class="small"><?php echo $lang1814; ?> | ${lvInfo.filesystem || part.fstype || 'no fs'} | ${lvInfo.mount_point || part.mount_point || 'not mounted'}</div>
                             ${lvInfo.mount_point ? '<span class="badge bg-danger mt-1">mounted</span>' : ''}
-                            ${!lvInfo.has_filesystem ? '<span class="badge bg-warning mt-1">no fs</span>' : ''}
+                            ${!lvInfo.has_filesystem ? '<span class="badge bg-warning mt-1"><?php echo $lang1816; ?></span>' : ''}
                         </div>`;
                     } else if (isPV) {
                         // PV - показываем как physical volume
                         html += `<div class="partition-item" style="border-left: 3px solid #9013FE;" onclick="event.stopPropagation(); showPartitionInfo('${part.name}')">
                             <i class="fas fa-database" style="color: #9013FE;"></i> ${part.name}
                             <span class="float-end">${part.size_formatted}</span>
-                            <div class="small">PV | ${vgName ? 'VG: ' + vgName : 'free'} | ${part.fstype || 'LVM2_member'}</div>
-                            <span class="badge bg-info mt-1">PV</span>
+                            <div class="small"><?php echo $lang1817; ?> | ${vgName ? 'VG: ' + vgName : 'free'} | ${part.fstype || 'LVM2_member'}</div>
+                            <span class="badge bg-info mt-1"><?php echo $lang1817; ?></span>
                         </div>`;
                     } else {
                         // Обычный раздел
@@ -1043,16 +1061,16 @@ function renderLvm(data) {
     if (data.pvs && data.pvs.length) {
         html += `<div class="lvm-card mb-4">
             <div class="lvm-header d-flex justify-content-between align-items-center">
-                <strong><i class="fas fa-database"></i> Physical Volumes (${data.pvs.length})</strong>
+                <strong><i class="fas fa-database"></i> <?php echo $lang1818; ?> (${data.pvs.length})</strong>
                 <div class="btn-group">
                 <button class="btn btn-sm btn-outline-apple dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-plus"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#" onclick="showCreatePv(); return false;"><i class="fas fa-database me-2"></i>Create PV</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showCreateVg(); return false;"><i class="fas fa-layer-group me-2"></i>Create VG</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCreatePv(); return false;"><i class="fas fa-database me-2"></i><?php echo $lang1819; ?></a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCreateVg(); return false;"><i class="fas fa-layer-group me-2"></i><?php echo $lang1820; ?></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i>Refresh</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="refreshAll(); return false;"><i class="fas fa-sync-alt me-2"></i><?php echo $lang1821; ?></a></li>
                 </ul>
             </div>
             </div>
@@ -1063,12 +1081,12 @@ function renderLvm(data) {
                 <div class="border rounded p-2 h-100">
                     <div class="d-flex justify-content-between align-items-start">
                         <strong><i class="fas fa-database"></i> ${escapeHtml(pv.name.split('/').pop())}</strong>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deletePv('${escapeAttr(pv.name)}')" title="Delete PV"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePv('${escapeAttr(pv.name)}')" title="<?php echo $lang1822; ?>"><i class="fas fa-trash"></i></button>
                     </div>
-                    <div class="small mt-1">Size: ${pv.size_formatted}</div>
-                    <div class="small">Used: ${pv.used_formatted}</div>
-                    <div class="small">Free: ${pv.free_formatted}</div>
-                    <div class="small">VG: ${pv.vg_name ? escapeHtml(pv.vg_name) : '<span class="text-muted">free</span>'}</div>
+                    <div class="small mt-1"><?php echo $lang1823; ?> ${pv.size_formatted}</div>
+                    <div class="small"><?php echo $lang1824; ?> ${pv.used_formatted}</div>
+                    <div class="small"><?php echo $lang1825; ?> ${pv.free_formatted}</div>
+                    <div class="small"><?php echo $lang1826; ?> ${pv.vg_name ? escapeHtml(pv.vg_name) : '<span class="text-muted"><?php echo $lang1827; ?></span>'}</div>
                     <div class="progress mt-1" style="height: 3px;"><div class="progress-bar bg-info" style="width: ${usedPercent}%"></div></div>
                 </div>
             </div>`;
@@ -1077,10 +1095,10 @@ function renderLvm(data) {
     } else {
         html += `<div class="lvm-card mb-4">
             <div class="lvm-header d-flex justify-content-between align-items-center">
-                <strong><i class="fas fa-database"></i> Physical Volumes</strong>
+                <strong><i class="fas fa-database"></i> <?php echo $lang1828; ?></strong>
                 <button class="btn btn-sm btn-outline-apple" onclick="showCreatePv()"><i class="fas fa-plus"></i></button>
             </div>
-            <div class="alert alert-info mb-0 small">No Physical Volumes. Create a PV to get started with LVM.</div>
+            <div class="alert alert-info mb-0 small"><?php echo $lang1829; ?></div>
         </div>`;
     }
     
@@ -1094,30 +1112,30 @@ function renderLvm(data) {
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-1 text-white"><i class="fas fa-layer-group"></i> ${escapeHtml(vg.name)}</h5>
-                            <div class="small text-white-50">${vg.size_formatted} | ${vg.pv_count} PV | ${vg.lv_count} LV</div>
+                            <div class="small text-white-50">${vg.size_formatted} | ${vg.pv_count} <?php echo $lang1830; ?> | ${vg.lv_count} <?php echo $lang1831; ?></div>
                         </div>
                         <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-success" onclick="showCreateLv('${escapeAttr(vg.name)}')">
-                                <i class="fas fa-plus"></i> LV
+                                <i class="fas fa-plus"></i> <?php echo $lang1832; ?>
                             </button>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-cog"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="#" onclick="showExtendVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-expand me-2"></i>Expand VG</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="showReduceVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-compress me-2"></i>Remove PV from VG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="showExtendVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-expand me-2"></i><?php echo $lang1833; ?></a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="showReduceVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-compress me-2"></i><?php echo $lang1834; ?></a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#" onclick="showRenameVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-pen me-2"></i>Rename</a></li>
-                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-trash me-2"></i>Delete VG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="showRenameVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-pen me-2"></i><?php echo $lang1835; ?></a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteVg('${escapeAttr(vg.name)}'); return false;"><i class="fas fa-trash me-2"></i><?php echo $lang1836; ?></a></li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="mt-2">
                         <div class="d-flex justify-content-between small text-white-50 mb-1">
-                            <span>Used ${vg.used_percent}%</span>
-                            <span>Free ${vg.free_formatted}</span>
+                            <span><?php echo $lang1837; ?> ${vg.used_percent}%</span>
+                            <span><?php echo $lang1838; ?> ${vg.free_formatted}</span>
                         </div>
                         <div class="progress" style="height: 6px;"><div class="progress-bar bg-success" style="width: ${vg.used_percent}%"></div></div>
                     </div>
@@ -1126,7 +1144,7 @@ function renderLvm(data) {
             
             if (vgLvs.length) {
                 html += `<div class="row g-2">
-                    <div class="col-12"><strong><i class="fas fa-chart-line"></i> Logical Volumes</strong><hr class="my-2"></div>`;
+                    <div class="col-12"><strong><i class="fas fa-chart-line"></i> <?php echo $lang1839; ?></strong><hr class="my-2"></div>`;
                 
                 for (const lv of vgLvs) {
                     const isMounted = lv.mount_point !== null;
@@ -1146,29 +1164,29 @@ function renderLvm(data) {
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#" onclick="showCreateSnapshot('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-camera me-2"></i>Snapshot</a></li>
-                                        ${!isMounted ? `<li><a class="dropdown-item" href="#" onclick="formatLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}', false); return false;"><i class="fas fa-eraser me-2"></i>Formating</a></li>` : ''}
-                                        <li><a class="dropdown-item" href="#" onclick="showExtendLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}', '${lv.size_formatted}'); return false;"><i class="fas fa-expand me-2"></i>Expand</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="showRenameLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-pen me-2"></i>Rename</a></li>
-                                        ${!isMounted && hasFs ? `<li><a class="dropdown-item" href="#" onclick="showMountModal('${escapeAttr(lv.path)}'); return false;"><i class="fas fa-eject me-2"></i>Mount</a></li>` : ''}
-                                        ${isMounted ? `<li><a class="dropdown-item" href="#" onclick="umountLv('${escapeAttr(lv.mount_point)}'); return false;"><i class="fas fa-eject me-2"></i>Umount</a></li>` : ''}
+                                        <li><a class="dropdown-item" href="#" onclick="showCreateSnapshot('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-camera me-2"></i><?php echo $lang1840; ?></a></li>
+                                        ${!isMounted ? `<li><a class="dropdown-item" href="#" onclick="formatLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}', false); return false;"><i class="fas fa-eraser me-2"></i><?php echo $lang1841; ?></a></li>` : ''}
+                                        <li><a class="dropdown-item" href="#" onclick="showExtendLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}', '${lv.size_formatted}'); return false;"><i class="fas fa-expand me-2"></i><?php echo $lang1842; ?></a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="showRenameLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-pen me-2"></i><?php echo $lang1843; ?></a></li>
+                                        ${!isMounted && hasFs ? `<li><a class="dropdown-item" href="#" onclick="showMountModal('${escapeAttr(lv.path)}'); return false;"><i class="fas fa-eject me-2"></i><?php echo $lang1844; ?></a></li>` : ''}
+                                        ${isMounted ? `<li><a class="dropdown-item" href="#" onclick="umountLv('${escapeAttr(lv.mount_point)}'); return false;"><i class="fas fa-eject me-2"></i><?php echo $lang1845; ?></a></li>` : ''}
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteLv('${escapeAttr(lv.vg_name)}', '${escapeAttr(lv.name)}'); return false;"><i class="fas fa-trash me-2"></i><?php echo $lang1846; ?></a></li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="small mt-2">
-                                <div>Размер: <strong>${lv.size_formatted}</strong></div>
-                                <div class="text-truncate" title="${escapeAttr(lv.path)}">Path: <code class="small">${escapeHtml(lv.path)}</code></div>
-                                <div>Статус: ${escapeHtml(mountStatus)}</div>
-                                ${lv.filesystem ? `<div>ФС: ${escapeHtml(lv.filesystem)}</div>` : ''}`;
+                                <div><?php echo $lang1847; ?> <strong>${lv.size_formatted}</strong></div>
+                                <div class="text-truncate" title="${escapeAttr(lv.path)}"><?php echo $lang1848; ?> <code class="small">${escapeHtml(lv.path)}</code></div>
+                                <div><?php echo $lang1849; ?> ${escapeHtml(mountStatus)}</div>
+                                ${lv.filesystem ? `<div><?php echo $lang1850; ?> ${escapeHtml(lv.filesystem)}</div>` : ''}`;
                     
                     // Прогресс-бар для смонтированных LV
                     if (isMounted) {
 						html += `<div class="mt-2" data-lv-mount="${escapeAttr(lv.mount_point)}">
 									<div class="d-flex justify-content-between small mb-1">
-										<span>Used</span>
-										<span class="usage-text">loading...</span>
+										<span><?php echo $lang1851; ?></span>
+										<span class="usage-text"><?php echo $lang1852; ?></span>
 									</div>
 									<div class="progress" style="height: 4px;">
 										<div class="progress-bar bg-primary" style="width: 0%"></div>
@@ -1176,11 +1194,11 @@ function renderLvm(data) {
 								</div>`;
 					} else if (hasFs) {
                         html += `<div class="alert alert-info mt-2 mb-0 py-1 px-2 small">
-                                    <i class="fas fa-info-circle"></i> LV is formatted but not mounted
+                                    <i class="fas fa-info-circle"></i> <?php echo $lang1853; ?>
                                 </div>`;
                     } else {
                         html += `<div class="alert alert-warning mt-2 mb-0 py-1 px-2 small">
-                                    <i class="fas fa-exclamation-triangle"></i> Formatting required
+                                    <i class="fas fa-exclamation-triangle"></i> <?php echo $lang1854; ?>
                                 </div>`;
                     }
                     
@@ -1190,9 +1208,9 @@ function renderLvm(data) {
                 }
                 html += `</div>`;
             } else {
-                html += `<div class="text-center text-muted py-3 small">There are no Logical Volumes in this group. 
+                html += `<div class="text-center text-muted py-3 small"><?php echo $lang1855; ?> 
 					<br><button class="btn btn-sm btn-success" onclick="showCreateLv('${escapeAttr(vg.name)}')">
-                                <i class="fas fa-plus"></i> Add LV
+                                <i class="fas fa-plus"></i> <?php echo $lang1856; ?>
                             </button>
 				</div>`;
             }
@@ -1202,10 +1220,10 @@ function renderLvm(data) {
     } else {
         html += `<div class="lvm-card">
             <div class="lvm-header d-flex justify-content-between align-items-center">
-                <strong><i class="fas fa-layer-group"></i> Volume Groups</strong>
+                <strong><i class="fas fa-layer-group"></i> <?php echo $lang1857; ?></strong>
                 <button class="btn btn-sm btn-outline-apple" onclick="showCreateVg()"><i class="fas fa-plus"></i></button>
             </div>
-            <div class="alert alert-info mb-0 small">No Volume Groups. Create VG from PV.</div>
+            <div class="alert alert-info mb-0 small"><?php echo $lang1858; ?></div>
         </div>`;
     }
     
@@ -1283,7 +1301,7 @@ async function showLVInfoModal(lvPath, vgName, lvName) {
     const title = document.getElementById('lvInfoTitle');
     
     title.innerHTML = `<i class="fas fa-chart-line"></i> ${vgName}/${lvName}`;
-    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading information...</p></div>';
+    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1859; ?></p></div>';
     modal.show();
     
     try {
@@ -1291,26 +1309,26 @@ async function showLVInfoModal(lvPath, vgName, lvName) {
         if (res.success && res.info) {
             const lv = res.info;
             const mountStatus = lv.mount_point ? 
-                `<span class="badge bg-danger">Mount in ${lv.mount_point}</span>` : 
-                '<span class="badge bg-secondary">Not mount</span>';
+                `<span class="badge bg-danger"><?php echo $lang1860; ?> ${lv.mount_point}</span>` : 
+                '<span class="badge bg-secondary"><?php echo $lang1861; ?></span>';
             const fsStatus = lv.has_filesystem ? 
                 `<span class="badge bg-success">${lv.filesystem}</span>` : 
-                '<span class="badge bg-warning">Not formated</span>';
+                '<span class="badge bg-warning"><?php echo $lang1862; ?></span>';
             
             content.innerHTML = `
                 <div class="partition-details">
-                    <div class="partition-details-item"><strong>Name:</strong> ${lv.name}</div>
-                    <div class="partition-details-item"><strong>VG:</strong> ${lv.vg_name}</div>
-                    <div class="partition-details-item"><strong>Size:</strong> ${lv.size_formatted}</div>
-                    <div class="partition-details-item"><strong>Path:</strong> <code>${lv.path}</code></div>
-                    <div class="partition-details-item"><strong>File system:</strong> ${fsStatus}</div>
-                    <div class="partition-details-item"><strong>Mount status:</strong> ${mountStatus}</div>
-                    <div class="partition-details-item"><strong>Active:</strong> ${lv.is_active ? 'Yes' : 'No'}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1863; ?></strong> ${lv.name}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1864; ?></strong> ${lv.vg_name}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1865; ?></strong> ${lv.size_formatted}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1866; ?></strong> <code>${lv.path}</code></div>
+                    <div class="partition-details-item"><strong><?php echo $lang1867; ?></strong> ${fsStatus}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1868; ?></strong> ${mountStatus}</div>
+                    <div class="partition-details-item"><strong><?php echo $lang1869; ?></strong> ${lv.is_active ? 'Yes' : 'No'}</div>
                 </div>
                 ${!lv.has_filesystem ? `
                 <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle"></i> LV not formated. 
-                    Click the "Format" button to create the file system.
+                    <i class="fas fa-exclamation-triangle"></i> <?php echo $lang1871; ?> 
+                    <?php echo $lang1872; ?>
                 </div>
                 ` : ''}
             `;
@@ -1335,10 +1353,10 @@ async function showLVInfoModal(lvPath, vgName, lvName) {
             currentLvInfo.vg_name = lv.vg_name;
             currentLvInfo.name = lv.name;
         } else {
-            content.innerHTML = `<div class="alert alert-danger">Error loading information: ${res.error || 'Unknown error'}</div>`;
+            content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1873; ?> ${res.error || 'Unknown error'}</div>`;
         }
     } catch (e) {
-        content.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1874; ?> ${e.message}</div>`;
     }
 }
 
@@ -1347,7 +1365,7 @@ async function showLVInfoModal(lvPath, vgName, lvName) {
 async function showBlockDiagram() {
     const modal = new bootstrap.Modal(document.getElementById('blockDiagramModal'));
     const container = document.getElementById('blockDiagramContent');
-    container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2">Scheme loading...</p></div>';
+    container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1875; ?></p></div>';
     modal.show();
     
     try {
@@ -1364,10 +1382,10 @@ async function showBlockDiagram() {
         if (data.success) {
             renderConnectionDiagram(data);
         } else {
-            container.innerHTML = '<div class="alert alert-danger">Data loading error</div>';
+            container.innerHTML = '<div class="alert alert-danger"><?php echo $lang1876; ?></div>';
         }
     } catch (e) {
-        container.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        container.innerHTML = `<div class="alert alert-danger"><?php echo $lang1877; ?> ${e.message}</div>`;
     }
 }
 
@@ -1390,7 +1408,8 @@ function renderConnectionDiagram(data) {
     
     if (data.vgs) {
         for (const vg of data.vgs) {
-            vgToPvs[vg.name] = [];            vgToLvs[vg.name] = [];
+            vgToPvs[vg.name] = []; 
+			vgToLvs[vg.name] = [];
         }
     }
     
@@ -1425,7 +1444,7 @@ function renderConnectionDiagram(data) {
         <div class="connection-diagram" id="connectionDiagram" style="position: relative;">
             <svg id="connectionLines" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></svg>
             <div class="physical-layer" id="physicalLayer">
-                <div class="level-label" style="position: absolute; top: -10px; left: 10px;">Physical devices (Disks and partitions)</div>
+                <div class="level-label" style="position: absolute; top: -10px; left: 10px;"><?php echo $lang1878; ?></div>
     `;
     
     // Рендер диски и разделы
@@ -1450,17 +1469,17 @@ function renderConnectionDiagram(data) {
                             title="${isPv ? 'PV in ' + (vgName || '?') : 'Not a PV'}">
                     <i class="fas fa-microchip"></i> ${part.name}<br>
                     <small>${part.size_formatted}</small>
-                    ${isPv ? `<span class="badge bg-info" style="font-size: 8px;">PV</span>` : ''}
+                    ${isPv ? `<span class="badge bg-info" style="font-size: 8px;"><?php echo $lang1879; ?></span>` : ''}
                 </div>`;
             }
         } else {
-            html += `<div class="text-muted small">нет разделов</div>`;
+            html += `<div class="text-muted small"><?php echo $lang1880; ?></div>`;
         }
         
         html += `</div></div>`;
     }
     
-    html += `</div><div class="lvm-layer" id="lvmLayer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;">LVM Structure</div>`;
+    html += `</div><div class="lvm-layer" id="lvmLayer"><div class="level-label" style="position: absolute; top: -10px; left: 10px;"><?php echo $lang1881; ?></div>`;
     
     // Рендер VG и их содержимое
     if (data.vgs && data.vgs.length) {
@@ -1477,7 +1496,7 @@ function renderConnectionDiagram(data) {
             
             if (pvsInVg.length) {
                 html += `<div class="pv-in-vg" id="pvInVg_${vg.name}">
-                    <div style="width:100%; text-align:center; font-size:10px; color:#aaa;">PV</div>`;
+                    <div style="width:100%; text-align:center; font-size:10px; color:#aaa;"><?php echo $lang1882; ?></div>`;
                 for (const pv of pvsInVg) {
                     const pvId = getElementId('pv', pv.name);
                     html += `<div class="pv-badge" id="${pvId}" data-pv="${pv.name}" data-vg="${vg.name}" onclick="event.stopPropagation(); showPvInfo('${pv.name}')">
@@ -1490,7 +1509,7 @@ function renderConnectionDiagram(data) {
             
             if (lvsInVg.length) {
                 html += `<div class="pv-in-vg" style="background: rgba(76,175,80,0.1);">
-                    <div style="width:100%; text-align:center; font-size:10px; color:#aaa;">LV</div>`;
+                    <div style="width:100%; text-align:center; font-size:10px; color:#aaa;"><?php echo $lang1883; ?></div>`;
                 for (const lv of lvsInVg) {
                     const isMounted = lv.mount_point !== null;
                     const lvId = getElementId('lv', `${lv.vg_name}_${lv.name}`);
@@ -1504,13 +1523,13 @@ function renderConnectionDiagram(data) {
             }
             
             if (pvsInVg.length === 0 && lvsInVg.length === 0) {
-                html += `<div class="text-center text-muted small">No PV or LV</div>`;
+                html += `<div class="text-center text-muted small"><?php echo $lang1884; ?></div>`;
             }
             
             html += `</div>`;
         }
     } else {
-        html += `<div class="text-center text-muted">No Volume Groups</div>`;
+        html += `<div class="text-center text-muted"><?php echo $lang1885; ?></div>`;
     }
     
     html += `</div></div>`;
@@ -1564,13 +1583,13 @@ function drawConnectionLines() {
         }
         
         if (!sourceElement) {
-            console.warn(`Не найден источник для PV: ${pvName}`);
+            console.warn(`<?php echo $lang1886; ?> ${pvName}`);
             continue;
         }
         
         const targetElement = document.querySelector(`.vg-card[data-vg="${vgName}"]`);
         if (!targetElement) {
-            console.warn(`VG card not found for: ${vgName}`);
+            console.warn(`<?php echo $lang1887; ?> ${vgName}`);
             continue;
         }
         
@@ -1667,7 +1686,7 @@ function drawConnectionLines() {
 
 async function refreshBlockDiagram() {
     const container = document.getElementById('blockDiagramContent');
-    container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading scheme...</p></div>';
+    container.innerHTML = '<div class="text-center p-4 text-white"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1888; ?></p></div>';
     
     try {
         const headers = {};
@@ -1683,10 +1702,10 @@ async function refreshBlockDiagram() {
         if (data.success) {
             renderConnectionDiagram(data);
         } else {
-            container.innerHTML = '<div class="alert alert-danger">Error loading data</div>';
+            container.innerHTML = '<div class="alert alert-danger"><?php echo $lang1889; ?></div>';
         }
     } catch (e) {
-        container.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        container.innerHTML = `<div class="alert alert-danger"><?php echo $lang1890; ?> ${e.message}</div>`;
     }
 }
 
@@ -1715,22 +1734,22 @@ function showVgInfo(vgName) {
     
     document.getElementById('vgInfoContent').innerHTML = `
         <div class="partition-details">
-            <div class="partition-details-item"><strong>Name:</strong> ${vg.name}</div>
-            <div class="partition-details-item"><strong>Size:</strong> ${vg.size_formatted}</div>
-            <div class="partition-details-item"><strong>Used:</strong> ${vg.used_formatted} (${vg.used_percent}%)</div>
-            <div class="partition-details-item"><strong>Free:</strong> ${vg.free_formatted}</div>
-            <div class="partition-details-item"><strong>PV:</strong> ${vg.pv_count}</div>
-            <div class="partition-details-item"><strong>LV:</strong> ${vg.lv_count}</div>
-            <div class="partition-details-item"><strong>PE size:</strong> ${vg.pe_size}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1891; ?></strong> ${vg.name}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1892; ?></strong> ${vg.size_formatted}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1893; ?></strong> ${vg.used_formatted} (${vg.used_percent}%)</div>
+            <div class="partition-details-item"><strong><?php echo $lang1894; ?></strong> ${vg.free_formatted}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1895; ?></strong> ${vg.pv_count}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1896; ?></strong> ${vg.lv_count}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1897; ?></strong> ${vg.pe_size}</div>
         </div>
         <hr>
-        <strong>Physical Volumes в VG:</strong>
+        <strong><?php echo $lang1898; ?></strong>
         <ul class="list-group mt-2">
             ${pvsInVg.map(pv => `<li class="list-group-item d-flex justify-content-between align-items-center">
                 ${pv.name}
                 <span class="badge bg-primary rounded-pill">${pv.size_formatted}</span>
             </li>`).join('')}
-            ${pvsInVg.length === 0 ? '<li class="list-group-item text-muted">No PV</li>' : ''}
+            ${pvsInVg.length === 0 ? '<li class="list-group-item text-muted"><?php echo $lang1899; ?></li>' : ''}
         </ul>
     `;
     modal.show();
@@ -1753,7 +1772,7 @@ function showExtendVgFromModal() {
 function showPvInfo(pvName) {
     const pv = currentData.pvs?.find(p => p.name === pvName);
     if (!pv) return;
-    showToast(`PV: ${pv.name}\nSize: ${pv.size_formatted}\nUsed: ${pv.used_formatted}\nVG: ${pv.vg_name || 'none'}`, 'info');
+    showToast(`<?php echo $lang1900; ?> ${pv.name}\n<?php echo $lang1901; ?> ${pv.size_formatted}\n<?php echo $lang1902; ?> ${pv.used_formatted}\n<?php echo $lang1903; ?> ${pv.vg_name || 'none'}`, 'info');
 }
 
 function showLvInfo(vgName, lvName) {
@@ -1782,20 +1801,20 @@ function showLvInfo(vgName, lvName) {
     
     document.getElementById('lvInfoContent').innerHTML = `
         <div class="partition-details">
-            <div class="partition-details-item"><strong>Name:</strong> ${lv.name}</div>
-            <div class="partition-details-item"><strong>VG:</strong> ${lv.vg_name}</div>
-            <div class="partition-details-item"><strong>Size:</strong> ${lv.size_formatted}</div>
-            <div class="partition-details-item"><strong>Path:</strong> <code>${lv.path}</code></div>
-            <div class="partition-details-item"><strong>File system:</strong> ${lv.filesystem || 'Not formating'}</div>
-            <div class="partition-details-item"><strong>Status:</strong> ${lv.mount_point ? `Mount in <code>${lv.mount_point}</code>` : 'Not mounted'}</div>
-            <div class="partition-details-item"><strong>Active:</strong> ${lv.is_active ? 'Yes' : 'No'}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1904; ?></strong> ${lv.name}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1905; ?></strong> ${lv.vg_name}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1906; ?></strong> ${lv.size_formatted}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1907; ?></strong> <code>${lv.path}</code></div>
+            <div class="partition-details-item"><strong><?php echo $lang1908; ?></strong> ${lv.filesystem || 'Not formating'}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1909; ?></strong> ${lv.mount_point ? `<?php echo $lang1910; ?> <code>${lv.mount_point}</code>` : 'Not mounted'}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1911; ?></strong> ${lv.is_active ? 'Yes' : 'No'}</div>
         </div>
         ${!lv.has_filesystem ? `<div class="alert alert-warning mt-3">
-            <i class="fas fa-exclamation-triangle"></i> LV is not formatted. 
-            Click the "Format" button to create the file system.
+            <i class="fas fa-exclamation-triangle"></i> <?php echo $lang1912; ?> 
+            <?php echo $lang1913; ?>
         </div>` : ''}
         ${lv.mount_point ? `<div class="alert alert-info mt-3">
-            <i class="fas fa-info-circle"></i> The LV is mounted. To format it, unmount it first.
+            <i class="fas fa-info-circle"></i> <?php echo $lang1914; ?>
         </div>` : ''}
     `;
     modal.show();
@@ -1831,7 +1850,7 @@ async function showPartitionInfo(partitionName) {
     const createBtn = document.getElementById('createPvFromPartitionBtn');
     
     title.innerHTML = `<i class="fas fa-microchip"></i> ${partitionName}`;
-    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading information...</p></div>';
+    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1915; ?></p></div>';
     createBtn.style.display = 'none';
     modal.show();
     
@@ -1844,31 +1863,31 @@ async function showPartitionInfo(partitionName) {
                 createBtn.style.display = 'inline-block';
             }
         } else {
-            content.innerHTML = `<div class="alert alert-danger">Error loading information: ${res.error || 'Unknown error'}</div>`;
+            content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1916; ?> ${res.error || 'Unknown error'}</div>`;
         }
     } catch (e) {
-        content.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1917; ?> ${e.message}</div>`;
     }
 }
 
 function renderPartitionInfo(info) {
-    const mountStatus = info.mount_point ? `<span class="badge bg-danger">Mount in ${info.mount_point}</span>` : '<span class="badge bg-secondary">Not mounted</span>';
-    const pvStatus = info.is_pv ? `<span class="badge bg-info">PV ${info.vg_name ? '(in VG: ' + info.vg_name + ')' : '(unused)'}</span>` : '<span class="badge bg-warning">Not PV</span>';
+    const mountStatus = info.mount_point ? `<span class="badge bg-danger"><?php echo $lang1918; ?> ${info.mount_point}</span>` : '<span class="badge bg-secondary"><?php echo $lang1919; ?></span>';
+    const pvStatus = info.is_pv ? `<span class="badge bg-info"><?php echo $lang1920; ?> ${info.vg_name ? '(<?php echo $lang1921; ?> ' + info.vg_name + ')' : '(unused)'}</span>` : '<span class="badge bg-warning"><?php echo $lang1922; ?></span>';
     
     const html = `
         <div class="partition-details">
-            <div class="partition-details-item"><strong>Device:</strong> <code>${info.path}</code></div>
-            <div class="partition-details-item"><strong>Size:</strong> ${info.size}</div>
-            <div class="partition-details-item"><strong>File system:</strong> ${info.fstype || 'Not formated'}</div>
-            <div class="partition-details-item"><strong>Label:</strong> ${info.label || 'No'}</div>
-            <div class="partition-details-item"><strong>UUID:</strong> <code>${info.uuid || 'No'}</code></div>
-            <div class="partition-details-item"><strong>Mount status:</strong> ${mountStatus}</div>
-            <div class="partition-details-item"><strong>LVM status:</strong> ${pvStatus}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1923; ?></strong> <code>${info.path}</code></div>
+            <div class="partition-details-item"><strong><?php echo $lang1924; ?></strong> ${info.size}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1925; ?></strong> ${info.fstype || 'Not formated'}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1926; ?></strong> ${info.label || 'No'}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1927; ?></strong> <code>${info.uuid || 'No'}</code></div>
+            <div class="partition-details-item"><strong><?php echo $lang1928; ?></strong> ${mountStatus}</div>
+            <div class="partition-details-item"><strong><?php echo $lang1929; ?></strong> ${pvStatus}</div>
         </div>
         ${!info.is_pv ? `
         <div class="alert alert-info mt-3">
-            <i class="fas fa-info-circle"></i> This partition is not a Physical Volume (PV). 
-            You can create a PV on this partition for use in LVM.
+            <i class="fas fa-info-circle"></i> <?php echo $lang1930; ?> 
+            <?php echo $lang1931; ?>
         </div>
         ` : ''}
     `;
@@ -1878,14 +1897,14 @@ function renderPartitionInfo(info) {
 async function createPvFromPartition() {
     if (!currentPartitionInfo) return;
     
-    if (!confirm(`Create Physical Volume on ${currentPartitionInfo.path}?\nATTENTION: Data on the partition will be destroyed!`)) return;
+    if (!confirm(`<?php echo $lang1932; ?> ${currentPartitionInfo.path}?\n<?php echo $lang1933; ?>`)) return;
     
     showLoader();
     const res = await apiCall('lvm_create_pv', { device: currentPartitionInfo.path });
     hideLoader();
     
     if (res.success) {
-        showToast(`PV created in ${currentPartitionInfo.path}`);
+        showToast(`<?php echo $lang1934; ?> ${currentPartitionInfo.path}`);
         bootstrap.Modal.getInstance(document.getElementById('partitionInfoModal')).hide();
         refreshAll();
     } else {
@@ -1899,7 +1918,7 @@ async function showDiskInfo(diskName) {
     const title = document.getElementById('diskInfoTitle');
     
     title.innerHTML = `<i class="fas fa-hdd"></i> ${diskName}`;
-    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2">Loading information...</p></div>';
+    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p class="mt-2"><?php echo $lang1935; ?></p></div>';
     modal.show();
     
     try {
@@ -1907,10 +1926,10 @@ async function showDiskInfo(diskName) {
         if (res.success && res.info) {
             renderDiskInfo(res.info);
         } else {
-            content.innerHTML = `<div class="alert alert-danger">Error loading information: ${res.error || 'Unknown error'}</div>`;
+            content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1936; ?> ${res.error || 'Unknown error'}</div>`;
         }
     } catch (e) {
-        content.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        content.innerHTML = `<div class="alert alert-danger"><?php echo $lang1937; ?> ${e.message}</div>`;
     }
 }
 
@@ -1919,25 +1938,25 @@ function renderDiskInfo(disk) {
         <div class="row">
             <div class="col-md-6">
                 <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">Basic information</div>
+                    <div class="card-header bg-primary text-white"><?php echo $lang1938; ?></div>
                     <div class="card-body">
                         <table class="table table-sm">
-                            <tr><td><strong>Name:</strong></td><td>${disk.name}</td></tr>
-                            <tr><td><strong>Path:</strong></td><td><code>${disk.path}</code></td></tr>
-                            <tr><td><strong>Size:</strong></td><td>${disk.size_formatted}</td></tr>
-                            <tr><td><strong>Model:</strong></td><td>${disk.model || 'N/A'}</td></tr>
-                            <tr><td><strong>Table type:</strong></td><td>${disk.partition_table_type ? disk.partition_table_type.toUpperCase() : 'No'}</td></tr>
-                            <tr><td><strong>Type:</strong></td><td>${disk.is_system ? 'System disk' : (disk.removable ? 'Removable' : 'Interior')}</td></tr>
+                            <tr><td><strong><?php echo $lang1939; ?></strong></td><td>${disk.name}</td></tr>
+                            <tr><td><strong><?php echo $lang1940; ?></strong></td><td><code>${disk.path}</code></td></tr>
+                            <tr><td><strong><?php echo $lang1941; ?></strong></td><td>${disk.size_formatted}</td></tr>
+                            <tr><td><strong><?php echo $lang1942; ?></strong></td><td>${disk.model || 'N/A'}</td></tr>
+                            <tr><td><strong><?php echo $lang1943; ?></strong></td><td>${disk.partition_table_type ? disk.partition_table_type.toUpperCase() : 'No'}</td></tr>
+                            <tr><td><strong><?php echo $lang1944; ?></strong></td><td>${disk.is_system ? 'System disk' : (disk.removable ? 'Removable' : 'Interior')}</td></tr>
                         </table>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="card mb-3">
-                    <div class="card-header bg-info text-white">Partitions</div>
+                    <div class="card-header bg-info text-white"><?php echo $lang1945; ?></div>
                     <div class="card-body">
                         <table class="table table-sm">
-                            <thead><tr><th>Partition</th><th>Size</th><th>FS</th><th>Mount point</th></tr></thead>
+                            <thead><tr><th><?php echo $lang1946; ?></th><th><?php echo $lang1947; ?></th><th><?php echo $lang1948; ?></th><th><?php echo $lang1949; ?></th></tr></thead>
                             <tbody>
                                 ${disk.partitions.map(part => `
                                     <tr>
@@ -1947,7 +1966,7 @@ function renderDiskInfo(disk) {
                                         <td>${part.mount_point || '-'}</td>
                                     </tr>
                                 `).join('')}
-                                ${disk.partitions.length === 0 ? '<tr><td colspan="4" class="text-center">No partitions</td></tr>' : ''}
+                                ${disk.partitions.length === 0 ? '<tr><td colspan="4" class="text-center"><?php echo $lang1950; ?></td></tr>' : ''}
                             </tbody>
                         </table>
                     </div>
@@ -1982,15 +2001,15 @@ async function showCreatePv() {
             const physicalDevices = data.devices.filter(dev => dev.type === 'disk' || dev.type === 'partition');
             
             if (physicalDevices.length === 0) {
-                html = '<div class="col-12 alert alert-warning">No physical devices available</div>';
+                html = '<div class="col-12 alert alert-warning"><?php echo $lang1951; ?></div>';
             } else {
                 for (const dev of physicalDevices) {
                     const isUsed = dev.is_pv === true;
                     const isSystem = dev.is_system === true;
                     const disabled = isUsed || isSystem;
                     let disabledReason = '';
-                    if (isUsed) disabledReason = 'Already in use as PV';
-                    if (isSystem) disabledReason = 'System disk (protected)';
+                    if (isUsed) disabledReason = '<?php echo $lang1952; ?>';
+                    if (isSystem) disabledReason = '<?php echo $lang1953; ?>';
                     
                     html += `<div class="col-md-6 col-lg-4">
                         <div class="card ${disabled ? 'bg-light opacity-50' : 'border-primary'} h-100">
@@ -2007,11 +2026,11 @@ async function showCreatePv() {
                                     </label>
                                 </div>
                                 <div class="small mt-2">
-                                    <div><i class="fas fa-chart-pie me-1"></i> Size: ${dev.size_formatted}</div>
-                                    <div><i class="fas fa-tag me-1"></i> Type: ${dev.type === 'disk' ? 'Disk' : 'Partition'}</div>
-                                    ${dev.fstype ? `<div><i class="fas fa-file me-1"></i> FS: ${dev.fstype}</div>` : ''}
-                                    ${dev.model ? `<div><i class="fas fa-microchip me-1"></i> Model: ${dev.model}</div>` : ''}
-                                    ${dev.parent_disk ? `<div><i class="fas fa-hdd me-1"></i> Disk: ${dev.parent_disk}</div>` : ''}
+                                    <div><i class="fas fa-chart-pie me-1"></i> <?php echo $lang1954; ?> ${dev.size_formatted}</div>
+                                    <div><i class="fas fa-tag me-1"></i> <?php echo $lang1955; ?> ${dev.type === 'disk' ? 'Disk' : 'Partition'}</div>
+                                    ${dev.fstype ? `<div><i class="fas fa-file me-1"></i> <?php echo $lang1956; ?> ${dev.fstype}</div>` : ''}
+                                    ${dev.model ? `<div><i class="fas fa-microchip me-1"></i> <?php echo $lang1957; ?> ${dev.model}</div>` : ''}
+                                    ${dev.parent_disk ? `<div><i class="fas fa-hdd me-1"></i> <?php echo $lang1958; ?> ${dev.parent_disk}</div>` : ''}
                                 </div>
                                 ${disabledReason ? `<div class="badge bg-secondary mt-2">${disabledReason}</div>` : ''}
                             </div>
@@ -2023,11 +2042,11 @@ async function showCreatePv() {
             container.innerHTML = html;
             new bootstrap.Modal(document.getElementById('createPvModal')).show();
         } else {
-            showToast('Failed to get device list', 'error');
+            showToast('<?php echo $lang1959; ?>', 'error');
         }
     } catch (e) {
         hideLoader();
-        showToast('Error loading devices: ' + e.message, 'error');
+        showToast('<?php echo $lang1960; ?>' + e.message, 'error');
     }
 }
 
@@ -2035,11 +2054,11 @@ async function createPvFromSelected() {
     const selected = Array.from(document.querySelectorAll('#pvDevicesList input:checked:not(:disabled)')).map(cb => cb.value);
     
     if (selected.length === 0) {
-        showToast('Please select at least one device', 'warning');
+        showToast('<?php echo $lang1961; ?>', 'warning');
         return;
     }
     
-    if (!confirm(`Create PV in ${selected.length} device(s)?\n\nATTENTION: All data on the selected devices will be destroyed!`)) {
+    if (!confirm(`<?php echo $lang1962; ?> ${selected.length} <?php echo $lang1963; ?>\n\n<?php echo $lang1964; ?>`)) {
         return;
     }
     
@@ -2062,16 +2081,16 @@ async function createPvFromSelected() {
     if (successCount > 0) {
         bootstrap.Modal.getInstance(document.getElementById('createPvModal')).hide();
         await refreshAll();
-        showToast(`Created PV: ${successCount}, errors: ${errorCount}`);
+        showToast(`<?php echo $lang1965; ?> ${successCount}, <?php echo $lang1966; ?> ${errorCount}`);
     } else {
-        showToast('Unable to create any PVs. There may be partitions on the disk!', 'error');
+        showToast('<?php echo $lang1967; ?>', 'error');
     }
 }
 
 async function createPv() {
     const device = document.getElementById('pvDevice').value;
-    if (!device) return showToast('Select device', 'error');
-    if (!confirm(`Create PV in ${device}? Data will be destroyed!`)) return;
+    if (!device) return showToast('<?php echo $lang1968; ?>', 'error');
+    if (!confirm(`<?php echo $lang1969; ?> ${device}? <?php echo $lang1970; ?>`)) return;
     
     showLoader();
     const res = await apiCall('lvm_create_pv', { device });
@@ -2080,14 +2099,14 @@ async function createPv() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('createPvModal')).hide();
         refreshAll();
-        showToast('PV created!');
+        showToast('<?php echo $lang1971; ?>');
     } else {
         showToast(res.error, 'error');
     }
 }
 
 async function deletePv(pvName) {
-    if (!confirm(`Delete PV ${pvName}?\nATTENTION: Data will be destroyed!`)) return;
+    if (!confirm(`<?php echo $lang1972; ?> ${pvName}?\n<?php echo $lang1973; ?>`)) return;
     
     showLoader();
     const res = await apiCall('lvm_delete_pv', { pv_name: pvName });
@@ -2095,7 +2114,7 @@ async function deletePv(pvName) {
     
     if (res.success) {
         refreshAll();
-        showToast('PV deleted');
+        showToast('<?php echo $lang1974; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2123,19 +2142,19 @@ async function showCreateVg() {
             document.getElementById('vgName').value = '';
             new bootstrap.Modal(document.getElementById('createVgModal')).show();
         } else {
-            showToast('There are no PVs available to create a VG. Create a PV first.', 'warning');
+            showToast('<?php echo $lang1975; ?>', 'warning');
         }
     } catch (e) {
         hideLoader();
-        showToast('Error loading PVs: ' + e.message, 'error');
+        showToast('<?php echo $lang1976; ?> ' + e.message, 'error');
     }
 }
 
 async function createVg() {
     const vgName = document.getElementById('vgName').value.trim();
     const devices = Array.from(document.querySelectorAll('#pvList input:checked')).map(cb => cb.value);
-    if (!vgName) return showToast('Введите имя VG', 'error');
-    if (!devices.length) return showToast('Choose at least one PV', 'error');
+    if (!vgName) return showToast('<?php echo $lang1977; ?>', 'error');
+    if (!devices.length) return showToast('<?php echo $lang1978; ?>', 'error');
     
     showLoader();
     const res = await apiCall('lvm_create_vg', { vg_name: vgName, devices });
@@ -2144,14 +2163,14 @@ async function createVg() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('createVgModal')).hide();
         refreshAll();
-        showToast(`VG ${vgName} created!`);
+        showToast(`<?php echo $lang1979; ?> ${vgName} <?php echo $lang1980; ?>`);
     } else {
         showToast(res.error, 'error');
     }
 }
 
 async function deleteVg(vgName) {
-    if (!confirm(`Delete VG ${vgName}?\nAll LVs inside will be deleted!`)) return;
+    if (!confirm(`<?php echo $lang1981; ?> ${vgName}?\n<?php echo $lang1982; ?>`)) return;
     
     showLoader();
     const res = await apiCall('lvm_delete_vg', { vg_name: vgName });
@@ -2159,7 +2178,7 @@ async function deleteVg(vgName) {
     
     if (res.success) {
         refreshAll();
-        showToast('VG deleted!');
+        showToast('<?php echo $lang1983; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2185,18 +2204,18 @@ async function showExtendVg(vgName) {
             document.getElementById('extendPvList').innerHTML = data.pvs.map(pv => `<div class="form-check"><input class="form-check-input" type="checkbox" value="${pv.name}" id="extend_${pv.name.replace(/[\/-]/g, '_')}"><label class="form-check-label">${pv.name} (${pv.size_formatted})</label></div>`).join('');
             new bootstrap.Modal(document.getElementById('extendVgModal')).show();
         } else {
-            showToast('There are no PVs available for expansion', 'warning');
+            showToast('<?php echo $lang1984; ?>', 'warning');
         }
     } catch (e) {
         hideLoader();
-        showToast('Error loading PVs: ' + e.message, 'error');
+        showToast('<?php echo $lang1985; ?> ' + e.message, 'error');
     }
 }
 
 async function extendVg() {
     const vgName = document.getElementById('extendVgName').value;
     const devices = Array.from(document.querySelectorAll('#extendPvList input:checked')).map(cb => cb.value);
-    if (!devices.length) return showToast('Select PV to add', 'error');
+    if (!devices.length) return showToast('<?php echo $lang1986; ?>', 'error');
     
     showLoader();
     const res = await apiCall('lvm_extend_vg', { vg_name: vgName, devices });
@@ -2205,7 +2224,7 @@ async function extendVg() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('extendVgModal')).hide();
         refreshAll();
-        showToast('VG expanded');
+        showToast('<?php echo $lang1987; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2231,20 +2250,20 @@ async function showReduceVg(vgName) {
             document.getElementById('reducePvList').innerHTML = data.pvs.map(pv => `<div class="form-check"><input class="form-check-input" type="checkbox" value="${pv.name}" id="reduce_${pv.name.replace(/[\/-]/g, '_')}"><label class="form-check-label">${pv.name} (${pv.size_formatted}) - Used: ${pv.used_formatted}</label></div>`).join('');
             new bootstrap.Modal(document.getElementById('reduceVgModal')).show();
         } else {
-            showToast('No PV in this VG to remove', 'warning');
+            showToast('<?php echo $lang1988; ?>', 'warning');
         }
     } catch (e) {
         hideLoader();
-        showToast('Error loading PVs: ' + e.message, 'error');
+        showToast('<?php echo $lang1989; ?> ' + e.message, 'error');
     }
 }
 
 async function reduceVg() {
     const vgName = document.getElementById('reduceVgName').value;
     const devices = Array.from(document.querySelectorAll('#reducePvList input:checked')).map(cb => cb.value);
-    if (!devices.length) return showToast('Select PV to delete', 'error');
+    if (!devices.length) return showToast('<?php echo $lang1990; ?>', 'error');
     
-    if (!confirm(`Remove selected PVs from VG ${vgName}?\n\nATTENTION: The data will be moved to other PVs. If there is not enough free space, the operation will fail.`)) return;
+    if (!confirm(`<?php echo $lang1991; ?> ${vgName}?\n\n<?php echo $lang1992; ?>`)) return;
     
     showLoader();
     const res = await apiCall('lvm_reduce_vg', { vg_name: vgName, devices });
@@ -2254,12 +2273,12 @@ async function reduceVg() {
         bootstrap.Modal.getInstance(document.getElementById('reduceVgModal')).hide();
         refreshAll();
         if (res.removed) {
-            showToast(`PVs removed: ${res.removed.join(', ')}`);
+            showToast(`<?php echo $lang1993; ?> ${res.removed.join(', ')}`);
         }
         if (res.errors && res.errors.length) {
-            showToast(`Error: ${res.errors.join('; ')}`, 'warning');
+            showToast(`<?php echo $lang1994; ?> ${res.errors.join('; ')}`, 'warning');
         } else {
-            showToast('PV removed from VG');
+            showToast('<?php echo $lang1995; ?>');
         }
     } else {
         showToast(res.error, 'error');
@@ -2275,8 +2294,8 @@ async function showRenameVg(vgName) {
 async function renameVg() {
     const oldName = document.getElementById('renameVgOldName').value;
     const newName = document.getElementById('renameVgNewName').value.trim();
-    if (!newName) return showToast('Enter new name', 'error');
-    if (oldName === newName) return showToast('The names are the same', 'warning');
+    if (!newName) return showToast('<?php echo $lang1997; ?>', 'error');
+    if (oldName === newName) return showToast('<?php echo $lang1996; ?>', 'warning');
     
     showLoader();
     const res = await apiCall('lvm_rename_vg', { old_name: oldName, new_name: newName });
@@ -2285,7 +2304,7 @@ async function renameVg() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('renameVgModal')).hide();
         refreshAll();
-        showToast('VG renamed');
+        showToast('<?php echo $lang1998; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2309,8 +2328,8 @@ async function createLv() {
     const format = document.getElementById('lvFormat')?.checked || false;
     const fsType = document.getElementById('lvFsType')?.value || 'ext4';
     
-    if (!lvName) return showToast('Enter name for LV', 'error');
-    if (!size) return showToast('Enter size', 'error');
+    if (!lvName) return showToast('<?php echo $lang1999; ?>', 'error');
+    if (!size) return showToast('<?php echo $lang2000; ?>', 'error');
     
     showLoader();
     const res = await apiCall('lvm_create_lv', { 
@@ -2326,9 +2345,9 @@ async function createLv() {
         closeAllModals();
         await refreshAll();
         if (format) {
-            showToast(`LV ${lvName} created and formatted as ${fsType}`);
+            showToast(`<?php echo $lang2001; ?> ${lvName} <?php echo $lang2002; ?> ${fsType}`);
         } else {
-            showToast(`LV ${lvName} created. Dont forget to format it before using it.`);
+            showToast(`<?php echo $lang2001; ?> ${lvName} <?php echo $lang2003; ?>`);
         }
     } else {
         showToast(res.error, 'error');
@@ -2353,13 +2372,13 @@ async function formatLv(vgName, lvName, checkMount = true) {
     
     if (statusRes.success && statusRes.exists) {
         if (statusRes.active === false) {
-            showToast('LV Its not active. Try activating it before formatting.', 'warning');
+            showToast('<?php echo $lang2004; ?>', 'warning');
             hideLoader();
             return;
         }
         
         if (statusRes.mounted === true) {
-            showToast('LV mounted. Please unmount it before formatting.', 'error');
+            showToast('<?php echo $lang2005; ?>', 'error');
             hideLoader();
             return;
         }
@@ -2370,7 +2389,7 @@ async function formatLv(vgName, lvName, checkMount = true) {
 }
 
 async function deleteLv(vgName, lvName) {
-    if (!confirm(`Remove LV ${lvName}?`)) return;
+    if (!confirm(`<?php echo $lang2006; ?> ${lvName}?`)) return;
     
     showLoader();
     const res = await apiCall('lvm_delete_lv', { vg_name: vgName, lv_name: lvName });
@@ -2378,7 +2397,7 @@ async function deleteLv(vgName, lvName) {
     
     if (res.success) {
         refreshAll();
-        showToast('LV removed');
+        showToast('<?php echo $lang2007; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2397,7 +2416,7 @@ async function extendLv() {
     const lvName = document.getElementById('extendLvName').value;
     const size = document.getElementById('extendLvSize').value.trim();
     
-    if (!size) return showToast('Enter size', 'error');
+    if (!size) return showToast('<?php echo $lang2008; ?>', 'error');
     
     showLoader();
     const res = await apiCall('lvm_extend_lv', { vg_name: vgName, lv_name: lvName, size });
@@ -2406,7 +2425,7 @@ async function extendLv() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('extendLvModal')).hide();
         refreshAll();
-        showToast('LV expanded');
+        showToast('<?php echo $lang2009; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2423,8 +2442,8 @@ async function renameLv() {
     const vgName = document.getElementById('renameLvVg').value;
     const oldName = document.getElementById('renameLvOldName').value;
     const newName = document.getElementById('renameLvNewName').value.trim();
-    if (!newName) return showToast('Enter new name', 'error');
-    if (oldName === newName) return showToast('The names are the same', 'warning');
+    if (!newName) return showToast('<?php echo $lang2010; ?>', 'error');
+    if (oldName === newName) return showToast('<?php echo $lang2011; ?>', 'warning');
     
     showLoader();
     const res = await apiCall('lvm_rename_lv', { vg_name: vgName, old_name: oldName, new_name: newName });
@@ -2433,7 +2452,7 @@ async function renameLv() {
     if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('renameLvModal')).hide();
         refreshAll();
-        showToast('LV renamed');
+        showToast('<?php echo $lang2012; ?>');
     } else {
         showToast(res.error, 'error');
     }
@@ -2451,30 +2470,46 @@ function showMountModal(device) {
 }
 
 async function mountLv() {
+    // ====== ОТЛАДКА ======
     const device = document.getElementById('mountDevice').value;
     const mountPoint = document.getElementById('mountPoint').value.trim();
     const fs = document.getElementById('mountFs').value;
     const fstab = document.getElementById('mountFstab').checked;
     
-    if (!mountPoint) return showToast('Enter the mount point', 'error');
+    console.log('=== MOUNT LV DEBUG ===');
+    console.log('device:', device);
+    console.log('mountPoint:', mountPoint);
+    console.log('fs:', fs);
+    console.log('fstab (checkbox checked):', fstab);
+    console.log('fstab (type):', typeof fstab);
+    // =====================
+    
+    if (!mountPoint) return showToast('<?php echo $lang2013; ?>', 'error');
     
     if (!mountPoint.startsWith('/mnt/') && !mountPoint.startsWith('/media/')) {
-        if (!confirm('The mount point must be in /mnt/ or /media/. Continue?')) {
+        if (!confirm('<?php echo $lang2014; ?>')) {
             return;
         }
     }
     
     showLoader();
-    const res = await apiCall('lvm_mount', { device, mount_point: mountPoint, fs, fstab });
+    
+    // ====== ОТЛАДКА ПЕРЕД ОТПРАВКОЙ ======
+    const payload = { device, mount_point: mountPoint, fs, fstab };
+    console.log('Sending payload:', payload);
+    console.log('Payload JSON:', JSON.stringify(payload));
+    // ====================================
+    
+    const res = await apiCall('lvm_mount', payload);
+    
+    console.log('Response:', res);
+    // ====================================
     
     if (res.success) {
         closeAllModals();
-        
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
         await refreshAll();
-        
-        showToast(`The device is mounted in ${res.mount_point || mountPoint}`);
+        showToast(`<?php echo $lang2015; ?> ${res.mount_point || mountPoint}`);
     } else {
         showToast(res.error, 'error');
     }
@@ -2483,22 +2518,132 @@ async function mountLv() {
 }
 
 async function umountLv(mountPoint) {
-    if (!confirm(`Umount ${mountPoint}?`)) return;
+    if (!confirm(`<?php echo $lang2016; ?> ${mountPoint}?`)) return;
+    
+    const result = await showDialog(
+        '<?php echo $lang4776; ?>',
+        `<?php echo $lang4777; ?> ${mountPoint}?`,
+        [
+            { text: '<?php echo $lang4778; ?>', value: true, class: 'btn-danger' },
+            { text: '<?php echo $lang4779; ?>', value: false, class: 'btn-secondary' }
+        ]
+    );
+    
+    if (result === undefined) return;
     
     showLoader();
-    const res = await apiCall('lvm_umount', { mount_point: mountPoint });
+    const res = await apiCall('lvm_umount', { 
+        mount_point: mountPoint,
+        remove_from_fstab: result 
+    });
     
     if (res.success) {
         await new Promise(resolve => setTimeout(resolve, 500));
-        
         await refreshAll();
-        
-        showToast(res.message || 'Device umounted');
+        let message = res.message || '<?php echo $lang2017; ?>';
+        if (result) {
+            message += ' <?php echo $lang4780; ?>';
+        }
+        showToast(message);
     } else {
         showToast(res.error, 'error');
     }
     
     hideLoader();
+}
+
+function showDialog(title, message, buttons) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+        
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            min-width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        `;
+        
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = title;
+        titleEl.style.cssText = `
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #333;
+        `;
+        dialog.appendChild(titleEl);
+        
+        const messageEl = document.createElement('p');
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            margin: 0 0 25px 0;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        `;
+        dialog.appendChild(messageEl);
+        
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        `;
+        
+        buttons.forEach((btn) => {
+            const button = document.createElement('button');
+            button.textContent = btn.text;
+            button.style.cssText = `
+                padding: 8px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                ${btn.class === 'btn-danger' ? 'background: #dc3545; color: #fff;' : ''}
+                ${btn.class === 'btn-secondary' ? 'background: #6c757d; color: #fff;' : ''}
+                ${!btn.class ? 'background: #007bff; color: #fff;' : ''}
+            `;
+            
+            button.onmouseenter = () => {
+                button.style.opacity = '0.8';
+            };
+            button.onmouseleave = () => {
+                button.style.opacity = '1';
+            };
+            
+            button.onclick = () => {
+                document.body.removeChild(overlay);
+                resolve(btn.value);
+            };
+            
+            buttonContainer.appendChild(button);
+        });
+        
+        dialog.appendChild(buttonContainer);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                resolve(undefined);
+            }
+        };
+    });
 }
 
 async function showCreateSnapshot(vgName, originLv) {
@@ -2532,7 +2677,7 @@ async function showCreateSnapshot(vgName, originLv) {
 }
 
 async function deleteSnapshotByName(vgName, snapshotName) {
-    if (!confirm(`Delete snapshot ${snapshotName}?`)) return;
+    if (!confirm(`<?php echo $lang2018; ?> ${snapshotName}?`)) return;
     
     showLoader();
     const res = await apiCall('delete_snapshot', {
@@ -2543,7 +2688,7 @@ async function deleteSnapshotByName(vgName, snapshotName) {
     
     if (res.success) {
         await refreshAll();
-        showToast(`Snapshot ${snapshotName} deleted!`);
+        showToast(`<?php echo $lang2019; ?> ${snapshotName} <?php echo $lang2020; ?>!`);
         
         const snapshotsModal = document.getElementById('snapshotsListModal');
         if (snapshotsModal && snapshotsModal.classList.contains('show')) {
@@ -2561,11 +2706,11 @@ async function createSnapshot() {
     const size = document.getElementById('snapshotSize').value.trim();
     
     if (!snapshotName) {
-        showToast('Enter snapshot name', 'error');
+        showToast('<?php echo $lang2021; ?>', 'error');
         return;
     }
     if (!size) {
-        showToast('Enter snapshot size', 'error');
+        showToast('<?php echo $lang2022; ?>', 'error');
         return;
     }
     
@@ -2582,7 +2727,7 @@ async function createSnapshot() {
         bootstrap.Modal.getInstance(document.getElementById('createSnapshotModal')).hide();
         await refreshAll();
         const createdName = res.snapshot_name || snapshotName;
-        showToast(`Снапшот ${createdName} создан`);
+        showToast(`<?php echo $lang2023; ?> ${createdName} <?php echo $lang2024; ?>`);
     } else {
         showToast(res.error, 'error');
     }
@@ -2591,7 +2736,7 @@ async function createSnapshot() {
 async function showSnapshotsList() {
     const modal = new bootstrap.Modal(document.getElementById('snapshotsListModal'));
     const content = document.getElementById('snapshotsListContent');
-    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p>Snapshots loading...</p></div>';
+    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p><?php echo $lang2025; ?></p></div>';
     modal.show();
     
     await refreshSnapshotsList();
@@ -2607,7 +2752,7 @@ async function refreshSnapshotsList() {
                 <div class="col-12 mb-3">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i> 
-                        Snapshots are snapshots of the Logical Volumes state. Use "Restore" to roll back to a saved state.
+                        <?php echo $lang2026; ?>
                     </div>
                 </div>`;
             
@@ -2621,29 +2766,29 @@ async function refreshSnapshotsList() {
                         <div class="card ${isMerging ? 'border-warning' : ''}" onclick="showSnapshotInfo('${snap.vg_name}', '${snap.name}')" style="cursor: pointer;">
                             <div class="card-header ${isMerging ? 'bg-warning' : 'bg-info'} text-white">
                                 <i class="fas fa-camera"></i> ${snap.name}
-                                ${isMerging ? '<span class="badge bg-dark ms-2">Merging...</span>' : ''}
+                                ${isMerging ? '<span class="badge bg-dark ms-2"><?php echo $lang2027; ?></span>' : ''}
                             </div>
                             <div class="card-body">
                                 <table class="table table-sm mb-0">
-                                    <tr><td width="40%">VG:</td><td><strong>${snap.vg_name}</strong></td></tr>
-                                    <tr><td>Original:</td><td><strong>${snap.origin}</strong></td></tr>
-                                    <tr><td>Size:</td><td>${snap.size}</td></tr>
-                                    <tr><td>Used:</td><td>${snap.data_percent}%</td></tr>
-                                    <tr><td>Metadata:</td><td>${snap.metadata_percent}%</td></tr>
-                                    <tr><td>Status:</td><td>${snap.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td></tr>
-                                    ${snap.mount_point ? `<tr><td>Mounted:</td><td><code>${snap.mount_point}</code></td></tr>` : ''}
+                                    <tr><td width="40%"><?php echo $lang2028; ?></td><td><strong>${snap.vg_name}</strong></td></tr>
+                                    <tr><td><?php echo $lang2029; ?></td><td><strong>${snap.origin}</strong></td></tr>
+                                    <tr><td><?php echo $lang2030; ?></td><td>${snap.size}</td></tr>
+                                    <tr><td><?php echo $lang2031; ?></td><td>${snap.data_percent}%</td></tr>
+                                    <tr><td><?php echo $lang2032; ?></td><td>${snap.metadata_percent}%</td></tr>
+                                    <tr><td><?php echo $lang2033; ?></td><td>${snap.is_active ? '<span class="badge bg-success"><?php echo $lang2034; ?></span>' : '<span class="badge bg-secondary"><?php echo $lang2035; ?></span>'}</td></tr>
+                                    ${snap.mount_point ? `<tr><td><?php echo $lang2036; ?></td><td><code>${snap.mount_point}</code></td></tr>` : ''}
                                 </table>
                                 <div class="progress mt-2" style="height: 8px;">
                                     <div class="progress-bar ${progressColor}" style="width: ${usedPercent}%"></div>
                                 </div>
-                                <div class="small text-muted mt-1">Filling: ${usedPercent}%</div>
+                                <div class="small text-muted mt-1"><?php echo $lang2037; ?> ${usedPercent}%</div>
                             </div>
                             <div class="card-footer">
                                 <button class="btn btn-sm btn-outline-warning" onclick="event.stopPropagation(); restoreSnapshot('${snap.vg_name}', '${snap.name}', '${snap.origin}')">
-                                    <i class="fas fa-undo"></i> Restore
+                                    <i class="fas fa-undo"></i> <?php echo $lang2038; ?>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSnapshot('${snap.vg_name}', '${snap.name}')">
-                                    <i class="fas fa-trash"></i> Delete
+                                    <i class="fas fa-trash"></i> <?php echo $lang2039; ?>
                                 </button>
                             </div>
                         </div>
@@ -2655,23 +2800,23 @@ async function refreshSnapshotsList() {
         } else {
             content.innerHTML = `
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> No snapshots.
+                    <i class="fas fa-info-circle"></i> <?php echo $lang2040; ?>
                     <hr>
-                    Snapshots are created from the Logical Volume to save the state.
+                    <?php echo $lang2041; ?>
                 </div>
                 <div class="text-center">
-                    <button class="btn btn-apple" onclick="closeSnapshotsListAndCreate()">Create snapshots</button>
+                    <button class="btn btn-apple" onclick="closeSnapshotsListAndCreate()"><?php echo $lang2042; ?></button>
                 </div>
             `;
         }
     } catch (e) {
-        document.getElementById('snapshotsListContent').innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        document.getElementById('snapshotsListContent').innerHTML = `<div class="alert alert-danger"><?php echo $lang2043; ?> ${e.message}</div>`;
     }
 }
 
 function closeSnapshotsListAndCreate() {
     bootstrap.Modal.getInstance(document.getElementById('snapshotsListModal')).hide();
-    showToast('First, select the LV to create a snapshot', 'info');
+    showToast('<?php echo $lang2044; ?>', 'info');
 }
 
 async function showSnapshotInfo(vgName, snapshotName) {
@@ -2680,7 +2825,7 @@ async function showSnapshotInfo(vgName, snapshotName) {
     const title = document.getElementById('snapshotInfoTitle');
     
     title.innerHTML = `<i class="fas fa-camera"></i> ${vgName}/${snapshotName}`;
-    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p>Loading...</p></div>';
+    content.innerHTML = '<div class="text-center p-4"><div class="apple-spinner mx-auto"></div><p><?php echo $lang2045; ?></p></div>';
     modal.show();
     
     try {
@@ -2696,39 +2841,39 @@ async function showSnapshotInfo(vgName, snapshotName) {
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card mb-3">
-                            <div class="card-header bg-info text-white">Basic information</div>
+                            <div class="card-header bg-info text-white"><?php echo $lang2046; ?></div>
                             <div class="card-body">
                                 <table class="table table-sm">
-                                    <tr><td width="40%">Name:</td><td><strong>${snap.name}</strong></td></tr>
-                                    <tr><td>VG:</td><td><strong>${snap.vg_name}</strong></td></tr>
-                                    <tr><td>Original:</td><td><strong>${snap.origin}</strong></td></tr>
-                                    <tr><td>Size:</td><td>${snap.size}</td></tr>
-                                    <tr><td>Path:</td><td><code>${snap.path}</code></td></tr>
-                                    <tr><td>Status:</td><td>${snap.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td></tr>
-                                    <tr><td>Merger:</td><td>${snap.is_merging ? '<span class="badge bg-warning">In progress</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
-                                    ${snap.mount_point ? `<tr><td>Mounted:</td><td><code>${snap.mount_point}</code></td></tr>` : ''}
+                                    <tr><td width="40%"><?php echo $lang2047; ?></td><td><strong>${snap.name}</strong></td></tr>
+                                    <tr><td><?php echo $lang2048; ?></td><td><strong>${snap.vg_name}</strong></td></tr>
+                                    <tr><td><?php echo $lang2049; ?></td><td><strong>${snap.origin}</strong></td></tr>
+                                    <tr><td><?php echo $lang2050; ?></td><td>${snap.size}</td></tr>
+                                    <tr><td><?php echo $lang2051; ?></td><td><code>${snap.path}</code></td></tr>
+                                    <tr><td><?php echo $lang2052; ?></td><td>${snap.is_active ? '<span class="badge bg-success"><?php echo $lang2053; ?></span>' : '<span class="badge bg-secondary"><?php echo $lang2054; ?></span>'}</td></tr>
+                                    <tr><td><?php echo $lang2055; ?></td><td>${snap.is_merging ? '<span class="badge bg-warning"><?php echo $lang2056; ?></span>' : '<span class="badge bg-secondary"><?php echo $lang2057; ?></span>'}</td></tr>
+                                    ${snap.mount_point ? `<tr><td><?php echo $lang2058; ?></td><td><code>${snap.mount_point}</code></td></tr>` : ''}
                                 </table>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="card mb-3">
-                            <div class="card-header bg-primary text-white">Usage</div>
+                            <div class="card-header bg-primary text-white"><?php echo $lang2059; ?></div>
                             <div class="card-body">
-                                <label>Data:</label>
+                                <label><?php echo $lang2060; ?></label>
                                 <div class="progress mb-3" style="height: 20px;">
                                     <div class="progress-bar bg-${progressColor}" style="width: ${usedPercent}%">
                                         ${usedPercent}%
                                     </div>
                                 </div>
-                                <label>Metadata:</label>
+                                <label><?php echo $lang2061; ?></label>
                                 <div class="progress mb-3" style="height: 20px;">
                                     <div class="progress-bar bg-info" style="width: ${snap.metadata_percent}%">
                                         ${snap.metadata_percent}%
                                     </div>
                                 </div>
                                 ${snap.copy_percent > 0 ? `
-                                <label>Copy:</label>
+                                <label><?php echo $lang2062; ?></label>
                                 <div class="progress mb-3" style="height: 20px;">
                                     <div class="progress-bar bg-warning" style="width: ${snap.copy_percent}%">
                                         ${snap.copy_percent}%
@@ -2741,22 +2886,22 @@ async function showSnapshotInfo(vgName, snapshotName) {
                 </div>
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Attention!</strong> Restoring a snapshot will overwrite the original LV. 
-                    It is recommended to unmount the original volume first.
+                    <strong><?php echo $lang2063; ?></strong> <?php echo $lang2064; ?> 
+                    <?php echo $lang2065; ?>
                 </div>
             `;
         } else {
-            content.innerHTML = `<div class="alert alert-danger">${res.error || 'Snapshot not found'}</div>`;
+            content.innerHTML = `<div class="alert alert-danger">${res.error || '<?php echo $lang2066; ?>'}</div>`;
         }
     } catch (e) {
-        content.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        content.innerHTML = `<div class="alert alert-danger"><?php echo $lang2067; ?> ${e.message}</div>`;
     }
 }
 
 async function restoreSnapshot(vgName, snapshotName, originLv = null) {
     const confirmMsg = originLv 
-        ? `Restore ${originLv} from a snapshot ${snapshotName}?\n\nATTENTION: All changes in ${originLv} will be lost!`
-        : `Restore from a snapshot ${snapshotName}?\n\nATTENTION: All changes will be lost!`;
+        ? `<?php echo $lang2068; ?> ${originLv} <?php echo $lang2069; ?> ${snapshotName}?\n\n<?php echo $lang2070; ?> ${originLv} <?php echo $lang2071; ?>`
+        : `<?php echo $lang2072; ?> ${snapshotName}?\n\n<?php echo $lang2073; ?>`;
     
     if (!confirm(confirmMsg)) return;
     
@@ -2773,7 +2918,7 @@ async function restoreSnapshot(vgName, snapshotName, originLv = null) {
         if (snapshotModal) snapshotModal.hide();
         
         await refreshAll();
-        showToast(res.message || 'Recovery started');
+        showToast(res.message || '<?php echo $lang2074; ?>');
         
         const snapshotsModal = document.getElementById('snapshotsListModal');
         if (snapshotsModal && snapshotsModal.classList.contains('show')) {
@@ -2785,7 +2930,7 @@ async function restoreSnapshot(vgName, snapshotName, originLv = null) {
 }
 
 async function deleteSnapshot(vgName, snapshotName) {
-    if (!confirm(`Delete snapshot ${snapshotName}?\n\nWill be released ${snapshotName} disk space.`)) return;
+    if (!confirm(`<?php echo $lang2075; ?> ${snapshotName}?\n\n<?php echo $lang2076; ?> ${snapshotName} <?php echo $lang2077; ?>`)) return;
     
     showLoader();
     const res = await apiCall('delete_snapshot', {
@@ -2799,7 +2944,7 @@ async function deleteSnapshot(vgName, snapshotName) {
         if (snapshotModal) snapshotModal.hide();
         
         await refreshAll();
-        showToast(`Снапшот ${snapshotName} удалён`);
+        showToast(`<?php echo $lang2078; ?> ${snapshotName} <?php echo $lang2079; ?>`);
         
         const snapshotsModal = document.getElementById('snapshotsListModal');
         if (snapshotsModal && snapshotsModal.classList.contains('show')) {
